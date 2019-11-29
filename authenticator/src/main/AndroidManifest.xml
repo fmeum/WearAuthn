@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="me.henneke.wearauthn"
+    android:targetSandboxVersion="2">
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <uses-feature android:name="android.hardware.bluetooth" />
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.nfc.hce"
+        android:required="false" />
+    <uses-feature android:name="android.hardware.type.watch" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault"
+        tools:ignore="GoogleAppIndexingWarning">
+        <uses-library
+            android:name="com.google.android.wearable"
+            android:required="true" />
+
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="true" />
+
+        <activity
+            android:name="me.henneke.wearauthn.ui.main.AuthenticatorActivity"
+            android:clearTaskOnLaunch="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="me.henneke.wearauthn.ui.main.AuthenticatorAttachedActivity" />
+        <activity android:name="me.henneke.wearauthn.ui.main.AboutActivity" />
+        <activity android:name="me.henneke.wearauthn.ui.ConfirmDeviceCredentialActivity" />
+        <activity android:name="me.henneke.wearauthn.ui.ManageSpaceActivity" />
+        <activity android:name="android.support.wearable.preference.WearablePreferenceActivity" />
+        <activity android:name="android.support.wearable.activity.ConfirmationActivity" />
+
+        <service
+            android:name="me.henneke.wearauthn.fido.nfc.NfcAuthenticatorService"
+            android:exported="true"
+            android:permission="android.permission.BIND_NFC_SERVICE">
+            <intent-filter>
+                <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.nfc.cardemulation.host_apdu_service"
+                android:resource="@xml/ctap_apdu_service" />
+        </service>
+
+        <service
+            android:enabled="false"
+            android:name="me.henneke.wearauthn.complication.ShortcutComplicationProviderService"
+            android:icon="@drawable/ic_launcher_outline"
+            android:label="Device shortcut"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT,LONG_TEXT,ICON" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="0" />
+            <meta-data
+                android:name="android.support.wearable.complications.PROVIDER_CONFIG_ACTION"
+                android:value="me.henneke.wearauthn.complication.ACTION_COMPLICATION_CONFIG" />
+        </service>
+
+        <activity
+            android:name="me.henneke.wearauthn.complication.ComplicationConfigActivity"
+            android:label="Config">
+            <intent-filter>
+                <action android:name="me.henneke.wearauthn.complication.ACTION_COMPLICATION_CONFIG" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.support.wearable.complications.category.PROVIDER_CONFIG" />
+            </intent-filter>
+        </activity>
+
+        <service android:name="me.henneke.wearauthn.sync.UnlockComplicationListenerService">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:path="/unlock-complication" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>

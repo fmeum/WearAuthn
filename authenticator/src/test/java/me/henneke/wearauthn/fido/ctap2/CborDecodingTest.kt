@@ -1,0 +1,82 @@
+package me.henneke.wearauthn.fido.ctap2
+
+import io.kotlintest.matchers.types.shouldBeInstanceOf
+import io.kotlintest.shouldBe
+import io.kotlintest.shouldNotBe
+import io.kotlintest.specs.StringSpec
+
+
+private fun String.hex() = List(length / 2) {
+    substring(2 * it..2 * it + 1).toInt(16).toByte()
+}
+
+@ExperimentalUnsignedTypes
+private fun ByteArray.hex() = joinToString("") {
+    it.toUByte().toString(16).padStart(2, '0')
+}
+
+@ExperimentalUnsignedTypes
+class CborDecodingTests : StringSpec({
+    "Non-negative integers decode correctly" {
+        fromCbor("00".hex()) shouldBe CborLong(0)
+        fromCbor("01".hex()) shouldBe CborLong(1)
+        fromCbor("0a".hex()) shouldBe CborLong(10)
+        fromCbor("17".hex()) shouldBe CborLong(23)
+        fromCbor("1818".hex()) shouldBe CborLong(24)
+        fromCbor("1819".hex()) shouldBe CborLong(25)
+        fromCbor("1864".hex()) shouldBe CborLong(100)
+        fromCbor("1903e8".hex()) shouldBe CborLong(1000)
+        fromCbor("19ffff".hex()) shouldBe CborLong(UShort.MAX_VALUE.toLong())
+        fromCbor("1a0000ffff".hex()) shouldBe null
+        fromCbor("1affffffff".hex()) shouldBe CborLong(UInt.MAX_VALUE.toLong())
+        fromCbor("1b00000000ffffffff".hex()) shouldBe null
+        fromCbor("1b7fffffffffffffff".hex()) shouldBe CborLong(Long.MAX_VALUE)
+        fromCbor("1b8000000000000000".hex()) shouldBe CborUnsignedInteger(Long.MAX_VALUE.toULong() + 1.toULong())
+        fromCbor("1bffffffffffffffff".hex()) shouldBe CborUnsignedInteger(ULong.MAX_VALUE)
+    }
+
+    "Arrays decode correctly" {
+        fromCbor("98190102030405060708090a0b0c0d0e0f101112131415161718181819".hex()) shouldBe CborArray(
+            Array(25) { CborLong((it + 1).toLong()) })
+    }
+
+    "authenticatorMakeCredential request decodes correctly" {
+        val req = fromCbor("a5015820687134968222ec17202e42505f8ed2b16ae22f16bb05b88c25db9e602645f14102a26269646b6578616d706c652e636f6d646e616d656441636d6503a462696458203082019330820138a0030201023082019330820138a0030201023082019330826469636f6e782b68747470733a2f2f706963732e6578616d706c652e636f6d2f30302f702f61426a6a6a707150622e706e67646e616d65766a6f686e70736d697468406578616d706c652e636f6d6b646973706c61794e616d656d4a6f686e20502e20536d6974680482a263616c672664747970656a7075626C69632D6B6579a263616c6739010064747970656a7075626C69632D6B657907a162726bf5".hex())
+        req shouldNotBe null
+        req.shouldBeInstanceOf<CborLongMap>()
+
+        val map = (req as CborLongMap).value
+        map.size shouldBe 5
+
+        map[1] shouldBe CborByteString("687134968222ec17202e42505f8ed2b16ae22f16bb05b88c25db9e602645f141".hex().toByteArray())
+
+        map[4].shouldBeInstanceOf<CborArray>()
+        val pubKeyCredParamsArray = (map[4] as CborArray).value
+        pubKeyCredParamsArray.size shouldBe 2
+        pubKeyCredParamsArray[0].shouldBeInstanceOf<CborTextStringMap>()
+        val esPubKeyParamsMap = (pubKeyCredParamsArray[0] as CborTextStringMap).value
+        esPubKeyParamsMap.size shouldBe 2
+        esPubKeyParamsMap["alg"] shouldBe CborLong(-7)
+        esPubKeyParamsMap["type"] shouldBe CborTextString("public-key")
+
+        map[7].shouldBeInstanceOf<CborTextStringMap>()
+        val optionsMap = (map[7] as CborTextStringMap).value
+        optionsMap.size shouldBe 1
+        optionsMap["rk"] shouldBe CborBoolean(true)
+    }
+
+    "toCbor(fromCbor(...)) is the identity" {
+        val cborExamples = listOf(
+            "a5015820687134968222ec17202e42505f8ed2b16ae22f16bb05b88c25db9e602645f14102a26269646b6578616d706c652e636f6d646e616d656441636d6503a462696458203082019330820138a0030201023082019330820138a0030201023082019330826469636f6e782b68747470733a2f2f706963732e6578616d706c652e636f6d2f30302f702f61426a6a6a707150622e706e67646e616d65766a6f686e70736d697468406578616d706c652e636f6d6b646973706c61794e616d656d4a6f686e20502e20536d6974680482a263616c672664747970656a7075626c69632d6b6579a263616c6739010064747970656a7075626c69632d6b657907a162726bf5",
+            "a301667061636b656402589ac289c5ca9b0460f9346ab4e42d842743404d31f4846825a6d065be597a87051d410000000bf8a011f38c0a4d15800617111f9edc7d00108959cead5b5c48164e8abcd6d9435c6fa363616c6765455332353661785820f7c4f4a6f1d79538dfa4c9ac50848df708bc1c99f5e60e51b42a521b35d3b69a61795820de7b7d6ca564e70ea321a4d5d96ea00ef0e2db89dd61d4894c15ac585bd2368403a363616c67266373696758473045022013f73c5d9d530e8cc15cc9bd96ad586d393664e462d5f0561235e6350f2b728902210090357ff910ccb56ac5b596511948581c8fddb4a2b79959948078b09f4bdc622963783563815901973082019330820138a003020102020900859b726cb24b4c29300a06082a8648ce3d0403023047310b300906035504061302555331143012060355040a0c0b59756269636f205465737431223020060355040b0c1941757468656e74696361746f72204174746573746174696f6e301e170d3136313230343131353530305a170d3236313230323131353530305a3047310b300906035504061302555331143012060355040a0c0b59756269636f205465737431223020060355040b0c1941757468656e74696361746f72204174746573746174696f6e3059301306072a8648ce3d020106082a8648ce3d03010703420004ad11eb0e8852e53ad5dfed86b41e6134a18ec4e1af8f221a3c7d6e636c80ea13c3d504ff2e76211bb44525b196c44cb4849979cf6f896ecd2bb860de1bf4376ba30d300b30090603551d1304023000300a06082a8648ce3d0403020349003046022100e9a39f1b03197525f7373e10ce77e78021731b94d0c03f3fda1fd22db3d030e7022100c4faec3445a820cf43129cdb00aabefd9ae2d874f9c5d343cb2f113da23723f3",
+            "a4016b6578616d706c652e636f6d025820687134968222ec17202e42505f8ed2b16ae22f16bb05b88c25db9e602645f1410382a26269645840f22006de4f905af68a43942f024f2a5ece603d9c6d4b3df8be08ed01fc442646d034858ac75bed3fd580bf9808d94fcbee82b9b2ef6677af0adcc35852ea6b9e64747970656a7075626c69632d6b6579a26269645832030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030364747970656a7075626c69632d6b657905a1627576f5",
+            "a501a26269645840f22006de4f905af68a43942f024f2a5ece603d9c6d4b3df8be08ed01fc442646d034858ac75bed3fd580bf9808d94fcbee82b9b2ef6677af0adcc35852ea6b9e64747970656a7075626c69632d6b6579025825625ddadf743f5727e66bba8c2e387922d1af43c503d9114a8fba104d84d02bfa0100000011035847304502204a5a9dd39298149d904769b51a451433006f182a34fbdf66de5fc717d75fb350022100a46b8ea3c3b933821c6e7f5ef9daae94ab47f18db474c74790eaabb14411e7a004a462696458203082019330820138a0030201023082019330820138a0030201023082019330826469636f6e782b68747470733a2f2f706963732e6578616d706c652e636f6d2f30302f702f61426a6a6a707150622e706e67646e616d65766a6f686e70736d697468406578616d706c652e636f6d6b646973706c61794e616d656d4a6f686e20502e20536d6974680501",
+            "a56161614161626142616361436164614461656145",
+            "fb7e37e43c8800759c"
+            )
+        cborExamples.forEach {
+            fromCbor(it.hex())!!.toCbor().hex() shouldBe it
+        }
+    }
+})
+

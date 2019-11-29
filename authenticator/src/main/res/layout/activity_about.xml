@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tools:context="me.henneke.wearauthn.ui.main.AboutActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/titleView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:paddingTop="@dimen/text_vertical_padding"
+            android:textAppearance="@android:style/TextAppearance.Material.Title"
+            tools:text="WearAuthn" />
+
+        <TextView
+            android:id="@+id/versionView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            tools:text="1.0.0" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="@dimen/text_horizontal_padding"
+            android:text="@string/about_nfc_how_to_use"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1" />
+
+        <ImageButton
+            android:id="@+id/howToUseOpenOnPhoneButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginVertical="@dimen/diag_button_bottom_padding"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_btn_open_on_phone" />
+
+        <Button
+            android:id="@+id/supportButtton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginVertical="@dimen/diag_button_bottom_padding"
+            android:text="@string/label_support" />
+
+        <TextView
+            android:id="@+id/keyStorageView"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginVertical="@dimen/diag_button_bottom_padding"
+            android:layout_weight="1"
+            android:paddingHorizontal="@dimen/text_horizontal_padding"
+            android:text="@string/message_key_storage_type_unknown"
+            android:textAppearance="@android:style/TextAppearance.Material.Body2" />
+
+        <Button
+            android:id="@+id/privacyButtton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginVertical="@dimen/diag_button_bottom_padding"
+            android:text="@string/label_privacy" />
+
+        <Button
+            android:id="@+id/licensesButtton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginVertical="@dimen/diag_button_bottom_padding"
+            android:text="@string/label_licenses" />
+    </LinearLayout>
+</ScrollView>

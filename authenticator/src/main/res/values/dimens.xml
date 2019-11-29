@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="button_icon_margin">8dp</dimen>
+    <dimen name="button_icon_size">24dp</dimen>
+    <dimen name="text_horizontal_padding">@dimen/screen_percentage_12</dimen>
+    <dimen name="text_vertical_padding">@dimen/screen_percentage_15</dimen>
+</resources>

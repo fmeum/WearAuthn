@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+    Based on accept_deny_dialog.xml of the Android Wearable Support Library, which comes with
+    the following copyright notice and is licensed under the Apache License, Version 2.0:
+    Copyright (C) 2016 The Android Open Source Project
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tool="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tool:context="ui.TimedAcceptDenyDialog">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:minHeight="@dimen/diag_preferred_padding">
+
+            <ImageView
+                android:id="@+id/iconView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/generic_icon"
+                android:maxWidth="24dp"
+                android:maxHeight="24dp"
+                android:scaleType="centerInside"
+                android:src="@null"
+                android:visibility="gone"
+                tool:src="@drawable/ic_cc_checkmark"
+                tool:visibility="visible" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/titleView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:paddingHorizontal="@dimen/text_horizontal_padding"
+            android:text="@null"
+            android:textAppearance="@android:style/TextAppearance.Material.Title"
+            android:visibility="gone"
+            tool:text="WearAuthn"
+            tool:visibility="visible" />
+
+        <TextView
+            android:id="@+id/messageView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:hyphenationFrequency="full"
+            android:paddingHorizontal="@dimen/text_horizontal_padding"
+            android:text="@null"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:visibility="gone"
+            tool:text="Authenticate to Google?"
+            tool:visibility="visible" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/buttonPanel"
+                style="?android:attr/buttonBarStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:gravity="center_horizontal|top"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/diag_button_padding_horizontal"
+                android:paddingTop="8dp"
+                android:paddingEnd="@dimen/diag_button_padding_horizontal"
+                android:paddingBottom="@dimen/diag_button_padding_bottom"
+                android:visibility="gone"
+                tool:visibility="visible">
+
+                <androidx.wear.widget.CircularProgressLayout
+                    android:id="@+id/negativeTimeout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="4dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="4dp"
+                    android:paddingBottom="4dp"
+                    android:visibility="gone"
+                    app:backgroundColor="@color/dark_blue"
+                    app:colorSchemeColors="@color/blue"
+                    app:strokeWidth="4dp"
+                    tool:visibility="visible">
+
+                    <ImageButton
+                        android:id="@+id/negativeButton"
+                        android:layout_width="@dimen/diag_button_size"
+                        android:layout_height="@dimen/diag_button_size"
+                        android:background="@drawable/accept_deny_dialog_negative_bg"
+                        android:contentDescription="@string/generic_deny"
+                        android:src="@drawable/ic_cc_clear" />
+                </androidx.wear.widget.CircularProgressLayout>
+
+                <Space
+                    android:id="@+id/spacer"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:visibility="gone"
+                    tool:visibility="visible" />
+
+                <ImageButton
+                    android:id="@+id/positiveButton"
+                    android:layout_width="@dimen/diag_button_size"
+                    android:layout_height="@dimen/diag_button_size"
+                    android:background="@drawable/accept_deny_dialog_positive_bg"
+                    android:contentDescription="@string/generic_accept"
+                    android:src="@drawable/ic_cc_checkmark"
+                    android:visibility="gone"
+                    tool:visibility="visible" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,68 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    kotlinOptions {
+        freeCompilerArgs = ["-XXLanguage:+InlineClasses"]
+        jvmTarget = "1.8"
+    }
+    signingConfigs {
+        testSign {
+            storeFile file('../ci_keystore.jks')
+            storePassword 'hunter2'
+            keyAlias = 'key0'
+            keyPassword 'hunter2'
+        }
+    }
+    compileSdkVersion 29
+    defaultConfig {
+        applicationId "me.henneke.wearauthn.authenticator"
+        minSdkVersion 28
+        targetSdkVersion 29
+        versionCode 228090
+        versionName "0.9.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.testSign
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
+    applicationVariants.all { variant ->
+        variant.resValue "string", "application_id", variant.applicationId
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    implementation 'androidx.annotation:annotation:1.1.0'
+    implementation 'androidx.core:core:1.2.0-beta02'
+    implementation 'androidx.core:core-ktx:1.1.0'
+    implementation 'androidx.fragment:fragment-ktx:1.1.0'
+    implementation 'androidx.preference:preference:1.1.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0-rc01'
+    implementation 'androidx.wear:wear:1.0.0'
+
+    implementation 'com.google.android.gms:play-services-wearable:17.0.0'
+    implementation 'com.google.android.support:wearable:2.5.0'
+    compileOnly 'com.google.android.wearable:wearable:2.5.0'
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.3.2'
+
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'io.kotlintest:kotlintest-runner-junit5:3.4.0'
+    testImplementation 'org.slf4j:slf4j-nop:2.0.0-alpha0'
+}

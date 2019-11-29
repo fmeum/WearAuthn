@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:title="Use via Bluetooth with">
+
+    <Preference
+        android:key="@string/preference_nfc_settings"
+        android:order="@integer/order_device_list_nfc_settings"
+        android:persistent="false"
+        tools:summary="Hold to NFC-capable phone, even while on watch face.">
+        <intent android:action="android.settings.NFC_SETTINGS" />
+    </Preference>
+
+    <PreferenceCategory
+        android:order="@integer/order_device_list_bluetooth_category"
+        android:title="Bluetooth">
+
+        <Preference
+            android:icon="@drawable/ic_btn_bluetooth"
+            android:key="@string/preference_bluetooth_settings"
+            android:order="@integer/order_device_list_bluetooth_settings"
+            android:persistent="false"
+            android:title="Settings"
+            tools:summary="@string/status_bluetooth_tap_and_pair">
+            <intent android:action="android.settings.BLUETOOTH_SETTINGS" />
+        </Preference>
+
+        <SwitchPreference
+            android:key="@string/preference_discoverable"
+            android:order="@integer/order_device_list_discoverable"
+            android:persistent="false"
+            android:summaryOn="Visible to other devices for 1 min"
+            android:summaryOff="Make visible to other devices"
+            android:title="Discoverable" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:order="@integer/order_device_list_more_category"
+        android:title="Advanced">
+
+        <SwitchPreference
+            android:key="@string/preference_single_factor_mode"
+            android:order="@integer/order_device_list_single_factor_mode"
+            android:title="Single-factor mode"
+            android:enabled="false"
+            android:persistent="false" />
+
+        <Preference
+            android:icon="@drawable/ic_btn_info"
+            android:key="@string/preference_about"
+            android:order="@integer/order_device_list_about"
+            android:persistent="false"
+            android:title="About">
+            <intent
+                android:targetClass="me.henneke.wearauthn.ui.main.AboutActivity"
+                android:targetPackage="@string/application_id" />
+        </Preference>
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">WearAuthn</string>
+    <string name="changelog"><![CDATA[<h4>Recent changes</h4><b>Version 0.9.0</b><br/>• First beta release]]></string>
+    <string name="url_new_issue">https://github.com/FabianHenneke/WearAuthn/issues/new?assignees=FabianHenneke&amp;template=bug_report.md</string>
+    <string name="label_purchase_button_purchased">Purchased</string>
+    <string name="label_purchase_button_pending">Purchase pending</string>
+    <string name="label_purchase_button_available">Purchase</string>
+    <string name="label_purchase_button_install_watch_app">Watch app not installed</string>
+    <string name="label_price_without_tax">%1$s (+tax)</string>
+    <string name="message_unlocked_on_watch">Complication is now available on your %1$s!</string>
+    <string name="title_complication_unlock_card">Unlock complication</string>
+    <string name="description_complication_unlock_card">Support the development of WearAuthn and unlock a watch face complication that directly connects WearAuthn to a preset device.</string>
+    <string name="title_install_watch_card">Install WearAuthn on your watch</string>
+    <string name="description_install_watch_card">Open the Play Store on your watch and install WearAuthn from the \'Apps on your phone\' section. If you cannot find it there, just search for \'wearauthn\'.</string>
+    <string name="file_bug_email_address">wearauthn@henneke.me</string>
+    <string name="file_bug_email_subject">Bug report</string>
+    <string name="file_bug_email_body">Thank you for reporting a bug! Please provide as much information as possible below to help fix it.\n\nWhat went wrong?\n\n\nSteps taken before experiencing the bug\n\n1.\n2.\n3.\n4.\n\nWhat is the model of your watch?\n(find under Settings -> System -> About)\n\n%1$s\n\nWhich Android version runs on your watch?\n(find under Settings -> System -> About -> Version)\n\n\nWhich version of WearAuthn are you using?\n(shown at the top of WearAuthn\'s About screen)</string>
+    <string name="label_report_a_bug">Report a bug</string>
+</resources>
