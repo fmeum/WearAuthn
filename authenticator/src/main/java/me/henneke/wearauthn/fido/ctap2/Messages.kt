@@ -89,6 +89,10 @@ const val GET_INFO_RESPONSE_PIN_PROTOCOLS = 0x6L
 // https://chromium.googlesource.com/chromium/src/+/acef6fd7468307321aeab22853f2b6d0d5d6462a
 const val GET_INFO_RESPONSE_MAX_CREDENTIAL_COUNT_IN_LIST = 0x7L
 const val GET_INFO_RESPONSE_MAX_CREDENTIAL_ID_LENGTH = 0x8L
+// These parts of the GetInfo response are also not yet public, but have been picked up from
+// https://groups.google.com/a/fidoalliance.org/d/msg/fido-dev/zFbMGu8rfJQ/WE5Wo6tiAgAJ
+const val GET_INFO_RESPONSE_TRANSPORTS = 0x9L
+const val GET_INFO_RESPONSE_ALGORITHMS = 0xAL
 
 
 const val COSE_ID_ES256 = -7L
