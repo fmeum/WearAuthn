@@ -55,7 +55,7 @@ Due to security restrictions imposed on third-party apps by Wear OS, WearAuthn i
 
 No setup required and fully supported by Chrome, Edge and Firefox on Windows 10 Version 1809 and later.
 
-If have WearAuthn's single-factor mode enabled and are using Edge, you can even [log in to your Microsoft account with a single tap on your watch](https://support.microsoft.com/en-us/help/4463210/windows-10-sign-in-microsoft-account-windows-hello-security-key).
+If you have WearAuthn's single-factor mode enabled and are using Chrome or Edge, you can even [log in to your Microsoft account with a single tap on your watch](https://support.microsoft.com/en-us/help/4463210/windows-10-sign-in-microsoft-account-windows-hello-security-key).
 
 ### macOS (Bluetooth)
 
