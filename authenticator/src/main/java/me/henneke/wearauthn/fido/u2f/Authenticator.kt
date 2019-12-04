@@ -42,7 +42,7 @@ object Authenticator {
             val (keyAlias, _) = context.getOrCreateFreshWebAuthnCredential()
                 ?: throw ApduException(StatusWord.MEMORY_FAILURE)
             val credential =
-                U2FLocalCredential(
+                U2FCredential(
                     keyAlias,
                     req.application
                 )
@@ -81,10 +81,10 @@ object Authenticator {
         context: AuthenticatorContext,
         req: AuthenticationRequest
     ): Pair<RequestInfo?, () -> Response.AuthenticationResponse> {
-        val credential = LocalCredential.fromKeyHandle(req.keyHandle, req.application, context)
+        val credential = Credential.fromKeyHandle(req.keyHandle, req.application, context)
             ?: throw ApduException(StatusWord.WRONG_DATA)
         // CTAP2 credentials are allowed to be used via CTAP1, which greatly improves NFC  usability
-        if (credential !is U2FLocalCredential)
+        if (credential !is U2FCredential)
             Log.i(TAG, "Using a CTAP2 credential via CTAP1")
         val action =
             if (isDummyRequest(req.application, req.challenge))

@@ -329,7 +329,7 @@ data class Assertion(val authenticatorData: ByteArray, val signature: ByteArray)
     }
 }
 
-abstract class LocalCredential {
+abstract class Credential {
     abstract val rpIdHash: ByteArray
     protected abstract val keyAlias: String
 
@@ -435,7 +435,7 @@ abstract class LocalCredential {
         check(usesMultipleResidentKeys implies isResident)
         if (isResident) {
             // Resident keys are always WebAuthn credentials.
-            check(this is WebAuthnLocalCredential)
+            check(this is WebAuthnCredential)
             // For a resident key, we have to add a "user" field to the result, which contains
             // personal information only if the authenticator does not use the display and there are
             // multiple assertions that need to be returned. At this point, the personal information
@@ -472,7 +472,7 @@ abstract class LocalCredential {
             keyHandle: ByteArray,
             rpIdHash: ByteArray,
             context: AuthenticatorContext
-        ): LocalCredential? {
+        ): Credential? {
             require(rpIdHash.size == 32)
             if (keyHandle.size < 64)
                 return null
@@ -493,7 +493,7 @@ abstract class LocalCredential {
             }
             return if (keyHandleData.size == 32) {
                 // U2F: keyHandleData only consists of the nonce
-                U2FLocalCredential(keyAlias, rpIdHash)
+                U2FCredential(keyAlias, rpIdHash)
             } else {
                 // WebAuthn: keyHandleData consists of the nonce, a null byte, and the RP name
                 // At this point, keyHandleData has size at least 33
@@ -507,7 +507,7 @@ abstract class LocalCredential {
                     rawRpName.decodeToStringOrNull() ?: return null
                 else
                     null
-                WebAuthnLocalCredential(
+                WebAuthnCredential(
                     keyAlias,
                     rpIdHash,
                     rpName
@@ -520,7 +520,7 @@ abstract class LocalCredential {
             credential: CborValue,
             rpIdHash: ByteArray,
             context: AuthenticatorContext
-        ): LocalCredential? {
+        ): Credential? {
             val map = credential.unbox<Map<String, CborValue>>()
             if (map["type"].unbox<String>() != "public-key")
                 return null
@@ -535,8 +535,8 @@ abstract class LocalCredential {
 
 }
 
-data class U2FLocalCredential(override val keyAlias: String, override val rpIdHash: ByteArray) :
-    LocalCredential() {
+data class U2FCredential(override val keyAlias: String, override val rpIdHash: ByteArray) :
+    Credential() {
 
     init {
         require(keyAlias.base64() != null)
@@ -553,7 +553,7 @@ data class U2FLocalCredential(override val keyAlias: String, override val rpIdHa
 }
 
 @ExperimentalUnsignedTypes
-class WebAuthnLocalCredential(
+class WebAuthnCredential(
     override val keyAlias: String,
     override val rpIdHash: ByteArray,
     val rpName: String? = null,
@@ -562,7 +562,7 @@ class WebAuthnLocalCredential(
     userName: String? = null,
     userIcon: String? = null,
     val encryptedUserMap: ByteArray? = null
-) : LocalCredential() {
+) : Credential() {
 
     init {
         require(keyAlias.base64()?.size == 32)
@@ -643,7 +643,7 @@ class WebAuthnLocalCredential(
         }
 
     companion object {
-        fun deserialize(str: String, rpIdHash: ByteArray): WebAuthnLocalCredential? {
+        fun deserialize(str: String, rpIdHash: ByteArray): WebAuthnCredential? {
             val bytes = str.base64() ?: return null
             val cbor = fromCborToEnd(bytes) as? CborTextStringMap ?: return null
             val map = cbor.value
@@ -651,7 +651,7 @@ class WebAuthnLocalCredential(
             val rpName = (map["rpName"] as? CborTextString)?.value ?: return null
             val userId = (map["userId"] as? CborByteString)?.value ?: return null
             val encryptedUserMap = (map["encryptedUser"] as? CborByteString)?.value
-            val credential = WebAuthnLocalCredential(
+            val credential = WebAuthnCredential(
                 keyAlias = keyAlias,
                 rpIdHash = rpIdHash,
                 rpName = rpName,

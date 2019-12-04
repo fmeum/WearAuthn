@@ -366,17 +366,17 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
             status = AuthenticatorStatus.PROCESSING
     }
 
-    suspend fun chooseCredential(credentials: List<LocalCredential>): LocalCredential? {
+    suspend fun chooseCredential(credentials: List<Credential>): Credential? {
         check(isHidTransport)
         require(credentials.isNotEmpty())
         if (credentials.size == 1)
             return credentials.first()
         // If there is more than one credential to choose from, all of them must be resident.
-        require(credentials.all { it is WebAuthnLocalCredential && it.isResident })
-        val credentialsArray = credentials.map { it as WebAuthnLocalCredential }.toTypedArray()
+        require(credentials.all { it is WebAuthnCredential && it.isResident })
+        val credentialsArray = credentials.map { it as WebAuthnCredential }.toTypedArray()
         status = AuthenticatorStatus.WAITING_FOR_UP
         val credential = withContext(Dispatchers.Main) {
-            suspendCancellableCoroutine<WebAuthnLocalCredential?> { continuation ->
+            suspendCancellableCoroutine<WebAuthnCredential?> { continuation ->
                 val dialog = CredentialChooserDialog(credentialsArray, context) {
                     continuation.resume(it)
                 }
@@ -393,7 +393,7 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
     suspend fun setResidentCredential(
         rpIdHash: ByteArray,
         userId: ByteArray,
-        credential: WebAuthnLocalCredential,
+        credential: WebAuthnCredential,
         userVerified: Boolean
     ) {
         require(rpIdHash.size == 32)
@@ -415,7 +415,7 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
         Log.i(TAG, "Resident credential stored for ${Hex.bytesToStringUppercase(rpIdHash)}")
     }
 
-    fun lookupAndReplaceWithResidentCredential(credential: LocalCredential): LocalCredential {
+    fun lookupAndReplaceWithResidentCredential(credential: Credential): Credential {
         val encodedKeyHandle = credential.keyHandle.base64()
         val encodedUserId =
             getResidentKeyPrefsForRpId(credential.rpIdHash).getString("kh+$encodedKeyHandle", null)
@@ -429,12 +429,12 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
     fun getResidentCredential(
         rpIdHash: ByteArray,
         encodedUserId: String
-    ): WebAuthnLocalCredential? {
+    ): WebAuthnCredential? {
         require(rpIdHash.size == 32)
         val serialized =
             getResidentKeyPrefsForRpId(rpIdHash).getString("uid+$encodedUserId", null)
                 ?: return null
-        return WebAuthnLocalCredential.deserialize(
+        return WebAuthnCredential.deserialize(
             serialized,
             rpIdHash
         )

@@ -10,23 +10,23 @@ import android.widget.TextView
 import kotlinx.android.synthetic.main.credential_chooser_dialog.*
 import kotlinx.coroutines.*
 import me.henneke.wearauthn.R
-import me.henneke.wearauthn.fido.context.WebAuthnLocalCredential
+import me.henneke.wearauthn.fido.context.WebAuthnCredential
 import java.text.SimpleDateFormat
 
 private const val TAG = "CredentialChooserDialog"
 
 @ExperimentalUnsignedTypes
 class CredentialChooserDialog(
-    val credentials: Array<WebAuthnLocalCredential>,
+    val credentials: Array<WebAuthnCredential>,
     context: Context,
-    val callback: (WebAuthnLocalCredential?) -> Unit
+    val callback: (WebAuthnCredential?) -> Unit
 ) : Dialog(context), CoroutineScope {
 
     private val TIMEOUT_MS = 30_000L
 
     override val coroutineContext = Dispatchers.Main + SupervisorJob()
 
-    private var chosenCredential: WebAuthnLocalCredential? = null
+    private var chosenCredential: WebAuthnCredential? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

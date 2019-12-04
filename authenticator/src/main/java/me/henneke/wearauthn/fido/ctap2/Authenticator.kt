@@ -116,7 +116,7 @@ object Authenticator {
         // Step 1
         if (excludeList != null) {
             for (cborCredential in excludeList) {
-                if (LocalCredential.fromCborCredential(cborCredential, rpIdHash, context) == null)
+                if (Credential.fromCborCredential(cborCredential, rpIdHash, context) == null)
                     continue
                 val requestInfo =
                     Ctap2RequestInfo(
@@ -194,7 +194,7 @@ object Authenticator {
                 attestationChallenge = clientDataHash
             ) ?: CTAP_ERR(KeyStoreFull, "Failed to create WebAuthnCredential")
 
-        val credential = WebAuthnLocalCredential(
+        val credential = WebAuthnCredential(
             keyAlias = keyAlias,
             rpIdHash = rpIdHash,
             rpName = rpName,
@@ -324,7 +324,7 @@ object Authenticator {
                 emptySequence()
             } else {
                 allowList.asSequence().mapNotNull { cborCredential ->
-                    LocalCredential.fromCborCredential(cborCredential, rpIdHash, context)
+                    Credential.fromCborCredential(cborCredential, rpIdHash, context)
                 }.map { credential -> context.lookupAndReplaceWithResidentCredential(credential) }
             }
         } else {
@@ -352,7 +352,7 @@ object Authenticator {
             requireUserPresence = true
 
         val requestInfo = if (numberOfCredentials > 0) {
-            val firstCredential = credentialsToUse.first() as? WebAuthnLocalCredential
+            val firstCredential = credentialsToUse.first() as? WebAuthnCredential
             val singleCredential = numberOfCredentials == 1
             check(!singleCredential implies useResidentKey)
             Ctap2RequestInfo(
@@ -391,7 +391,7 @@ object Authenticator {
 
         if (requireUserVerification) {
             for (credential in credentialsToUse) {
-                if (credential is WebAuthnLocalCredential) {
+                if (credential is WebAuthnCredential) {
                     context.authenticateUserFor {
                         credential.unlockUserInfoIfNecessary()
                     }
@@ -555,7 +555,7 @@ object Authenticator {
 
     private fun processExtensions(
         extensions: Map<Extension, CborValue>,
-        credential: LocalCredential,
+        credential: Credential,
         requireUserPresence: Boolean,
         requireUserVerification: Boolean
     ): CborValue? {
@@ -576,7 +576,7 @@ object Authenticator {
 
     private fun processExtension(
         extension: Extension,
-        credential: LocalCredential,
+        credential: Credential,
         userPresent: Boolean,
         userVerified: Boolean
     ): CborValue {

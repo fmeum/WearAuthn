@@ -1,7 +1,7 @@
 package me.henneke.wearauthn.fido.u2f
 
 import me.henneke.wearauthn.bytes
-import me.henneke.wearauthn.fido.context.U2FLocalCredential
+import me.henneke.wearauthn.fido.context.U2FCredential
 import java.security.KeyFactory
 import java.security.Signature
 import java.security.spec.PKCS8EncodedKeySpec
@@ -99,7 +99,7 @@ private val REFERENCE_ATTESTATION_CERT_SIGNATURE_TEMPLATE = ubyteArrayOf(
 ).toByteArray()
 
 @ExperimentalUnsignedTypes
-fun createU2fSelfAttestationCert(credential: U2FLocalCredential): ByteArray {
+fun createU2fSelfAttestationCert(credential: U2FCredential): ByteArray {
     val certBody = REFERENCE_ATTESTATION_CERT_TEMPLATE + credential.u2fPublicKeyRepresentation!!
     val certSignaturePayload = credential.sign(certBody)
     val certSignaturePrefix = ubyteArrayOf(0x03u, (certSignaturePayload.size + 1).toUByte(), 0x00u).toByteArray()
