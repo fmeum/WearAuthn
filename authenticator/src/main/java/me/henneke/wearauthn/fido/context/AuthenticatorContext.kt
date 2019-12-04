@@ -18,10 +18,9 @@ import kotlinx.coroutines.*
 import me.henneke.wearauthn.base64
 import me.henneke.wearauthn.escapeHtml
 import me.henneke.wearauthn.fido.context.AuthenticatorAction.*
-import me.henneke.wearauthn.fido.ctap2.AttestationType
-import me.henneke.wearauthn.fido.ctap2.CborValue
-import me.henneke.wearauthn.fido.ctap2.CtapError
-import me.henneke.wearauthn.fido.ctap2.CtapErrorException
+import me.henneke.wearauthn.fido.ctap2.*
+import me.henneke.wearauthn.fido.ctap2.CtapError.OperationDenied
+import me.henneke.wearauthn.fido.ctap2.CtapError.Other
 import me.henneke.wearauthn.fido.u2f.resolveAppIdHash
 import me.henneke.wearauthn.ui.*
 import kotlin.coroutines.resume
@@ -404,10 +403,10 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
         val serializedCredential = try {
             authenticateUserFor {
                 credential.serialize(userVerified)
-            } ?: throw CtapErrorException(CtapError.OperationDenied)
+            } ?: CTAP_ERR(OperationDenied)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to serialize user data: $e")
-            throw CtapErrorException(CtapError.Other)
+            CTAP_ERR(Other)
         }
         getResidentKeyPrefsForRpId(rpIdHash).edit {
             putString("uid+$encodedUserId", serializedCredential)

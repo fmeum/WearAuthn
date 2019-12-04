@@ -1,6 +1,8 @@
 package me.henneke.wearauthn.fido.ctap2
 
+import android.util.Log
 import me.henneke.wearauthn.fido.context.AuthenticatorAction
+import me.henneke.wearauthn.fido.ctap2.CtapError.*
 import java.io.ByteArrayOutputStream
 
 // This size is chosen such that it can be transmitted via the HID protocol even if the maximal
@@ -49,6 +51,12 @@ enum class CtapError(val value: Byte) {
 }
 
 data class CtapErrorException(val error: CtapError) : Throwable()
+
+fun CTAP_ERR(error: CtapError, message: String? = null): Nothing {
+    if (message != null)
+        Log.w("CTAP", "${error.name}: $message")
+    throw CtapErrorException(error)
+}
 
 const val MAKE_CREDENTIAL_CLIENT_DATA_HASH = 0x1L
 const val MAKE_CREDENTIAL_RP = 0x2L
@@ -124,13 +132,13 @@ enum class Extension(val identifier: String) {
         when (this) {
             UserVerificationMethod -> {
                 if (!input.unbox<Boolean>())
-                    throw CtapErrorException(CtapError.UnsupportedExtension)
+                    CTAP_ERR(UnsupportedExtension, "Input was not 'true' for uvm")
             }
             SupportedExtensions -> {
                 if (!input.unbox<Boolean>())
-                    throw CtapErrorException(CtapError.UnsupportedExtension)
+                    CTAP_ERR(UnsupportedExtension, "Input was not 'true' for exts")
                 if (action != AuthenticatorAction.REGISTER)
-                    throw CtapErrorException(CtapError.UnsupportedExtension)
+                    CTAP_ERR(UnsupportedExtension, "exts not supported during GetAssertion")
             }
         }
     }
@@ -171,41 +179,61 @@ val DUMMY_MAKE_CREDENTIAL_RESPONSE = CborLongMap(
     )
 )
 
-inline fun <reified T> CborValue?.unbox(): T {
+inline fun <reified T : Any> CborValue?.unbox(): T {
     if (this == null)
-        throw CtapErrorException(CtapError.MissingParameter)
-    if (this is CborBoxedValue<*> && this.value is T)
+        CTAP_ERR(MissingParameter, "Failed to unbox ${T::class.java.simpleName} from null")
+    if (this is CborBoxedValue<*> && this.value is T) {
         return this.value as T
-    else
-        throw CtapErrorException(CtapError.CborUnexpectedType)
+    } else if (this is CborBoxedValue<*>) {
+        val temp = this.value
+        if (temp is Any) {
+            CTAP_ERR(
+                CborUnexpectedType,
+                "Failed to unbox ${T::class.java.simpleName}; found ${temp::class.java.simpleName}"
+            )
+        } else {
+            CTAP_ERR(
+                CborUnexpectedType,
+                "Failed to unbox ${T::class.java.simpleName}; found null"
+            )
+        }
+    } else {
+        CTAP_ERR(
+            CborUnexpectedType,
+            "Failed to unbox ${T::class.java.simpleName} from ${this::class.java.simpleName}"
+        )
+    }
 }
 
 @ExperimentalUnsignedTypes
 fun CborValue?.getOptional(index: Long): CborValue? {
     if (this == null)
-        throw CtapErrorException(CtapError.InvalidCbor)
+        CTAP_ERR(InvalidCbor, "Failed to look up '$index'; object could not be parsed")
     if (this !is CborLongMap)
-        throw CtapErrorException(CtapError.CborUnexpectedType)
+        CTAP_ERR(CborUnexpectedType, "Failed to look up '$index'; object is not a CborLongMap")
     return this.value[index]
 }
 
 @ExperimentalUnsignedTypes
 fun CborValue?.getRequired(index: Long): CborValue {
-    return getOptional(index) ?: throw CtapErrorException(CtapError.MissingParameter)
+    return getOptional(index) ?: CTAP_ERR(MissingParameter, "Required key missing: $index")
 }
 
 @ExperimentalUnsignedTypes
 fun CborValue?.getOptional(index: String): CborValue? {
     if (this == null)
-        throw CtapErrorException(CtapError.InvalidCbor)
+        CTAP_ERR(InvalidCbor, "Failed to look up '$index'; object could not be parsed")
     if (this !is CborTextStringMap)
-        throw CtapErrorException(CtapError.CborUnexpectedType)
+        CTAP_ERR(
+            CborUnexpectedType,
+            "Failed to look up '$index'; object is not a CborTextStringMap"
+        )
     return this.value[index]
 }
 
 @ExperimentalUnsignedTypes
 fun CborValue?.getRequired(index: String): CborValue {
-    return getOptional(index) ?: throw CtapErrorException(CtapError.MissingParameter)
+    return getOptional(index) ?: CTAP_ERR(MissingParameter, "Required key missing: $index")
 }
 
 fun CborValue?.toCtapSuccessResponse(): ByteArray {

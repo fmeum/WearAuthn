@@ -4,6 +4,7 @@ import android.util.Log
 import me.henneke.wearauthn.*
 import me.henneke.wearauthn.fido.context.*
 import me.henneke.wearauthn.fido.context.AuthenticatorAction.*
+import me.henneke.wearauthn.fido.ctap2.CtapError.*
 import kotlin.experimental.or
 
 
@@ -15,50 +16,46 @@ object Authenticator {
         context.status = AuthenticatorStatus.PROCESSING
         return try {
             if (rawRequest.isEmpty())
-                throw CtapErrorException(CtapError.InvalidLength)
+                CTAP_ERR(InvalidLength, "Empty CBOR request")
             if (rawRequest.size > 1 + MAX_CBOR_MSG_SIZE)
-                throw CtapErrorException(CtapError.RequestTooLarge)
+                CTAP_ERR(RequestTooLarge, "CBOR request exceeds maximal size: ${rawRequest.size}")
             val rawRequestIterator = rawRequest.iterator()
-            val command = RequestCommand.fromByte(rawRequestIterator.next())
-                ?: throw CtapErrorException(CtapError.InvalidCommand)
+            val rawCommand = rawRequestIterator.next()
+            val command = RequestCommand.fromByte(rawCommand)
+                ?: CTAP_ERR(InvalidCommand, "Unsupported command: $rawCommand")
             when (command) {
                 RequestCommand.MakeCredential -> {
                     Log.i(TAG, "MakeCredential called")
-                    val params = fromCborToEnd(
-                        rawRequestIterator
-                    )
-                        ?: throw CtapErrorException(CtapError.InvalidCbor)
+                    val params = fromCborToEnd(rawRequestIterator)
+                        ?: CTAP_ERR(InvalidCbor, "Invalid CBOR in MakeCredential request")
                     handleMakeCredential(context, params)
                 }
                 RequestCommand.GetAssertion -> {
                     Log.i(TAG, "GetAssertion called")
-                    val params = fromCborToEnd(
-                        rawRequestIterator
-                    )
-                        ?: throw CtapErrorException(CtapError.InvalidCbor)
+                    val params = fromCborToEnd(rawRequestIterator)
+                        ?: CTAP_ERR(InvalidCbor, "Invalid CBOR in GetAssertion request")
                     handleGetAssertion(context, params)
                 }
                 RequestCommand.GetNextAssertion -> {
                     Log.i(TAG, "GetNextAssertion called")
                     if (rawRequest.size != 1)
-                        throw CtapErrorException(CtapError.InvalidLength)
+                        CTAP_ERR(InvalidLength, "Non-empty params for GetNextAssertion")
                     handleGetNextAssertion(context)
                 }
                 RequestCommand.GetInfo -> {
                     Log.i(TAG, "GetInfo called")
                     if (rawRequest.size != 1)
-                        throw CtapErrorException(CtapError.InvalidLength)
+                        CTAP_ERR(InvalidLength, "Non-empty params for GetInfo")
                     handleGetInfo(context)
                 }
                 RequestCommand.Reset -> {
                     Log.i(TAG, "Reset called")
                     if (rawRequest.size != 1)
-                        throw CtapErrorException(CtapError.InvalidLength)
+                        CTAP_ERR(InvalidLength, "Non-empty params for Reset")
                     handleReset(context)
                 }
             }.toCtapSuccessResponse()
         } catch (e: CtapErrorException) {
-            Log.w(TAG, "CTAP2 operation failed: ${e.error}")
             byteArrayOf(e.error.value)
         } finally {
             context.status = AuthenticatorStatus.IDLE
@@ -82,7 +79,7 @@ object Authenticator {
         val user = params.getRequired(MAKE_CREDENTIAL_USER)
         val userId = user.getRequired("id").unbox<ByteArray>()
         if (userId.size > 64)
-            throw CtapErrorException(CtapError.InvalidLength)
+            CTAP_ERR(InvalidLength, "userId too long: ${userId.size}")
         val userName = user.getRequired("name").unbox<String>().truncate(64)
         val userDisplayName = user.getOptional("displayName")?.unbox<String>()?.truncate(64)
         val userIcon = user.getOptional("icon")?.unbox<String>()
@@ -113,7 +110,7 @@ object Authenticator {
             if (showErrorInBrowser)
                 return DUMMY_MAKE_CREDENTIAL_RESPONSE
             else
-                throw CtapErrorException(CtapError.OperationDenied)
+                CTAP_ERR(OperationDenied)
         }
 
         // Step 1
@@ -129,9 +126,9 @@ object Authenticator {
                     )
                 val revealRegistration = context.confirmWithUser(requestInfo)
                 if (revealRegistration)
-                    throw CtapErrorException(CtapError.CredentialExcluded)
+                    CTAP_ERR(CredentialExcluded)
                 else
-                    throw CtapErrorException(CtapError.OperationDenied)
+                    CTAP_ERR(OperationDenied)
             }
         }
 
@@ -144,7 +141,7 @@ object Authenticator {
                 foundCompatibleAlgorithm = true
         }
         if (!foundCompatibleAlgorithm)
-            throw CtapErrorException(CtapError.UnsupportedAlgorithm)
+            CTAP_ERR(UnsupportedAlgorithm)
 
         // Step 3
         var requireResidentKey = false
@@ -153,10 +150,10 @@ object Authenticator {
             if (options.getOptional("rk")?.unbox<Boolean>() == true)
                 requireResidentKey = true
             if (options.getOptional("up") != null)
-                throw CtapErrorException(CtapError.InvalidOption)
+                CTAP_ERR(InvalidOption, "Option 'up' specified for MakeCredential")
             if (options.getOptional("uv")?.unbox<Boolean>() == true) {
                 if (context.getUserVerificationState() != true)
-                    throw CtapErrorException(CtapError.UnsupportedOption)
+                    CTAP_ERR(UnsupportedOption)
                 requireUserVerification = true
             }
         }
@@ -169,7 +166,7 @@ object Authenticator {
         // Step 7
         // We do not support any PIN protocols
         if (params.getOptional(MAKE_CREDENTIAL_PIN_AUTH) != null)
-            throw CtapErrorException(CtapError.PinAuthInvalid)
+            CTAP_ERR(PinAuthInvalid, "pinAuth sent with MakeCredential")
 
         // Step 8
         val requestInfo = Ctap2RequestInfo(
@@ -183,10 +180,10 @@ object Authenticator {
         )
 
         if (!context.confirmWithUser(requestInfo))
-            throw CtapErrorException(CtapError.OperationDenied)
+            CTAP_ERR(OperationDenied)
 
         if (requireUserVerification && !context.verifyUser())
-            throw CtapErrorException(CtapError.OperationDenied)
+            CTAP_ERR(OperationDenied)
 
         // At this point, user verification has been performed if requested.
 
@@ -195,7 +192,7 @@ object Authenticator {
             context.getOrCreateFreshWebAuthnCredential(
                 residentKey = requireResidentKey,
                 attestationChallenge = clientDataHash
-            ) ?: throw CtapErrorException(CtapError.KeyStoreFull)
+            ) ?: CTAP_ERR(KeyStoreFull, "Failed to create WebAuthnCredential")
 
         val credential = WebAuthnLocalCredential(
             keyAlias = keyAlias,
@@ -229,7 +226,7 @@ object Authenticator {
         if (credentialPublicKey == null) {
             credential.delete(context)
             Log.e(TAG, "Failed to get raw public key")
-            throw CtapErrorException(CtapError.Other)
+            CTAP_ERR(Other)
         }
         val attestedCredentialData =
             WEARAUTHN_AAGUID + credential.keyHandle.size.toUShort().bytes() + credential.keyHandle + credentialPublicKey.toCbor()
@@ -293,19 +290,19 @@ object Authenticator {
         // Step 3
         // We do not support any PIN protocols
         if (params.getOptional(GET_ASSERTION_PIN_AUTH) != null)
-            throw CtapErrorException(CtapError.PinAuthInvalid)
+            CTAP_ERR(PinAuthInvalid, "pinAuth sent with GetAssertion")
 
         // Step 5
         var requireUserPresence = true
         var requireUserVerification = false
         if (options != null) {
             if (options.getOptional("rk") != null)
-                throw CtapErrorException(CtapError.InvalidOption)
+                CTAP_ERR(InvalidOption, "Option 'rk' specified for GetAssertion")
             if (options.getOptional("up")?.unbox<Boolean>() == false)
                 requireUserPresence = false
             if (options.getOptional("uv")?.unbox<Boolean>() == true) {
                 if (context.getUserVerificationState() != true)
-                    throw CtapErrorException(CtapError.UnsupportedOption)
+                    CTAP_ERR(UnsupportedOption)
                 requireUserVerification = true
             }
         }
@@ -375,7 +372,7 @@ object Authenticator {
             )
         }
         if (requireUserPresence && !context.confirmWithUser(requestInfo))
-            throw CtapErrorException(CtapError.OperationDenied)
+            CTAP_ERR(OperationDenied)
         if (!requireUserPresence)
             Log.i(TAG, "Processing silent GetAssertion request")
 
@@ -383,12 +380,12 @@ object Authenticator {
         // It is very important that this step happens after the user presence check of step 7.
         if (numberOfCredentials == 0) {
             context.notifyUser(requestInfo)
-            throw CtapErrorException(CtapError.NoCredentials)
+            CTAP_ERR(NoCredentials)
         }
 
         // Step 7 (user verification)
         if (requireUserVerification && !context.verifyUser())
-            throw CtapErrorException(CtapError.OperationDenied)
+            CTAP_ERR(OperationDenied)
 
         // At this point, user presence and verification have been performed if requested.
 
@@ -433,7 +430,7 @@ object Authenticator {
         } else {
             // Step 11
             val credential = context.chooseCredential(credentialsToUse)
-                ?: throw CtapErrorException(CtapError.OperationDenied)
+                ?: CTAP_ERR(OperationDenied)
             // Step 6
             // Process extensions.
             val extensionOutputs = processExtensions(
@@ -456,7 +453,7 @@ object Authenticator {
 
     private fun handleGetNextAssertion(context: AuthenticatorContext): CborValue {
         if (context.getNextAssertionBuffer?.hasNext() != true || context.getNextAssertionRequestInfo == null)
-            throw CtapErrorException(CtapError.NotAllowed)
+            CTAP_ERR(NotAllowed)
         val nextAssertion = context.getNextAssertionBuffer!!.next()
         if (context.getNextAssertionBuffer?.hasNext() != true) {
             context.getNextAssertionRequestInfo?.let { context.notifyUser(it) }
@@ -530,12 +527,12 @@ object Authenticator {
 
         // Deny reset requests over NFC since there is now way to confirm them with the user.
         if (!context.isHidTransport)
-            throw CtapErrorException(CtapError.OperationDenied)
+            CTAP_ERR(OperationDenied)
         if (context.requestReset()) {
             return null
         } else {
             context.handleSpecialStatus(AuthenticatorSpecialStatus.RESET)
-            throw CtapErrorException(CtapError.OperationDenied)
+            CTAP_ERR(OperationDenied)
         }
     }
 
