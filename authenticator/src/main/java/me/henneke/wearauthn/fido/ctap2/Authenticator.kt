@@ -48,6 +48,12 @@ object Authenticator {
                         CTAP_ERR(InvalidLength, "Non-empty params for GetInfo")
                     handleGetInfo(context)
                 }
+                RequestCommand.ClientPIN -> {
+                    Log.i(TAG, "ClientPIN called")
+                    val params = fromCborToEnd(rawRequestIterator)
+                        ?: CTAP_ERR(InvalidCbor, "Invalid CBOR in ClientPIN request")
+                    handleClientPIN(params)
+                }
                 RequestCommand.Reset -> {
                     Log.i(TAG, "Reset called")
                     if (rawRequest.size != 1)
@@ -189,7 +195,8 @@ object Authenticator {
         // Step 9
         val (keyAlias, attestationType) =
             context.getOrCreateFreshWebAuthnCredential(
-                residentKey = requireResidentKey,
+                createResidentKey = requireResidentKey,
+                createHmacSecret = activeExtensions.containsKey(Extension.HmacSecret),
                 attestationChallenge = clientDataHash
             ) ?: CTAP_ERR(KeyStoreFull, "Failed to create WebAuthnCredential")
 
@@ -311,6 +318,11 @@ object Authenticator {
         // We only validate the extension inputs here, the actual processing is done later.
         val activeExtensions = parseExtensionInputs(extensions, AUTHENTICATE)
 
+        // hmac-secret requires user presence, but the spec is not clear on whether this has to be
+        // obtained separately
+        if (activeExtensions.containsKey(Extension.HmacSecret))
+            requireUserPresence = true
+
         // Step 1
         val useResidentKey = allowList == null
         val applicableCredentials = if (!useResidentKey) {
@@ -329,6 +341,13 @@ object Authenticator {
             context.getResidentKeyUserIdsForRpId(rpIdHash).asSequence()
                 .mapNotNull { userId -> context.getResidentCredential(rpIdHash, userId.base64()) }
                 .sortedByDescending { it.creationDate }
+        }.filter {
+            // If the hmac-secret extension is requested, we must only offer credentials that were
+            // created with hmac-secret enabled.
+            if (activeExtensions.containsKey(Extension.HmacSecret))
+                (it as? WebAuthnCredential)?.hasHmacSecret == true
+            else
+                true
         }.toList()
 
         // Step 9
@@ -362,10 +381,7 @@ object Authenticator {
             )
         } else {
             // We have not found any credentials, ask the user for permission to reveal this fact.
-            Ctap2RequestInfo(
-                AUTHENTICATE_NO_CREDENTIALS,
-                rpId
-            )
+            Ctap2RequestInfo(AUTHENTICATE_NO_CREDENTIALS, rpId)
         }
         if (requireUserPresence && !context.confirmWithUser(requestInfo))
             CTAP_ERR(OperationDenied)
@@ -513,6 +529,22 @@ object Authenticator {
         )
     }
 
+    private fun handleClientPIN(params: CborValue): CborValue {
+        val pinProtocol = params.getRequired(CLIENT_PIN_PIN_PROTOCOL).unbox<Long>()
+        if (pinProtocol != 1L)
+            CTAP_ERR(InvalidParameter, "Unsupported pinProtocol: $pinProtocol")
+
+        val subCommand = params.getRequired(CLIENT_PIN_SUB_COMMAND).unbox<Long>()
+        if (subCommand != CLIENT_PIN_SUB_COMMAND_GET_KEY_AGREEMENT)
+            CTAP_ERR(InvalidCommand, "Unsupported ClientPIN subcommand: $subCommand")
+
+        return CborLongMap(
+            mapOf(
+                CLIENT_PIN_GET_KEY_AGREEMENT_RESPONSE_KEY_AGREEMENT to authenticatorKeyAgreementKey
+            )
+        )
+    }
+
     private suspend fun handleReset(context: AuthenticatorContext): Nothing? {
         // The FIDO conformance tests demand reset capabilities over any protocol. In order to test
         // the authenticator behavior with UV configured, the UV status also needs to be reenabled
@@ -583,6 +615,38 @@ object Authenticator {
     ): CborValue {
         require(action == REGISTER || action == AUTHENTICATE)
         return when (extension) {
+            Extension.HmacSecret -> {
+                if (action == REGISTER) {
+                    require(input is NoInput)
+                    // hmac-secret has already been handled during credential creation
+                    CborBoolean(true)
+                } else {
+                    require(input is HmacSecretAuthenticateInput)
+                    require(credential is WebAuthnCredential)
+                    val sharedSecret = agreeOnSharedSecret(input.keyAgreement)
+                    val salt = decryptSalt(sharedSecret, input.saltEnc, input.saltAuth)
+                        ?: CTAP_ERR(InvalidParameter, "Invalid saltAuth")
+                    require(salt.size == 32 || salt.size == 64)
+                    val output = if (salt.size == 32) {
+                        val hmacOutput = credential.signWithHmacSecret(salt)
+                            ?: CTAP_ERR(NoCredentials, "HMAC secret is missing")
+                        encryptHmacOutput(sharedSecret, hmacOutput).also {
+                            check(it.size == 32)
+                        }
+                    } else {
+                        val salt1 = salt.sliceArray(0 until 32)
+                        val hmacOutput1 = credential.signWithHmacSecret(salt1)
+                            ?: CTAP_ERR(NoCredentials, "HMAC secret is missing")
+                        val salt2 = salt.sliceArray(32 until 64)
+                        val hmacOutput2 = credential.signWithHmacSecret(salt2)
+                            ?: CTAP_ERR(NoCredentials, "HMAC secret is missing")
+                        encryptHmacOutput(sharedSecret, hmacOutput1 + hmacOutput2).also {
+                            check(it.size == 64)
+                        }
+                    }
+                    CborByteString(output)
+                }
+            }
             Extension.SupportedExtensions -> {
                 require(action == REGISTER)
                 require(input is NoInput)

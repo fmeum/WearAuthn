@@ -2,8 +2,16 @@ package me.henneke.wearauthn.fido.ctap2
 
 import android.util.Log
 import me.henneke.wearauthn.fido.context.AuthenticatorAction
+import me.henneke.wearauthn.fido.context.authenticatorKeyAgreementParams
 import me.henneke.wearauthn.fido.ctap2.CtapError.*
 import java.io.ByteArrayOutputStream
+import java.math.BigInteger
+import java.security.KeyFactory
+import java.security.PublicKey
+import java.security.interfaces.ECPublicKey
+import java.security.spec.ECPoint
+import java.security.spec.ECPublicKeySpec
+
 
 // This size is chosen such that it can be transmitted via the HID protocol even if the maximal
 // report size is 48 bytes.
@@ -14,7 +22,7 @@ enum class RequestCommand(val value: Byte) {
     GetAssertion(0x02),
     GetNextAssertion(0x08),
     GetInfo(0x04),
-    // ClientPIN(0x06),
+    ClientPIN(0x06),
     Reset(0x07);
 
     companion object {
@@ -102,16 +110,28 @@ const val GET_INFO_RESPONSE_MAX_CREDENTIAL_ID_LENGTH = 0x8L
 const val GET_INFO_RESPONSE_TRANSPORTS = 0x9L
 const val GET_INFO_RESPONSE_ALGORITHMS = 0xAL
 
+const val CLIENT_PIN_PIN_PROTOCOL = 0x1L
+const val CLIENT_PIN_SUB_COMMAND = 0x2L
+
+const val CLIENT_PIN_SUB_COMMAND_GET_KEY_AGREEMENT = 0x2L
+const val CLIENT_PIN_GET_KEY_AGREEMENT_RESPONSE_KEY_AGREEMENT = 0x1L
 
 const val COSE_ID_ES256 = -7L
+const val COSE_ID_ECDH = -25L
 @ExperimentalUnsignedTypes
 val COSE_KEY_ES256_TEMPLATE = mapOf(
     1L to CborLong(2), // kty: EC2 key type
     3L to CborLong(COSE_ID_ES256), // alg: ES256 signature algorithm
     -1L to CborLong(1) // crv: P-256 curve
 )
-const val COSE_KEY_ES256_X = -2L
-const val COSE_KEY_ES256_Y = -3L
+@ExperimentalUnsignedTypes
+val COSE_KEY_ECDH_TEMPLATE = mapOf(
+    1L to CborLong(2), // kty: EC2 key type
+    3L to CborLong(COSE_ID_ECDH), // alg: ECDH key agreement algorithm
+    -1L to CborLong(1) // crv: P-256 curve
+)
+const val COSE_KEY_EC256_X = -2L
+const val COSE_KEY_EC256_Y = -3L
 
 const val FLAGS_USER_PRESENT = 1.toByte()
 const val FLAGS_USER_VERIFIED = (1 shl 2).toByte()
@@ -124,16 +144,84 @@ val WEARAUTHN_AAGUID = byteArrayOf(
     0x8e.toByte(), 0x77, 0xe9.toByte(), 0x90.toByte(), 0xa6.toByte(), 0x2b, 0xfd.toByte(), 0x41
 )
 
+const val HMAC_SECRET_KEY_AGREEMENT = 0x1L
+const val HMAC_SECRET_SALT_ENC = 0x2L
+const val HMAC_SECRET_SALT_AUTH = 0x3L
+
 interface ExtensionInput
 
 object NoInput : ExtensionInput
 
+data class HmacSecretAuthenticateInput(
+    val keyAgreement: PublicKey,
+    val saltEnc: ByteArray,
+    val saltAuth: ByteArray
+) : ExtensionInput
+
 enum class Extension(val identifier: String) {
+    HmacSecret("hmac-secret"),
     SupportedExtensions("exts"),
     UserVerificationMethod("uvm");
 
+    @ExperimentalUnsignedTypes
     fun parseInput(input: CborValue, action: AuthenticatorAction): ExtensionInput {
         return when (this) {
+            HmacSecret -> {
+                when (action) {
+                    AuthenticatorAction.AUTHENTICATE -> {
+                        val cosePublicKey = input.getRequired(HMAC_SECRET_KEY_AGREEMENT)
+                        if (cosePublicKey !is CborLongMap || cosePublicKey.value.size != 5)
+                            CTAP_ERR(InvalidParameter, "Invalid COSE as hmac-secret keyAgreement")
+                        for ((key, value) in COSE_KEY_ECDH_TEMPLATE) {
+                            if (cosePublicKey.getRequired(key) != value)
+                                CTAP_ERR(
+                                    InvalidParameter,
+                                    "Invalid ECDH COSE as hmac-secret keyAgreement"
+                                )
+                        }
+                        val rawX = cosePublicKey.getRequired(COSE_KEY_EC256_X).unbox<ByteArray>()
+                        if (rawX.size != 32)
+                            CTAP_ERR(
+                                InvalidParameter,
+                                "Incorrect length for x in keyAgreement: ${rawX.size}"
+                            )
+                        val rawY = cosePublicKey.getRequired(COSE_KEY_EC256_Y).unbox<ByteArray>()
+                        if (rawY.size != 32)
+                            CTAP_ERR(
+                                InvalidParameter,
+                                "Incorrect length for y in keyAgreement: ${rawY.size}"
+                            )
+                        val saltEnc = input.getRequired(HMAC_SECRET_SALT_ENC).unbox<ByteArray>()
+                        if (saltEnc.size != 32 && saltEnc.size != 64)
+                            CTAP_ERR(
+                                InvalidParameter,
+                                "Incorrect length for saltEnc in keyAgreement: ${saltEnc.size}"
+                            )
+                        val saltAuth = input.getRequired(HMAC_SECRET_SALT_AUTH).unbox<ByteArray>()
+                        if (saltAuth.size != 16)
+                            CTAP_ERR(
+                                InvalidParameter,
+                                "Incorrect length for saltAuth in keyAgreement: ${saltAuth.size}"
+                            )
+
+                        val publicPoint = ECPoint(BigInteger(1, rawX), BigInteger(1, rawY))
+                        val publicSpec =
+                            ECPublicKeySpec(publicPoint, authenticatorKeyAgreementParams)
+                        val keyFactory = KeyFactory.getInstance("EC")
+                        val publicKey = keyFactory.generatePublic(publicSpec) as ECPublicKey
+                        HmacSecretAuthenticateInput(publicKey, saltEnc, saltAuth)
+                    }
+                    AuthenticatorAction.REGISTER -> {
+                        if (!input.unbox<Boolean>())
+                            CTAP_ERR(
+                                UnsupportedExtension,
+                                "Input was not 'true' for hmac-secret in MakeCredential"
+                            )
+                        NoInput
+                    }
+                    else -> throw IllegalStateException("action must be AUTHENTICATE or REGISTER")
+                }
+            }
             UserVerificationMethod -> {
                 if (!input.unbox<Boolean>())
                     CTAP_ERR(UnsupportedExtension, "Input was not 'true' for uvm")

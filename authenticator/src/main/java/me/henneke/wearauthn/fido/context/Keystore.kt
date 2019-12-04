@@ -7,22 +7,22 @@ import androidx.core.content.edit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import me.henneke.wearauthn.base64
-import me.henneke.wearauthn.bytes
-import me.henneke.wearauthn.decodeToStringOrNull
+import me.henneke.wearauthn.*
 import me.henneke.wearauthn.fido.ctap2.*
 import me.henneke.wearauthn.fido.u2f.Response
-import me.henneke.wearauthn.implies
 import me.henneke.wearauthn.ui.defaultSharedPreferences
 import java.lang.Integer.max
 import java.nio.ByteBuffer
 import java.security.*
 import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
+import java.security.spec.ECParameterSpec
 import java.time.Instant
 import java.util.*
 import javax.crypto.*
 import javax.crypto.spec.GCMParameterSpec
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 import kotlin.experimental.or
 
 private const val TAG = "Keystore"
@@ -31,8 +31,10 @@ private const val PROVIDER_ANDROID_KEYSTORE = "AndroidKeyStore"
 private const val MASTER_SIGNING_KEY_ALIAS = "%MASTER_SIGNING_KEY%"
 private const val USER_INFO_ENCRYPTION_KEY_ALIAS = "%USER_INFO_ENCRYPTION_KEY%"
 private const val USER_VERIFICATION_FUSE_KEY_ALIAS = "%USER_VERIFICATION_FUSE_KEY%"
+private const val HMAC_SECRET_KEY_ALIAS_PREFIX = "%HMAC_SECRET%"
 
 private const val AES_GCM_NO_PADDING = "AES/GCM/NoPadding"
+private const val AES_CBC_NO_PADDING = "AES/CBC/NoPadding"
 
 const val USER_VERIFICATION_TIMEOUT_S = 5 * 60 // 5 minutes
 
@@ -90,27 +92,97 @@ private fun generateEllipticCurveKey(builder: KeyGenParameterSpec.Builder): KeyP
     }
 }
 
+private val authenticatorKeyAgreementKeyPair: KeyPair by lazy {
+    val ecParameterSpec = ECGenParameterSpec("secp256r1")
+    val kpg = KeyPairGenerator.getInstance("EC")
+    kpg.initialize(ecParameterSpec)
+    kpg.genKeyPair()
+}
+
+@ExperimentalUnsignedTypes
+val authenticatorKeyAgreementKey
+    get() = getCoseRepresentation(authenticatorKeyAgreementKeyPair.public as ECPublicKey, ECAlgorithm.KeyAgreement)
+
+val authenticatorKeyAgreementParams: ECParameterSpec
+    get() = (authenticatorKeyAgreementKeyPair.public as ECPublicKey).params
+
+fun agreeOnSharedSecret(platformKey: PublicKey): ByteArray {
+    return KeyAgreement.getInstance("ECDH").run {
+        init(authenticatorKeyAgreementKeyPair.private)
+        doPhase(platformKey, true)
+        generateSecret()
+    }.sha256()
+}
+
+fun decryptSalt(
+    sharedSecret: ByteArray,
+    saltEnc: ByteArray,
+    saltAuth: ByteArray
+): ByteArray? {
+    val saltAuthComputed = Mac.getInstance("HmacSHA256").run {
+        init(SecretKeySpec(sharedSecret, "HmacSHA256"))
+        doFinal(saltEnc)
+    }.take(16).toByteArray()
+    if (!MessageDigest.isEqual(saltAuth, saltAuthComputed))
+        return null
+    // hmac-secret uses an IV consisting of 0s since the plaintexts are (approximately) random
+    val iv = IvParameterSpec(ByteArray(16))
+    return Cipher.getInstance(AES_CBC_NO_PADDING).run {
+        init(Cipher.DECRYPT_MODE, SecretKeySpec(sharedSecret, AES_CBC_NO_PADDING), iv)
+        doFinal(saltEnc)
+    }
+}
+
+fun encryptHmacOutput(sharedSecret: ByteArray, hmacSecret: ByteArray): ByteArray {
+    // hmac-secret uses an IV consisting of 0s since the plaintexts are (approximately) random
+    val iv = IvParameterSpec(ByteArray(16))
+    return Cipher.getInstance(AES_CBC_NO_PADDING).run {
+        init(Cipher.ENCRYPT_MODE, SecretKeySpec(sharedSecret, AES_CBC_NO_PADDING), iv)
+        doFinal(hmacSecret)
+    }
+}
+
 fun generateWebAuthnCredential(
-    requireResidentKey: Boolean = false,
+    createResidentKey: Boolean = false,
+    createHmacSecret: Boolean = false,
     attestationChallenge: ByteArray? = null
 ): String? {
     val nonce = ByteArray(32)
     SecureRandom.getInstanceStrong().nextBytes(nonce)
     val keyAlias = nonce.base64()
     val purpose = KeyProperties.PURPOSE_SIGN
-    val parameterSpec = KeyGenParameterSpec.Builder(keyAlias, purpose).apply {
+    val ecParameterSpec = KeyGenParameterSpec.Builder(keyAlias, purpose).apply {
         setAlgorithmParameterSpec(ECGenParameterSpec("secp256r1"))
         setDigests(KeyProperties.DIGEST_SHA256)
         setKeySize(256)
         setAttestationChallenge(attestationChallenge)
-        if (requireResidentKey) {
+        if (createResidentKey) {
             setKeyValidityStart(Date.from(Instant.now().minusSeconds(24 * 60 * 60)))
         }
     }
-    return if (generateEllipticCurveKey(parameterSpec) != null)
-        keyAlias
-    else
-        null
+    generateEllipticCurveKey(ecParameterSpec) ?: return null
+
+    if (createHmacSecret) {
+        val hmacParameterSpec =
+            KeyGenParameterSpec.Builder(
+                HMAC_SECRET_KEY_ALIAS_PREFIX + keyAlias,
+                KeyProperties.PURPOSE_SIGN
+            )
+                .apply {
+                    setDigests(KeyProperties.DIGEST_SHA256)
+                    setKeySize(256)
+                }
+        if (generateSymmetricKey(
+                KeyProperties.KEY_ALGORITHM_HMAC_SHA256,
+                hmacParameterSpec
+            ) == null
+        ) {
+            deleteKey(keyAlias)
+            return null
+        }
+    }
+
+    return keyAlias
 }
 
 private fun getOrCreateUserInfoEncryptionKeyIfNecessary(): SecretKey? {
@@ -358,7 +430,7 @@ abstract class Credential {
     val ctap2PublicKeyRepresentation by lazy {
         val publicKey = androidKeystore.getPublicKey(keyAlias) as? ECPublicKey
         if (publicKey != null)
-            getCoseRepresentation(publicKey)
+            getCoseRepresentation(publicKey, ECAlgorithm.Signature)
         else
             null
     }
@@ -642,6 +714,21 @@ class WebAuthnCredential(
             }.toTypedArray())
         }
 
+    val hasHmacSecret: Boolean
+        get() = androidKeystore.containsAlias(HMAC_SECRET_KEY_ALIAS_PREFIX + keyAlias)
+
+    fun signWithHmacSecret(vararg data: ByteArray): ByteArray? {
+        val secretKeyAlias = HMAC_SECRET_KEY_ALIAS_PREFIX + keyAlias
+        val secretKey = androidKeystore.getSecretKey(secretKeyAlias) ?: return null
+        return Mac.getInstance("HmacSHA256").run {
+            init(secretKey)
+            for (datum in data) {
+                update(datum)
+            }
+            doFinal()
+        }
+    }
+
     companion object {
         fun deserialize(str: String, rpIdHash: ByteArray): WebAuthnCredential? {
             val bytes = str.base64() ?: return null
@@ -682,8 +769,13 @@ private fun getUncompressedRepresentation(publicKey: ECPublicKey): ByteArray {
     return uncompressed.array()
 }
 
+enum class ECAlgorithm {
+    Signature,
+    KeyAgreement
+}
+
 @ExperimentalUnsignedTypes
-private fun getCoseRepresentation(publicKey: ECPublicKey): CborLongMap {
+private fun getCoseRepresentation(publicKey: ECPublicKey, algorithm: ECAlgorithm): CborLongMap {
     val xRaw = publicKey.w.affineX.toByteArray()
     require(xRaw.size <= 32 || (xRaw.size == 33 && xRaw[0] == 0.toByte())) { "Can only handle 256 bit keys." }
     val xPadded =
@@ -694,10 +786,14 @@ private fun getCoseRepresentation(publicKey: ECPublicKey): CborLongMap {
     val yPadded =
         ByteArray(max(32 - yRaw.size, 0)) + yRaw.slice(max(yRaw.size - 32, 0) until yRaw.size)
     check(yPadded.size == 32)
+    val template = when (algorithm) {
+        ECAlgorithm.Signature -> COSE_KEY_ES256_TEMPLATE
+        ECAlgorithm.KeyAgreement -> COSE_KEY_ECDH_TEMPLATE
+    }
     return CborLongMap(
-        COSE_KEY_ES256_TEMPLATE + mapOf(
-            COSE_KEY_ES256_X to CborByteString(xPadded),
-            COSE_KEY_ES256_Y to CborByteString(yPadded)
+        template + mapOf(
+            COSE_KEY_EC256_X to CborByteString(xPadded),
+            COSE_KEY_EC256_Y to CborByteString(yPadded)
         )
     )
 }

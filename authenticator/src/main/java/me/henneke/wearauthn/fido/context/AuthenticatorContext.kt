@@ -219,7 +219,8 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
     }
 
     fun getOrCreateFreshWebAuthnCredential(
-        residentKey: Boolean = false,
+        createResidentKey: Boolean = false,
+        createHmacSecret: Boolean = false,
         attestationChallenge: ByteArray? = null
     ): Pair<String, AttestationType>? {
         val useAndroidAttestation =
@@ -228,7 +229,7 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
             )
         val actualAttestationChallenge = if (useAndroidAttestation) attestationChallenge else null
 
-        if (useCachedCredential && !residentKey) {
+        if (useCachedCredential && !createResidentKey && !createHmacSecret) {
             synchronized(CACHED_CREDENTIAL_ALIAS_WRITE_LOCK) {
                 val keyAlias =
                     getCachedCredentialKeyAlias(context)
@@ -244,8 +245,9 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
         }
 
         val credential = generateWebAuthnCredential(
-            residentKey,
-            actualAttestationChallenge
+            createResidentKey = createResidentKey,
+            createHmacSecret = createHmacSecret,
+            attestationChallenge = actualAttestationChallenge
         )
         if (credential == null) {
             if (actualAttestationChallenge == null) {
@@ -261,7 +263,11 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
             }
             // Directly retry without attestation; explicitly set attestation challenge to null to
             // prevent an infinite loop in case shared preferences are flaky.
-            return getOrCreateFreshWebAuthnCredential(residentKey, null)
+            return getOrCreateFreshWebAuthnCredential(
+                createResidentKey = createResidentKey,
+                createHmacSecret = createHmacSecret,
+                attestationChallenge = null
+            )
         }
         return Pair(credential, AttestationType.ANDROID_KEYSTORE)
     }

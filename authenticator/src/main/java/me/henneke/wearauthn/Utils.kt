@@ -52,7 +52,8 @@ fun uIntOf(bytes: ByteArray, offset: Int = 0): UInt {
     return ByteBuffer.wrap(padding + bytes).getLong(offset).toUInt()
 }
 
-fun String.sha256(): ByteArray = MessageDigest.getInstance("SHA-256").digest(this.toByteArray())
+fun ByteArray.sha256(): ByteArray = MessageDigest.getInstance("SHA-256").digest(this)
+fun String.sha256(): ByteArray = this.toByteArray().sha256()
 fun String.sha256Hex(): String = Hex.bytesToStringUppercase(this.sha256())
 
 fun String.base64(): ByteArray? = try {
