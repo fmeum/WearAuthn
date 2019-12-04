@@ -325,7 +325,7 @@ private fun verifyWithMasterSigningKey(signature: ByteArray, vararg data: ByteAr
 
 data class Assertion(val authenticatorData: ByteArray, val signature: ByteArray) {
     init {
-        require(authenticatorData.size == 32 + 1 + 4)
+        require(authenticatorData.size >= 32 + 1 + 4)
     }
 }
 
