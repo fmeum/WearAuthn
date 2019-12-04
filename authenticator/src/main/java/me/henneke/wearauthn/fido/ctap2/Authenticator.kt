@@ -160,8 +160,7 @@ object Authenticator {
 
         // Step 4
         // We only validate the extension inputs here, the actual processing is done later.
-        val supportedExtensions =
-            validateExtensionInputs(extensions, REGISTER)
+        val activeExtensions = parseExtensionInputs(extensions, REGISTER)
 
         // Step 7
         // We do not support any PIN protocols
@@ -215,10 +214,11 @@ object Authenticator {
 
         // Step 4
         val extensionOutputs = processExtensions(
-            supportedExtensions,
-            credential,
-            true,
-            requireUserVerification
+            extensions = activeExtensions,
+            credential = credential,
+            requireUserPresence = true,
+            requireUserVerification = requireUserVerification,
+            action = REGISTER
         )
 
         // Step 11
@@ -309,10 +309,7 @@ object Authenticator {
 
         // Step 6
         // We only validate the extension inputs here, the actual processing is done later.
-        val supportedExtensions = validateExtensionInputs(
-            extensions,
-            AUTHENTICATE
-        )
+        val activeExtensions = parseExtensionInputs(extensions, AUTHENTICATE)
 
         // Step 1
         val useResidentKey = allowList == null
@@ -405,10 +402,11 @@ object Authenticator {
                     // Step 6
                     // Process extensions.
                     val extensionOutputs = processExtensions(
-                        extensions = supportedExtensions,
+                        extensions = activeExtensions,
                         credential = nextCredential,
                         requireUserPresence = requireUserPresence,
-                        requireUserVerification = requireUserVerification
+                        requireUserVerification = requireUserVerification,
+                        action = AUTHENTICATE
                     )
                     nextCredential.assertWebAuthn(
                         clientDataHash = clientDataHash,
@@ -433,10 +431,11 @@ object Authenticator {
             // Step 6
             // Process extensions.
             val extensionOutputs = processExtensions(
-                extensions = supportedExtensions,
+                extensions = activeExtensions,
                 credential = credential,
                 requireUserPresence = requireUserPresence,
-                requireUserVerification = requireUserVerification
+                requireUserVerification = requireUserVerification,
+                action = AUTHENTICATE
             )
             // Step 12
             credential.assertWebAuthn(
@@ -535,36 +534,37 @@ object Authenticator {
         }
     }
 
-    private fun validateExtensionInputs(
+    private fun parseExtensionInputs(
         extensions: Map<String, CborValue>?,
         action: AuthenticatorAction
-    ): Map<Extension, CborValue> {
+    ): Map<Extension, ExtensionInput> {
         if (extensions == null)
             return mapOf()
-        val extensionInputs = extensions.filterKeys { identifier ->
+        return extensions.filterKeys { identifier ->
             identifier in Extension.identifiers
-        }.mapKeys {
-            Extension.fromIdentifier(it.key)
-        }
-        // validateInput throws an appropriate exception if the input is not of the correct form.
-        for ((extension, input) in extensionInputs.entries)
-            extension.validateInput(input, action)
-        return extensionInputs
+        }.map {
+            val extension = Extension.fromIdentifier(it.key)
+            // parseInput throws an appropriate exception if the input is not of the correct form.
+            Pair(extension, extension.parseInput(it.value, action))
+        }.toMap()
     }
 
     private fun processExtensions(
-        extensions: Map<Extension, CborValue>,
+        extensions: Map<Extension, ExtensionInput>,
         credential: Credential,
         requireUserPresence: Boolean,
-        requireUserVerification: Boolean
+        requireUserVerification: Boolean,
+        action: AuthenticatorAction
     ): CborValue? {
         val extensionOutputs = extensions.mapValues {
             val extension = it.key
             processExtension(
                 extension,
+                it.value,
                 credential,
                 requireUserPresence,
-                requireUserVerification
+                requireUserVerification,
+                action
             )
         }
         return if (extensionOutputs.isEmpty())
@@ -575,13 +575,21 @@ object Authenticator {
 
     private fun processExtension(
         extension: Extension,
+        input: ExtensionInput,
         credential: Credential,
         userPresent: Boolean,
-        userVerified: Boolean
+        userVerified: Boolean,
+        action: AuthenticatorAction
     ): CborValue {
+        require(action == REGISTER || action == AUTHENTICATE)
         return when (extension) {
-            Extension.SupportedExtensions -> Extension.identifiersAsCbor
+            Extension.SupportedExtensions -> {
+                require(action == REGISTER)
+                require(input is NoInput)
+                Extension.identifiersAsCbor
+            }
             Extension.UserVerificationMethod -> {
+                require(input is NoInput)
                 val keyProtectionType =
                     if (credential.isKeyMaterialInTEE) KEY_PROTECTION_HARDWARE or KEY_PROTECTION_TEE else KEY_PROTECTION_SOFTWARE
                 val methods = mutableListOf<CborArray>()

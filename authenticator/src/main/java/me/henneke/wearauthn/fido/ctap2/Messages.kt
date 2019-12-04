@@ -124,21 +124,27 @@ val WEARAUTHN_AAGUID = byteArrayOf(
     0x8e.toByte(), 0x77, 0xe9.toByte(), 0x90.toByte(), 0xa6.toByte(), 0x2b, 0xfd.toByte(), 0x41
 )
 
+interface ExtensionInput
+
+object NoInput : ExtensionInput
+
 enum class Extension(val identifier: String) {
     SupportedExtensions("exts"),
     UserVerificationMethod("uvm");
 
-    fun validateInput(input: CborValue, action: AuthenticatorAction) {
-        when (this) {
+    fun parseInput(input: CborValue, action: AuthenticatorAction): ExtensionInput {
+        return when (this) {
             UserVerificationMethod -> {
                 if (!input.unbox<Boolean>())
                     CTAP_ERR(UnsupportedExtension, "Input was not 'true' for uvm")
+                NoInput
             }
             SupportedExtensions -> {
                 if (!input.unbox<Boolean>())
                     CTAP_ERR(UnsupportedExtension, "Input was not 'true' for exts")
                 if (action != AuthenticatorAction.REGISTER)
                     CTAP_ERR(UnsupportedExtension, "exts not supported during GetAssertion")
+                NoInput
             }
         }
     }
