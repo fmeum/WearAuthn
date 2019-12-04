@@ -329,7 +329,6 @@ object Authenticator {
             }
         } else {
             // Locate all rk credentials bound to the provided rpId
-            Log.i(TAG, "Locating resident credentials for $rpId")
             context.getResidentKeyUserIdsForRpId(rpIdHash).asSequence()
                 .mapNotNull { userId -> context.getResidentCredential(rpIdHash, userId.base64()) }
                 .sortedByDescending { it.creationDate }
