@@ -317,7 +317,7 @@ fun pokeMasterSigningKey() {
 }
 
 private fun verifyWithMasterSigningKey(signature: ByteArray, vararg data: ByteArray): Boolean {
-    return signWithMasterSigningKey(*data).contentEquals(signature)
+    return MessageDigest.isEqual(signWithMasterSigningKey(*data), signature)
 }
 
 data class Assertion(val authenticatorData: ByteArray, val signature: ByteArray) {
