@@ -172,7 +172,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
                     setOnPreferenceClickListener { true }
                 }
                 false -> {
-                    setIcon(R.drawable.ic_btn_settings)
+                    icon = context.getDrawable(R.drawable.ic_btn_settings)
                     isEnabled = true
                     setTitle(R.string.title_nfc_preference)
                     setSummary(R.string.status_nfc_tap_and_enable)
