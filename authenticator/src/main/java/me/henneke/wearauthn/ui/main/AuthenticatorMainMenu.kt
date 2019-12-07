@@ -165,7 +165,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
         nfcSettingsPreference.apply {
             when (nfcManager?.defaultAdapter?.isEnabled) {
                 true -> {
-                    setIcon(0)
+                    icon = null
                     isEnabled = true
                     title = null
                     setSummary(R.string.status_nfc_explanation)
@@ -179,7 +179,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
                     onPreferenceClickListener = null
                 }
                 null -> {
-                    setIcon(0)
+                    icon = null
                     isEnabled = false
                     setTitle(R.string.title_nfc_preference)
                     setSummary(R.string.status_nfc_not_available)
