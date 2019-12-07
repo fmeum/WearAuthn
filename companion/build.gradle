@@ -13,8 +13,8 @@ android {
         applicationId "me.henneke.wearauthn.authenticator"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 129090
-        versionName "0.9.0"
+        versionCode 129091
+        versionName "0.9.1"
     }
     signingConfigs {
         testSign {

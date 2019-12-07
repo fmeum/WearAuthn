@@ -22,8 +22,8 @@ android {
         applicationId "me.henneke.wearauthn.authenticator"
         minSdkVersion 28
         targetSdkVersion 29
-        versionCode 228090
-        versionName "0.9.0"
+        versionCode 228091
+        versionName "0.9.1"
     }
     buildTypes {
         release {

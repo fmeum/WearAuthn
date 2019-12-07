@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">WearAuthn</string>
-    <string name="changelog"><![CDATA[<h4>Recent changes</h4><b>Version 0.9.0</b><br/>• First beta release]]></string>
+    <string name="changelog"><![CDATA[<h4>Recent changes</h4><b>Version 0.9.1</b><br/>• Verify master key signatures in constant time<br/><br/><b>Version 0.9.0</b><br/>• First beta release]]></string>
     <string name="url_new_issue">https://github.com/FabianHenneke/WearAuthn/issues/new?assignees=FabianHenneke&amp;template=bug_report.md</string>
     <string name="label_purchase_button_purchased">Purchased</string>
     <string name="label_purchase_button_pending">Purchase pending</string>
