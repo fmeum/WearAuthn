@@ -53,7 +53,8 @@ private fun generateSymmetricKey(
     builder: KeyGenParameterSpec.Builder
 ): SecretKey? {
     return try {
-        val kpg = KeyGenerator.getInstance(algorithm,
+        val kpg = KeyGenerator.getInstance(
+            algorithm,
             PROVIDER_ANDROID_KEYSTORE
         )
         val parameterSpec = builder.build()
@@ -72,7 +73,8 @@ private fun generateSymmetricKey(
 private fun generateEllipticCurveKey(builder: KeyGenParameterSpec.Builder): KeyPair? {
     return try {
         val kpg =
-            KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC,
+            KeyPairGenerator.getInstance(
+                KeyProperties.KEY_ALGORITHM_EC,
                 PROVIDER_ANDROID_KEYSTORE
             )
         val parameterSpec = builder.build()
@@ -213,7 +215,8 @@ fun armUserVerificationFuse(context: Context) {
     if (generateSymmetricKey(
             KeyProperties.KEY_ALGORITHM_HMAC_SHA256,
             parameterSpec
-        ) != null)
+        ) != null
+    )
         Log.i(TAG, "Armed user verification fuse")
     else
         Log.e(TAG, "Failed to arm user verification fuse")
@@ -704,7 +707,8 @@ private fun getKeyInfo(keyAlias: String): KeyInfo? {
         when (val key = androidKeystore.getKey(keyAlias, null)) {
             is SecretKey -> {
                 val factory =
-                    SecretKeyFactory.getInstance(key.getAlgorithm(),
+                    SecretKeyFactory.getInstance(
+                        key.getAlgorithm(),
                         PROVIDER_ANDROID_KEYSTORE
                     )
                 try {
@@ -714,7 +718,8 @@ private fun getKeyInfo(keyAlias: String): KeyInfo? {
                 }
             }
             is PrivateKey -> {
-                val factory = KeyFactory.getInstance(key.getAlgorithm(),
+                val factory = KeyFactory.getInstance(
+                    key.getAlgorithm(),
                     PROVIDER_ANDROID_KEYSTORE
                 )
                 try {
