@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">WearAuthn</string>
-    <string name="changelog"><![CDATA[<h4>Recent changes</h4><b>Version 0.9.3</b><br/>• Updated Android libraries<br/>• Fix the visibility of the NFC settings icon<br/><br/><b>Version 0.9.2</b><br/>• Fix a crash when the NFC state changes<br/><br/><b>Version 0.9.1</b><br/>• Verify master key signatures in constant time]]></string>
+    <string name="changelog"><![CDATA[<h4>Recent changes</h4><b>Version 0.9.4</b><br/>• Added support for offline login via the "hmac-secret" extension<br/>• Fixed a crash when extensions were requested with an assertion<br/><br/><b>Version 0.9.3</b><br/>• Updated Android libraries<br/>• Fixed the visibility of the NFC settings icon<br/><br/><b>Version 0.9.2</b><br/>• Fixed a crash when the NFC state changes<br/><br/><b>Version 0.9.1</b><br/>• Made signature verification constant-time]]></string>
     <string name="url_new_issue">https://github.com/FabianHenneke/WearAuthn/issues/new?assignees=FabianHenneke&amp;template=bug_report.md</string>
     <string name="label_purchase_button_purchased">Purchased</string>
     <string name="label_purchase_button_pending">Purchase pending</string>
