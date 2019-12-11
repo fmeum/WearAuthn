@@ -42,6 +42,10 @@
         {
             "id": "exts",
             "fail_if_unknown": false
+        },
+        {
+            "id": "hmac-secret",
+            "fail_if_unknown": false
         }
     ],
     "attestationRootCertificates": [
