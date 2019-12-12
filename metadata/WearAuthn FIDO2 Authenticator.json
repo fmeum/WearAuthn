@@ -34,7 +34,8 @@
     "matcherProtection": 1,
     "attachmentHint": 30,
     "isSecondFactorOnly": false,
-    "tcDisplay": 0,
+    "tcDisplay": 17,
+    "tcDisplayContentType": "text/plain",
     "supportedExtensions": [{
             "id": "uvm",
             "fail_if_unknown": false
@@ -45,6 +46,10 @@
         },
         {
             "id": "hmac-secret",
+            "fail_if_unknown": false
+        },
+        {
+            "id": "txAuthSimple",
             "fail_if_unknown": false
         }
     ],

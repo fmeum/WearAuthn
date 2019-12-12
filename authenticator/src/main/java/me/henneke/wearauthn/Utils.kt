@@ -74,3 +74,19 @@ fun String.escapeHtml(): String = TextUtils.htmlEncode(this)
 
 fun String.truncate(targetLength: Int): String =
     if (length > targetLength) this.take(targetLength - 1) + "…" else this
+
+fun String.breakAt(lineBreaks: List<Int>): String? {
+    if (this == "")
+        return ""
+    val lineRanges = (listOf(0) + lineBreaks + listOf(length)).zipWithNext()
+    if (!lineRanges.all { (start, end) -> start < end })
+        return null
+
+    return lineRanges.map { (start, end) ->
+        val line = substring(start until end)
+        if (line.last() == '\n' || end == length)
+            line
+        else
+            line + '\n'
+    }.joinToString(separator = "")
+}

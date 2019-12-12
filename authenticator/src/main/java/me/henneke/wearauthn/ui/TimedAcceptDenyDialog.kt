@@ -24,7 +24,9 @@ import android.content.DialogInterface
 import android.os.PowerManager
 import android.os.PowerManager.ACQUIRE_CAUSES_WAKEUP
 import android.os.PowerManager.FULL_WAKE_LOCK
+import android.util.Log
 import android.view.View
+import android.view.ViewTreeObserver
 import kotlinx.android.synthetic.main.timed_accept_deny_dialog.*
 import me.henneke.wearauthn.R
 
@@ -34,6 +36,9 @@ private const val DEFAULT_TIMEOUT = 5_000L
 
 
 class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
+
+    var messageLineBreaks: List<Int>? = null
+        private set
 
     private var wakeOnShow = false
     private var vibrateOnShow = false
@@ -66,6 +71,19 @@ class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
         negativeButton.setOnClickListener(actionHandler)
         negativeTimeout.setOnTimerFinishedListener(actionHandler)
         positiveButton.setOnClickListener(actionHandler)
+        // The txAuthSimple extension requires us to record the line breaks inserted into the
+        // message by the text rendering engine. This information can only be extracted reliably
+        // right before a draw. Since we do not expect the message to change after the dialog is
+        // shown, we remove the listener after the text layout has been obtained once.
+        messageView.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                if (messageView.layout != null) {
+                    computeMessageLineBreaks()
+                    messageView.viewTreeObserver.removeOnPreDrawListener(this)
+                }
+                return true
+            }
+        })
     }
 
     override fun onStart() {
@@ -157,5 +175,11 @@ class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
 
     fun setWakeOnShow(wakeOnShow: Boolean) {
         this.wakeOnShow = wakeOnShow
+    }
+
+    private fun computeMessageLineBreaks() {
+        val layout = messageView.layout
+        if (layout != null)
+            messageLineBreaks = (0 until layout.lineCount - 1).map { layout.getLineEnd(it) }
     }
 }

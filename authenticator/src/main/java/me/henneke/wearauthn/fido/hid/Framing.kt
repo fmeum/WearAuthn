@@ -415,7 +415,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                             // CONDITIONS_NOT_SATISFIED while waiting.
                             activeU2fConfirmation = U2fContinuation(
                                 message,
-                                async { authenticatorContext.confirmWithUser(requestInfo) },
+                                async { authenticatorContext.confirmRequestWithUser(requestInfo) },
                                 cont
                             )
                             rearmU2fRetryTimeout()

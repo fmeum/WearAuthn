@@ -1,6 +1,7 @@
 package me.henneke.wearauthn.fido.ctap2
 
 import android.util.Log
+import kotlinx.coroutines.delay
 import me.henneke.wearauthn.*
 import me.henneke.wearauthn.fido.context.*
 import me.henneke.wearauthn.fido.context.AuthenticatorAction.*
@@ -112,7 +113,7 @@ object Authenticator {
                 "Received a Chrome GetTouchRequest, replying with dummy response after confirmation"
             )
             val requestInfo = Ctap2RequestInfo(REQUIREMENTS_NOT_MET_CHROME, rpId)
-            val showErrorInBrowser = context.confirmWithUser(requestInfo)
+            val showErrorInBrowser = context.confirmRequestWithUser(requestInfo)
             if (showErrorInBrowser)
                 return DUMMY_MAKE_CREDENTIAL_RESPONSE
             else
@@ -130,7 +131,7 @@ object Authenticator {
                         rpId = rpId,
                         rpName = rpName
                     )
-                val revealRegistration = context.confirmWithUser(requestInfo)
+                val revealRegistration = context.confirmRequestWithUser(requestInfo)
                 if (revealRegistration)
                     CTAP_ERR(CredentialExcluded)
                 else
@@ -166,7 +167,11 @@ object Authenticator {
 
         // Step 4
         // We only validate the extension inputs here, the actual processing is done later.
-        val activeExtensions = parseExtensionInputs(extensions, REGISTER)
+        val activeExtensions = parseExtensionInputs(
+            extensions = extensions,
+            action = REGISTER,
+            canUseDisplay = context.isHidTransport
+        )
 
         // Step 7
         // We do not support any PIN protocols
@@ -184,7 +189,7 @@ object Authenticator {
             requiresUserVerification = requireUserVerification
         )
 
-        if (!context.confirmWithUser(requestInfo))
+        if (!context.confirmRequestWithUser(requestInfo))
             CTAP_ERR(OperationDenied)
 
         if (requireUserVerification && !context.verifyUser())
@@ -316,12 +321,20 @@ object Authenticator {
 
         // Step 6
         // We only validate the extension inputs here, the actual processing is done later.
-        val activeExtensions = parseExtensionInputs(extensions, AUTHENTICATE)
+        val activeExtensions = parseExtensionInputs(
+            extensions = extensions,
+            action = AUTHENTICATE,
+            canUseDisplay = context.isHidTransport
+        ).toMutableMap()
 
         // hmac-secret requires user presence, but the spec is not clear on whether this has to be
         // obtained separately
         if (activeExtensions.containsKey(Extension.HmacSecret))
             requireUserPresence = true
+        if (activeExtensions.containsKey(Extension.TxAuthSimple)) {
+            if (!requireUserPresence && !requireUserVerification)
+                requireUserPresence = true
+        }
 
         // Step 1
         val useResidentKey = allowList == null
@@ -361,6 +374,24 @@ object Authenticator {
 
         // Step 7
 
+        // txAuthSimple leads to a prompt that the user has to confirm. This prompt has to be shown
+        // before the usual user presence check as per spec, but we omit it if there are no
+        // applicable credentials.
+        if (activeExtensions.containsKey(Extension.TxAuthSimple) && numberOfCredentials > 0) {
+            val txAuthSimpleInput =
+                activeExtensions[Extension.TxAuthSimple] as TxAuthSimpleAuthenticateInput
+            // The actual prompt confirmed by the user differs from the requested prompt only by
+            // potentially containing additional newlines. We simply replace the extension input
+            // with the prompt that was actually shown to keep extension handling simple.
+            val actualPrompt = context.confirmTransactionWithUser(rpId, txAuthSimpleInput.prompt)
+                ?: CTAP_ERR(OperationDenied)
+            activeExtensions[Extension.TxAuthSimple] = TxAuthSimpleAuthenticateInput(actualPrompt)
+            // Introduce a small delay between the transaction confirmation and the usual
+            // GetAssertion confirmation, otherwise the user may inadvertently confirm both with one
+            // tap.
+            delay(500)
+        }
+
         // Since requests requiring user verification may ask the user to confirm their device
         // credentials, we upgrade them to also require user presence.
         if (requireUserVerification)
@@ -383,7 +414,7 @@ object Authenticator {
             // We have not found any credentials, ask the user for permission to reveal this fact.
             Ctap2RequestInfo(AUTHENTICATE_NO_CREDENTIALS, rpId)
         }
-        if (requireUserPresence && !context.confirmWithUser(requestInfo))
+        if (requireUserPresence && !context.confirmRequestWithUser(requestInfo))
             CTAP_ERR(OperationDenied)
         if (!requireUserPresence)
             Log.i(TAG, "Processing silent GetAssertion request")
@@ -492,7 +523,11 @@ object Authenticator {
                         CborTextString("U2F_V2")
                     )
                 ),
-                GET_INFO_RESPONSE_EXTENSIONS to Extension.identifiersAsCbor,
+                GET_INFO_RESPONSE_EXTENSIONS to
+                        if (context.isHidTransport)
+                            Extension.identifiersAsCbor
+                        else
+                            Extension.noDisplayIdentifiersAsCbor,
                 GET_INFO_RESPONSE_AAGUID to CborByteString(WEARAUTHN_AAGUID),
                 GET_INFO_RESPONSE_OPTIONS to CborTextStringMap(optionsMap),
                 GET_INFO_RESPONSE_MAX_MSG_SIZE to CborLong(MAX_CBOR_MSG_SIZE),
@@ -568,7 +603,8 @@ object Authenticator {
 
     private fun parseExtensionInputs(
         extensions: Map<String, CborValue>?,
-        action: AuthenticatorAction
+        action: AuthenticatorAction,
+        canUseDisplay: Boolean
     ): Map<Extension, ExtensionInput> {
         if (extensions == null)
             return mapOf()
@@ -577,7 +613,7 @@ object Authenticator {
         }.map {
             val extension = Extension.fromIdentifier(it.key)
             // parseInput throws an appropriate exception if the input is not of the correct form.
-            Pair(extension, extension.parseInput(it.value, action))
+            Pair(extension, extension.parseInput(it.value, action, canUseDisplay))
         }.toMap()
     }
 
@@ -651,6 +687,13 @@ object Authenticator {
                 require(action == REGISTER)
                 require(input is NoInput)
                 Extension.identifiersAsCbor
+            }
+            Extension.TxAuthSimple -> {
+                require(action == AUTHENTICATE)
+                require(input is TxAuthSimpleAuthenticateInput)
+                // At this point, either we have returned an OperationDenied error or the user has
+                // confirmed the prompt (with added line breaks).
+                CborTextString(input.prompt)
             }
             Extension.UserVerificationMethod -> {
                 require(input is NoInput)

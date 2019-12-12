@@ -21,6 +21,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import me.henneke.wearauthn.R
+import me.henneke.wearauthn.breakAt
 import me.henneke.wearauthn.bthid.*
 import me.henneke.wearauthn.complication.ShortcutComplicationProviderService
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
@@ -208,8 +209,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
                 // a special status.
             }
 
-            override suspend fun confirmWithUser(info: RequestInfo): Boolean {
-                val message = info.confirmationPrompt
+            override suspend fun confirmRequestWithUser(info: RequestInfo): Boolean {
                 return try {
                     status = AuthenticatorStatus.WAITING_FOR_UP
                     withContext(Dispatchers.Main) {
@@ -217,7 +217,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
                             TimedAcceptDenyDialog(this@AuthenticatorAttachedActivity)
                                 .apply {
                                     setIcon(R.drawable.ic_launcher_outline)
-                                    setMessage(message)
+                                    setMessage(info.confirmationPrompt)
                                     setTimeout(HID_USER_PRESENCE_TIMEOUT_MS)
                                     setVibrateOnShow(true)
                                     setWakeOnShow(true)
@@ -229,6 +229,43 @@ class AuthenticatorAttachedActivity : WearableActivity() {
                                 })
                                 setNegativeButton(DialogInterface.OnClickListener { _, _ ->
                                     continuation.resume(false)
+                                })
+                            }.show()
+                            continuation.invokeOnCancellation {
+                                dialog.dismiss()
+                            }
+                        }
+                    }
+                } finally {
+                    status = AuthenticatorStatus.PROCESSING
+                }
+            }
+
+            override suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String? {
+                return try {
+                    status = AuthenticatorStatus.WAITING_FOR_UP
+                    withContext(Dispatchers.Main) {
+                        val dialog =
+                            TimedAcceptDenyDialog(this@AuthenticatorAttachedActivity)
+                                .apply {
+                                    setIcon(R.drawable.ic_launcher_outline)
+                                    setTitle(rpId)
+                                    setMessage(prompt)
+                                    setTimeout(HID_USER_PRESENCE_TIMEOUT_MS)
+                                    setVibrateOnShow(true)
+                                    setWakeOnShow(true)
+                                }
+                        suspendCancellableCoroutine<String?> { continuation ->
+                            dialog.apply {
+                                setPositiveButton(DialogInterface.OnClickListener { _, _ ->
+                                    val lineBreaks = messageLineBreaks
+                                    if (lineBreaks == null)
+                                        continuation.resume(null)
+                                    else
+                                        continuation.resume(prompt.breakAt(lineBreaks))
+                                })
+                                setNegativeButton(DialogInterface.OnClickListener { _, _ ->
+                                    continuation.resume(null)
                                 })
                             }.show()
                             continuation.invokeOnCancellation {

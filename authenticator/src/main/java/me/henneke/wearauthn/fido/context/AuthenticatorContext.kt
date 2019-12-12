@@ -18,7 +18,9 @@ import kotlinx.coroutines.*
 import me.henneke.wearauthn.base64
 import me.henneke.wearauthn.escapeHtml
 import me.henneke.wearauthn.fido.context.AuthenticatorAction.*
-import me.henneke.wearauthn.fido.ctap2.*
+import me.henneke.wearauthn.fido.ctap2.AttestationType
+import me.henneke.wearauthn.fido.ctap2.CTAP_ERR
+import me.henneke.wearauthn.fido.ctap2.CborValue
 import me.henneke.wearauthn.fido.ctap2.CtapError.OperationDenied
 import me.henneke.wearauthn.fido.ctap2.CtapError.Other
 import me.henneke.wearauthn.fido.u2f.resolveAppIdHash
@@ -187,7 +189,8 @@ enum class AuthenticatorSpecialStatus {
 abstract class AuthenticatorContext(val isHidTransport: Boolean) {
     abstract fun notifyUser(info: RequestInfo)
     abstract fun handleSpecialStatus(specialStatus: AuthenticatorSpecialStatus)
-    abstract suspend fun confirmWithUser(info: RequestInfo): Boolean
+    abstract suspend fun confirmRequestWithUser(info: RequestInfo): Boolean
+    abstract suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String?
 
     // We use cached credentials only over NFC, where low latency responses are very important
     private val useCachedCredential = !isHidTransport

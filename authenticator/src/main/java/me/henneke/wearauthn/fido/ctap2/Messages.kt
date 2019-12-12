@@ -160,13 +160,20 @@ data class HmacSecretAuthenticateInput(
     val saltAuth: ByteArray
 ) : ExtensionInput
 
+data class TxAuthSimpleAuthenticateInput(val prompt: String) : ExtensionInput
+
 enum class Extension(val identifier: String) {
     HmacSecret("hmac-secret"),
     SupportedExtensions("exts"),
+    TxAuthSimple("txAuthSimple"),
     UserVerificationMethod("uvm");
 
     @ExperimentalUnsignedTypes
-    fun parseInput(input: CborValue, action: AuthenticatorAction): ExtensionInput {
+    fun parseInput(
+        input: CborValue,
+        action: AuthenticatorAction,
+        canUseDisplay: Boolean
+    ): ExtensionInput {
         require(action == AUTHENTICATE || action == REGISTER)
         return when (this) {
             HmacSecret -> {
@@ -232,6 +239,18 @@ enum class Extension(val identifier: String) {
                     CTAP_ERR(InvalidParameter, "Input was not 'true' for exts")
                 NoInput
             }
+            TxAuthSimple -> {
+                if (action != AUTHENTICATE)
+                    CTAP_ERR(InvalidParameter, "txAuthSimple not supported during MakeCredential")
+                // txAuthSimple requires interactive confirmation and therefore requires a transport
+                // that can use the display.
+                if (!canUseDisplay)
+                    CTAP_ERR(UnsupportedExtension)
+                val prompt = input.unbox<String>()
+                if (prompt.isBlank())
+                    CTAP_ERR(InvalidParameter, "Input was only whitespace for txAuthSimple")
+                TxAuthSimpleAuthenticateInput(prompt)
+            }
             UserVerificationMethod -> {
                 if (!input.unbox<Boolean>())
                     CTAP_ERR(InvalidParameter, "Input was not 'true' for uvm")
@@ -242,9 +261,13 @@ enum class Extension(val identifier: String) {
 
     companion object {
         val identifiers = values().map { it.identifier }
+        val noDisplayIdentifiers = values().filter { it != TxAuthSimple }.map { it.identifier }
 
         @ExperimentalUnsignedTypes
         val identifiersAsCbor = CborArray(identifiers.map { CborTextString(it) }.toTypedArray())
+        @ExperimentalUnsignedTypes
+        val noDisplayIdentifiersAsCbor =
+            CborArray(noDisplayIdentifiers.map { CborTextString(it) }.toTypedArray())
 
         fun fromIdentifier(identifier: String) =
             requireNotNull(values().associateBy(Extension::identifier)[identifier])

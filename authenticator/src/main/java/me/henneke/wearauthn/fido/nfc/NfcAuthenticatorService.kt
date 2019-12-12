@@ -15,11 +15,9 @@ import me.henneke.wearauthn.fido.ApduException
 import me.henneke.wearauthn.fido.CommandApdu
 import me.henneke.wearauthn.fido.ResponseApdu
 import me.henneke.wearauthn.fido.StatusWord
-import me.henneke.wearauthn.fido.context.AuthenticatorContext
-import me.henneke.wearauthn.fido.context.AuthenticatorSpecialStatus
+import me.henneke.wearauthn.fido.context.*
 import me.henneke.wearauthn.fido.context.AuthenticatorSpecialStatus.RESET
 import me.henneke.wearauthn.fido.context.AuthenticatorSpecialStatus.USER_NOT_AUTHENTICATED
-import me.henneke.wearauthn.fido.context.RequestInfo
 import me.henneke.wearauthn.fido.ctap2.Authenticator
 import me.henneke.wearauthn.ui.isDoNotDisturbEnabled
 import me.henneke.wearauthn.ui.showToast
@@ -218,9 +216,13 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
             }
         }
 
-        override suspend fun confirmWithUser(info: RequestInfo): Boolean {
+        override suspend fun confirmRequestWithUser(info: RequestInfo): Boolean {
             // User presence is always certain with NFC transport.
             return true
+        }
+
+        override suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String? {
+            throw IllegalStateException("Transaction confirmation not possible via NFC")
         }
     }
 
