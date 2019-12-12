@@ -2,6 +2,8 @@ package me.henneke.wearauthn.fido.ctap2
 
 import android.util.Log
 import me.henneke.wearauthn.fido.context.AuthenticatorAction
+import me.henneke.wearauthn.fido.context.AuthenticatorAction.AUTHENTICATE
+import me.henneke.wearauthn.fido.context.AuthenticatorAction.REGISTER
 import me.henneke.wearauthn.fido.context.authenticatorKeyAgreementParams
 import me.henneke.wearauthn.fido.ctap2.CtapError.*
 import java.io.ByteArrayOutputStream
@@ -165,10 +167,11 @@ enum class Extension(val identifier: String) {
 
     @ExperimentalUnsignedTypes
     fun parseInput(input: CborValue, action: AuthenticatorAction): ExtensionInput {
+        require(action == AUTHENTICATE || action == REGISTER)
         return when (this) {
             HmacSecret -> {
                 when (action) {
-                    AuthenticatorAction.AUTHENTICATE -> {
+                    AUTHENTICATE -> {
                         val cosePublicKey = input.getRequired(HMAC_SECRET_KEY_AGREEMENT)
                         if (cosePublicKey !is CborLongMap || cosePublicKey.value.size != 5)
                             CTAP_ERR(InvalidParameter, "Invalid COSE as hmac-secret keyAgreement")
@@ -211,10 +214,10 @@ enum class Extension(val identifier: String) {
                         val publicKey = keyFactory.generatePublic(publicSpec) as ECPublicKey
                         HmacSecretAuthenticateInput(publicKey, saltEnc, saltAuth)
                     }
-                    AuthenticatorAction.REGISTER -> {
+                    REGISTER -> {
                         if (!input.unbox<Boolean>())
                             CTAP_ERR(
-                                UnsupportedExtension,
+                                InvalidParameter,
                                 "Input was not 'true' for hmac-secret in MakeCredential"
                             )
                         NoInput
@@ -222,16 +225,16 @@ enum class Extension(val identifier: String) {
                     else -> throw IllegalStateException("action must be AUTHENTICATE or REGISTER")
                 }
             }
-            UserVerificationMethod -> {
+            SupportedExtensions -> {
+                if (action != REGISTER)
+                    CTAP_ERR(InvalidParameter, "exts not supported during GetAssertion")
                 if (!input.unbox<Boolean>())
-                    CTAP_ERR(UnsupportedExtension, "Input was not 'true' for uvm")
+                    CTAP_ERR(InvalidParameter, "Input was not 'true' for exts")
                 NoInput
             }
-            SupportedExtensions -> {
+            UserVerificationMethod -> {
                 if (!input.unbox<Boolean>())
-                    CTAP_ERR(UnsupportedExtension, "Input was not 'true' for exts")
-                if (action != AuthenticatorAction.REGISTER)
-                    CTAP_ERR(UnsupportedExtension, "exts not supported during GetAssertion")
+                    CTAP_ERR(InvalidParameter, "Input was not 'true' for uvm")
                 NoInput
             }
         }
