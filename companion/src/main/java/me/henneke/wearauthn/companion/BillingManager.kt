@@ -7,6 +7,8 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.android.billingclient.api.*
+import com.android.billingclient.api.BillingClient.*
+import com.android.billingclient.api.Purchase.*
 import java.security.KeyFactory
 import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
@@ -31,7 +33,7 @@ class BillingManager private constructor(private val application: Application) :
         get() = _isBillingReady
 
     fun connect() {
-        billingClient = BillingClient.newBuilder(application.applicationContext).run {
+        billingClient = newBuilder(application.applicationContext).run {
             enablePendingPurchases()
             setListener(this@BillingManager).build()
         }
@@ -44,7 +46,7 @@ class BillingManager private constructor(private val application: Application) :
     }
 
     fun updatePurchases() {
-        billingClient.queryPurchases(BillingClient.SkuType.INAPP)?.purchasesList?.forEach {
+        billingClient.queryPurchases(SkuType.INAPP).purchasesList?.forEach {
             process(it)
         }
     }
@@ -72,12 +74,12 @@ class BillingManager private constructor(private val application: Application) :
 
         val params = SkuDetailsParams.newBuilder().run {
             setSkusList(WearAuthnInAppProduct.values().map { it.sku })
-            setType(BillingClient.SkuType.INAPP)
+            setType(SkuType.INAPP)
             build()
         }
         billingClient.querySkuDetailsAsync(params) { result, skuDetails ->
             when (result.responseCode) {
-                BillingClient.BillingResponseCode.OK -> {
+                BillingResponseCode.OK -> {
                     skuDetails?.forEach { details ->
                         WearAuthnInAppProduct.fromString(details.sku)?.let { product ->
                             _skusLiveData[product]?.value = details
@@ -90,13 +92,13 @@ class BillingManager private constructor(private val application: Application) :
 
     private fun process(purchase: Purchase) {
         when (purchase.purchaseState) {
-            Purchase.PurchaseState.PURCHASED -> {
+            PurchaseState.PURCHASED -> {
                 if (isValid(purchase)) {
                     realizePurchase(purchase)
                     acknowledgePurchase(purchase)
                 }
             }
-            Purchase.PurchaseState.PENDING -> {
+            PurchaseState.PENDING -> {
                 when (WearAuthnInAppProduct.fromString(purchase.sku)) {
                     WearAuthnInAppProduct.Complication -> {
                         _isComplicationUnlockedLiveData.postValue(null)
@@ -119,8 +121,6 @@ class BillingManager private constructor(private val application: Application) :
     }
 
     private fun isValid(purchase: Purchase): Boolean {
-        if (purchase.signature == null || purchase.originalJson == null)
-            return false
         val signature = purchase.signature.base64() ?: return false
         return Signature.getInstance("SHA1withRSA").run {
             initVerify(googlePlayPublicKey)
@@ -149,7 +149,7 @@ class BillingManager private constructor(private val application: Application) :
             build()
         }
         billingClient.acknowledgePurchase(params) { result ->
-            if (result.responseCode != BillingClient.BillingResponseCode.OK)
+            if (result.responseCode != BillingResponseCode.OK)
                 Log.e(TAG, "Failed to acknowledge purchase: ${result.debugMessage}")
         }
     }
@@ -161,7 +161,7 @@ class BillingManager private constructor(private val application: Application) :
     }
 
     override fun onBillingSetupFinished(billingResult: BillingResult) {
-        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+        if (billingResult.responseCode == BillingResponseCode.OK) {
             _isBillingReady.postValue(true)
             updateSkus()
             updatePurchases()
@@ -175,9 +175,9 @@ class BillingManager private constructor(private val application: Application) :
         purchases: MutableList<Purchase>?
     ) {
         when (billingResult.responseCode) {
-            BillingClient.BillingResponseCode.OK -> purchases?.forEach { process(it) }
-            BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> updatePurchases()
-            BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> connect()
+            BillingResponseCode.OK -> purchases?.forEach { process(it) }
+            BillingResponseCode.ITEM_ALREADY_OWNED -> updatePurchases()
+            BillingResponseCode.SERVICE_DISCONNECTED -> connect()
             else -> Log.i(TAG, billingResult.debugMessage)
 
         }

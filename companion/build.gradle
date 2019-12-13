@@ -52,7 +52,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel:2.1.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.1.0'
 
-    implementation 'com.android.billingclient:billing:2.0.3'
+    implementation 'com.android.billingclient:billing:2.1.0'
+    implementation 'com.android.billingclient:billing-ktx:2.1.0'
 
     implementation 'com.google.android.gms:play-services-tasks:17.0.0'
     implementation 'com.google.android.gms:play-services-wearable:17.0.0'
