@@ -1,128 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context=".ui.main.MainFragment">
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/complicationUnlockCard"
+    <LinearLayout
+        android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:visibility="gone"
-        card_view:cardCornerRadius="4dp"
-        card_view:contentPadding="8dp"
-        tools:visibility="visible">
+        android:orientation="vertical">
 
-        <RelativeLayout
+        <androidx.cardview.widget.CardView
+            android:id="@+id/complicationUnlockCard"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:visibility="gone"
+            card_view:cardCornerRadius="4dp"
+            card_view:contentPadding="8dp"
+            tools:visibility="visible">
 
-            <TextView
-                android:id="@+id/complicationUnlockTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                android:layout_alignParentStart="@id/complicationUnlockPrice"
-                android:text="@string/title_complication_unlock_card"/>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/complicationUnlockPrice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_alignBaseline="@id/complicationUnlockTitle"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                tools:text="$1.99 (+tax)"/>
+                <TextView
+                    android:id="@+id/complicationUnlockTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="@id/complicationUnlockPrice"
+                    android:text="@string/title_complication_unlock_card"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
 
-            <TextView
-                android:id="@+id/complicationUnlockDescription"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/complicationUnlockTitle"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-                android:text="@string/description_complication_unlock_card"/>
+                <TextView
+                    android:id="@+id/complicationUnlockPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBaseline="@id/complicationUnlockTitle"
+                    android:layout_alignParentEnd="true"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                    tools:text="$1.99 (+tax)" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/complicationUnlockPurchase"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/complicationUnlockDescription"
-                android:layout_alignParentEnd="true"
-                tools:text="Purchase"
-                tools:enabled="true" />
+                <TextView
+                    android:id="@+id/complicationUnlockDescription"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/complicationUnlockTitle"
+                    android:text="@string/description_complication_unlock_card"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
 
-        </RelativeLayout>
-    </androidx.cardview.widget.CardView>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/complicationUnlockPurchase"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/complicationUnlockDescription"
+                    android:layout_alignParentEnd="true"
+                    tools:enabled="true"
+                    tools:text="Purchase" />
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/installWatchAppCard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        card_view:cardCornerRadius="4dp"
-        card_view:contentPadding="8dp">
+            </RelativeLayout>
+        </androidx.cardview.widget.CardView>
 
-        <LinearLayout
-            android:orientation="vertical"
+        <androidx.cardview.widget.CardView
+            android:id="@+id/installWatchAppCard"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                android:text="@string/title_install_watch_card"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-                android:text="@string/description_install_watch_card"/>
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            card_view:cardCornerRadius="4dp"
+            card_view:contentPadding="8dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/installWatchAppScreenshot1"
-                    android:layout_width="wrap_content"
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_margin="8dp"
-                    android:adjustViewBounds="true"
-                    android:src="@mipmap/install_wear_app_1" />
+                    android:text="@string/title_install_watch_card"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
 
-                <ImageView
-                    android:id="@+id/installWatchAppScreenshot2"
-                    android:layout_width="wrap_content"
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_margin="8dp"
-                    android:adjustViewBounds="true"
-                    android:src="@mipmap/install_wear_app_2" />
+                    android:text="@string/description_install_watch_card"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/installWatchAppScreenshot1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="8dp"
+                        android:layout_weight="1"
+                        android:adjustViewBounds="true"
+                        android:src="@mipmap/install_wear_app_1" />
+
+                    <ImageView
+                        android:id="@+id/installWatchAppScreenshot2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="8dp"
+                        android:layout_weight="1"
+                        android:adjustViewBounds="true"
+                        android:src="@mipmap/install_wear_app_2" />
+                </LinearLayout>
+
             </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        card_view:cardCornerRadius="4dp"
-        card_view:contentPadding="8dp">
-
-        <TextView
-            android:id="@+id/changelogView"
-            android:layout_width="wrap_content"
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:text="@string/changelog" />
-    </androidx.cardview.widget.CardView>
+            android:layout_margin="8dp"
+            card_view:cardCornerRadius="4dp"
+            card_view:contentPadding="8dp">
 
-</LinearLayout>
+            <TextView
+                android:id="@+id/changelogView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="@string/changelog" />
+        </androidx.cardview.widget.CardView>
+    </LinearLayout>
+</ScrollView>
