@@ -467,8 +467,12 @@ object Authenticator {
             // Step 12
             assertionOperationsIterator.next().also {
                 if (numberOfCredentials > 1) {
+                    // Cache remaining assertions for subsequent GetNextAssertion requests
                     context.getNextAssertionBuffer = assertionOperationsIterator
                     context.getNextAssertionRequestInfo = requestInfo
+                } else {
+                    // We return the only assertion and thus indicate success to the user
+                    context.notifyUser(requestInfo)
                 }
             }
         } else {
