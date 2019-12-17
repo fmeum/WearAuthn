@@ -20,7 +20,7 @@ Use your watch as a security key via Bluetooth and NFC and confirm sign-ins with
       - [Known issues](#known-issues-1)
     - [Linux (Bluetooth)](#linux-bluetooth)
     - [Android (NFC)](#android-nfc)
-    - [iPhones (NFC, currently untested)](#iphones-nfc-currently-untested)
+    - [iPhones (NFC)](#iphones-nfc)
   - [Security](#security)
   - [Privacy policy](#privacy-policy)
   - [Code](#code)
@@ -101,9 +101,9 @@ sudo make install
 
 Your Android device has to be equipped with NFC in order to use it with WearAuthn. If you are able to pay in stores with Google Pay on your device, then you will also be able to use WearAuthn.
 
-### iPhones (NFC, currently untested)
+### iPhones (NFC)
 
-You should be able to use WearAuthn with Safari on your NFC-capable iPhones running iOS version 13.3.
+You will be able to use WearAuthn with Safari on your NFC-capable iPhones running iOS version 13.3. 
 
 ## Security
 
