@@ -6,13 +6,16 @@ import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.main_fragment.*
 import me.henneke.wearauthn.companion.R
 import me.henneke.wearauthn.companion.ui.main.MainViewModel.ComplicationUnlockStatus.*
+
 
 class MainFragment : Fragment() {
 
@@ -31,6 +34,14 @@ class MainFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        scrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
+            val fab =
+                activity?.findViewById<ExtendedFloatingActionButton>(R.id.floatingActionButton)
+            if (scrollY > oldScrollY)
+                fab?.hide()
+            else
+                fab?.show()
+        })
         viewModel.apply {
             isBillingReady.observe(viewLifecycleOwner, Observer { isReady ->
                 if (isReady)
