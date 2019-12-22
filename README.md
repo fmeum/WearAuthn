@@ -17,7 +17,6 @@ Use your watch as a security key via Bluetooth and NFC and confirm sign-ins with
     - [macOS (Bluetooth)](#macos-bluetooth)
       - [Known issues](#known-issues)
     - [Chrome OS (Bluetooth)](#chrome-os-bluetooth)
-      - [Known issues](#known-issues-1)
     - [Linux (Bluetooth)](#linux-bluetooth)
     - [Android (NFC)](#android-nfc)
     - [iPhones (NFC)](#iphones-nfc)
@@ -67,11 +66,7 @@ No setup required, but only supported by Chrome at the moment.
 
 ### Chrome OS (Bluetooth)
 
-No setup required, but may not work with Android or Linux apps.
-
-#### Known issues
-
-* Due to security restrictions on the raw access to HID devices on Chrome OS, WearAuthn will sometimes not be recognized as a security key if you use other Wear OS apps that emulate a Bluetooth device. WearAuthn should work again after a restart of the watch and, as is sometimes required, repeating the Bluetooth pairing process between your watch and your Chrome OS device.
+Will not work with some devices, which is most likely because Chrome OS applies its own set of rules for low-level device access. This is currently being investigated in [crbug/1036698](https://bugs.chromium.org/p/chromium/issues/detail?id=1036698).  
 
 ### Linux (Bluetooth)
 
