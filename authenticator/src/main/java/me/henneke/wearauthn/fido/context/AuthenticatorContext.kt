@@ -423,7 +423,7 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
             putString("uid+$encodedUserId", serializedCredential)
             putString("kh+$encodedKeyHandle", encodedUserId)
         }
-        Log.i(TAG, "Resident credential stored for ${Hex.bytesToStringUppercase(rpIdHash)}")
+        Log.i(TAG, "Resident credential stored")
     }
 
     fun lookupAndReplaceWithResidentCredential(credential: Credential): Credential {
@@ -455,12 +455,7 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
         require(rpIdHash.size == 32)
         val prefs = getResidentKeyPrefsForRpId(rpIdHash)
         return prefs.all.keys.filter { it.startsWith("uid+") }
-            .mapNotNull { it.substring(4).base64() }.toList().also {
-                Log.i(
-                    TAG,
-                    "Found ${it.size} resident keys for ${Hex.bytesToStringUppercase(rpIdHash)}"
-                )
-            }
+            .mapNotNull { it.substring(4).base64() }.toList()
     }
 
     private fun getResidentKeyPrefsForRpId(rpIdHash: ByteArray): SharedPreferences {
