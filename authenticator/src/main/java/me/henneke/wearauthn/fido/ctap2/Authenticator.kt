@@ -218,7 +218,7 @@ object Authenticator {
         // Step 10
         if (requireResidentKey)
             context.setResidentCredential(
-                rpIdHash = rpIdHash,
+                rpId = rpId,
                 userId = userId,
                 credential = credential,
                 userVerified = requireUserVerification

@@ -24,6 +24,7 @@ import me.henneke.wearauthn.fido.ctap2.CborValue
 import me.henneke.wearauthn.fido.ctap2.CtapError.OperationDenied
 import me.henneke.wearauthn.fido.ctap2.CtapError.Other
 import me.henneke.wearauthn.fido.u2f.resolveAppIdHash
+import me.henneke.wearauthn.sha256
 import me.henneke.wearauthn.ui.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -400,13 +401,13 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
     }
 
     suspend fun setResidentCredential(
-        rpIdHash: ByteArray,
+        rpId: String,
         userId: ByteArray,
         credential: WebAuthnCredential,
         userVerified: Boolean
     ) {
-        require(rpIdHash.size == 32)
         require(userId.size <= 64)
+        val rpIdHash = rpId.sha256()
         val encodedUserId = userId.base64()
         val encodedKeyHandle = credential.keyHandle.base64()
         val serializedCredential = try {
@@ -418,6 +419,7 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
             CTAP_ERR(Other)
         }
         getResidentKeyPrefsForRpId(rpIdHash).edit {
+            putString("rpId", rpId)
             putString("uid+$encodedUserId", serializedCredential)
             putString("kh+$encodedKeyHandle", encodedUserId)
         }
