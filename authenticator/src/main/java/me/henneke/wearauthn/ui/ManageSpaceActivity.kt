@@ -44,6 +44,7 @@ class ManageSpaceActivity : FragmentActivity(), CoroutineScope {
             }
             setNegativeButton { _, _ -> returnResult(Activity.RESULT_CANCELED) }
             setOnCancelListener { returnResult(Activity.RESULT_CANCELED) }
+            setOnShowListener { wink(context) }
         }.show()
     }
 

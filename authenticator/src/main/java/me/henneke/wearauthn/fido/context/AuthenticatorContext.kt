@@ -68,7 +68,7 @@ sealed class RequestInfo(open val action: AuthenticatorAction) {
                 AUTHENTICATE_NO_CREDENTIALS -> "Reveal that you are not registered?"
                 REGISTER -> "Register$formattedRpPart$formattedUserPart?$formattedAdditionalInfo"
                 REGISTER_CREDENTIAL_EXCLUDED -> "Reveal previous registration or error$formattedRpPart?"
-                REQUIREMENTS_NOT_MET_CHROME -> "You are not registered to the site or it requires single-factor mode to be enabled.<br/>Show a more detailed error message in the browser?"
+                REQUIREMENTS_NOT_MET_CHROME -> "Continue with this security key?"
             }, Html.FROM_HTML_MODE_LEGACY
         )
 
