@@ -24,7 +24,6 @@ import android.content.DialogInterface
 import android.os.PowerManager
 import android.os.PowerManager.ACQUIRE_CAUSES_WAKEUP
 import android.os.PowerManager.FULL_WAKE_LOCK
-import android.util.Log
 import android.view.View
 import android.view.ViewTreeObserver
 import kotlinx.android.synthetic.main.timed_accept_deny_dialog.*

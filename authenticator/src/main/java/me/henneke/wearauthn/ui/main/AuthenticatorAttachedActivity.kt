@@ -280,6 +280,6 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         }
 
     companion object {
-        public const val EXTRA_DEVICE = "me.henneke.wearauthn.extra.DEVICE"
+        const val EXTRA_DEVICE = "me.henneke.wearauthn.extra.DEVICE"
     }
 }

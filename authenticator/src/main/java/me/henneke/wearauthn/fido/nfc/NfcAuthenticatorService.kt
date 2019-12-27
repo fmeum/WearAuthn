@@ -102,7 +102,7 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
         return null
     }
 
-    suspend fun handleRequestApdu(apdu: CommandApdu): UByteArray {
+    private suspend fun handleRequestApdu(apdu: CommandApdu): UByteArray {
         if (GET_RESPONSE_APDU_HEADERS.any { apdu.headerEquals(it) }) {
             if (apdu.lc != 0)
                 throw ApduException(StatusWord.WRONG_LENGTH)

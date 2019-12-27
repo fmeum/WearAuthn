@@ -13,7 +13,6 @@ import android.text.Spanned
 import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.core.content.edit
-import com.google.android.gms.common.util.Hex
 import kotlinx.coroutines.*
 import me.henneke.wearauthn.base64
 import me.henneke.wearauthn.escapeHtml

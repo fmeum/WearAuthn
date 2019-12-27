@@ -82,11 +82,11 @@ fun String.breakAt(lineBreaks: List<Int>): String? {
     if (!lineRanges.all { (start, end) -> start < end })
         return null
 
-    return lineRanges.map { (start, end) ->
+    return lineRanges.joinToString(separator = "") { (start, end) ->
         val line = substring(start until end)
         if (line.last() == '\n' || end == length)
             line
         else
             line + '\n'
-    }.joinToString(separator = "")
+    }
 }
