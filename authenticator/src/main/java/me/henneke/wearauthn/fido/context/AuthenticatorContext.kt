@@ -48,7 +48,7 @@ enum class AuthenticatorAction {
     AUTHENTICATE_NO_CREDENTIALS,
     REGISTER,
     REGISTER_CREDENTIAL_EXCLUDED,
-    REQUIREMENTS_NOT_MET_CHROME
+    PLATFORM_GET_TOUCH
 }
 
 sealed class RequestInfo(open val action: AuthenticatorAction) {
@@ -69,7 +69,7 @@ sealed class RequestInfo(open val action: AuthenticatorAction) {
                 AUTHENTICATE_NO_CREDENTIALS -> "Reveal that you are not registered?"
                 REGISTER -> "Register$formattedRpPart$formattedUserPart?$formattedAdditionalInfo"
                 REGISTER_CREDENTIAL_EXCLUDED -> "Reveal previous registration or error$formattedRpPart?"
-                REQUIREMENTS_NOT_MET_CHROME -> "Continue with this security key?"
+                PLATFORM_GET_TOUCH -> "Continue with this security key?"
             }, Html.FROM_HTML_MODE_LEGACY
         )
 
@@ -79,7 +79,7 @@ sealed class RequestInfo(open val action: AuthenticatorAction) {
             AUTHENTICATE_NO_CREDENTIALS -> "Revealed that you are not registered"
             REGISTER -> "Registered$shortRpPart$shortAdditionalInfo"
             REGISTER_CREDENTIAL_EXCLUDED -> "Revealed previous registration or error$shortRpPart"
-            REQUIREMENTS_NOT_MET_CHROME -> "Not registered or error encountered"
+            PLATFORM_GET_TOUCH -> "Not registered or error encountered"
         }
 }
 

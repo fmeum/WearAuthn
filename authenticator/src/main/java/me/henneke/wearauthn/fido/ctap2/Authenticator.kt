@@ -99,22 +99,16 @@ object Authenticator {
             params.getOptional(MAKE_CREDENTIAL_EXTENSIONS)?.unbox<Map<String, CborValue>>()
         val options = params.getOptional(MAKE_CREDENTIAL_OPTIONS)
 
-        // Chrome will send dummy MakeCredential requests to collect a touch after all credentials
-        // in the allowList of a GetAssertion request have been silently probed and were not
-        // recognized by the authenticator or if user verification/resident key is requested and the
-        // authenticator does not support it.
-        // We detect these requests and show an appropriate confirmation prompt to the user, after
-        // which we will either return a dummy response or an OperationDenied error. Chrome will
-        // show an error message afterwards, although sometimes only if we didn't deny.
+        // Chrome and Windows Hello use special dummy requests to request a touch from an
+        // authenticator in various situations, such as to confirm a reset request is sent to the
+        // correct device or to prevent websites from verifying the availability of a given
+        // credential without user interaction.
         // https://cs.chromium.org/chromium/src/device/fido/make_credential_task.cc?l=66&rcl=eb40dba9a062951578292de39424d7479f723463
-        if (rpId == ".dummy" && userName == "dummy" && clientDataHash.contentEquals("".sha256())) {
-            Log.i(
-                TAG,
-                "Received a Chrome GetTouchRequest, replying with dummy response after confirmation"
-            )
-            val requestInfo = Ctap2RequestInfo(REQUIREMENTS_NOT_MET_CHROME, rpId)
-            val showErrorInBrowser = context.confirmRequestWithUser(requestInfo)
-            if (showErrorInBrowser)
+        if ((rpId == ".dummy" && userName == "dummy") /* Chrome */ ||
+                (rpId == "SelectDevice" && userName == "SelectDevice") /* Windows Hello */) {
+            val requestInfo = Ctap2RequestInfo(PLATFORM_GET_TOUCH, rpId)
+            val followUpInClient = context.confirmRequestWithUser(requestInfo)
+            if (followUpInClient)
                 return DUMMY_MAKE_CREDENTIAL_RESPONSE
             else
                 CTAP_ERR(OperationDenied)
