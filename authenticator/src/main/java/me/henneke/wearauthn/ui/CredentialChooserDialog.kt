@@ -69,25 +69,10 @@ class CredentialChooserDialog(
             val titleView = credentialView.findViewById<TextView>(R.id.title)
             val summaryView = credentialView.findViewById<TextView>(R.id.summary)
             val credential = getItem(position)
-            when {
-                !credential.userDisplayName.isNullOrBlank() -> {
-                    titleView.text = credential.userDisplayName
-                    summaryView.text = credential.userName
-                }
-                !credential.userName.isNullOrBlank() -> {
-                    titleView.text = credential.userName
-                    summaryView.text = null
-                }
-                else -> {
-                    titleView.text = "Account #${position + 1}"
-                    summaryView.text = if (credential.creationDate != null) {
-                        "Created ${SimpleDateFormat.getDateInstance().format(credential.creationDate)}"
-                    } else {
-                        null
-                    }
-                }
-            }
-            summaryView.visibility = if (summaryView.text.isNullOrBlank()) View.GONE else View.VISIBLE
+            val credentialInfo = credential.getTwoLineInfo(position + 1)
+            titleView.text = credentialInfo.first
+            summaryView.text = credentialInfo.second
+            summaryView.visibility = if (summaryView.text == null) View.GONE else View.VISIBLE
             return credentialView
         }
 

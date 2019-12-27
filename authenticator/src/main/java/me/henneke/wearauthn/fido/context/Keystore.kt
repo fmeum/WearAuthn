@@ -17,6 +17,7 @@ import java.security.*
 import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.ECParameterSpec
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.*
 import javax.crypto.*
@@ -101,7 +102,10 @@ private val authenticatorKeyAgreementKeyPair: KeyPair by lazy {
 
 @ExperimentalUnsignedTypes
 val authenticatorKeyAgreementKey
-    get() = getCoseRepresentation(authenticatorKeyAgreementKeyPair.public as ECPublicKey, ECAlgorithm.KeyAgreement)
+    get() = getCoseRepresentation(
+        authenticatorKeyAgreementKeyPair.public as ECPublicKey,
+        ECAlgorithm.KeyAgreement
+    )
 
 val authenticatorKeyAgreementParams: ECParameterSpec
     get() = (authenticatorKeyAgreementKeyPair.public as ECPublicKey).params
@@ -533,8 +537,8 @@ abstract class Credential {
     }
 
     @ExperimentalUnsignedTypes
-    fun delete(context: AuthenticatorContext?) {
-        context?.deleteCounter(keyAlias)
+    open fun delete(context: AuthenticatorContext) {
+        context.deleteCounter(keyAlias)
         deleteKey(keyAlias)
     }
 
@@ -701,6 +705,44 @@ class WebAuthnCredential(
                 encryptedUserMap?.let { map["encryptedUser"] = CborByteString(it) }
             }
         }).toCbor().base64()
+    }
+
+    override fun delete(context: AuthenticatorContext) {
+        if (isResident)
+            context.deleteResidentCredential(this)
+        super.delete(context)
+    }
+
+    fun getTwoLineInfo(simpleCount: Int): Pair<String, String?> {
+        val userDisplayNameInfo = userDisplayName.takeUnless { it.isNullOrBlank() }
+        val userNameInfo = userName.takeUnless { it.isNullOrBlank() }
+        val creationDateInfo =
+            creationDate?.let { "Created ${SimpleDateFormat.getDateInstance().format(it)}" }
+        return when {
+            userDisplayNameInfo != null && userNameInfo != null -> {
+                Pair(userDisplayNameInfo, userNameInfo)
+            }
+            userNameInfo != null -> {
+                Pair(userNameInfo, creationDateInfo)
+            }
+            userDisplayNameInfo != null -> {
+                Pair(userDisplayNameInfo, creationDateInfo)
+            }
+            else -> {
+                Pair("Account #${simpleCount}", creationDateInfo)
+            }
+        }
+    }
+
+    fun getFormattedInfo(): String? {
+        val userDisplayNameInfo = userDisplayName.takeUnless { it.isNullOrBlank() }
+        val userNameInfo = userName.takeUnless { it.isNullOrBlank() }
+        val creationDateInfo =
+            creationDate?.let { "Created ${SimpleDateFormat.getDateInstance().format(it)}" }
+        val infoOrBlank = if (userDisplayNameInfo != null) "$userDisplayNameInfo\n" else "" +
+                if (userNameInfo != null) "$userNameInfo\n" else "" +
+                        if (creationDateInfo != null) "$creationDateInfo" else ""
+        return infoOrBlank.takeUnless { it.isBlank() }
     }
 
     @ExperimentalUnsignedTypes

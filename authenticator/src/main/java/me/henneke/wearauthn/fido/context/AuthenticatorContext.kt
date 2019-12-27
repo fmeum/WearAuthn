@@ -441,11 +441,30 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
         )
     }
 
-    fun getResidentKeyUserIdsForRpId(rpIdHash: ByteArray): List<ByteArray> {
+    fun deleteResidentCredential(credential: WebAuthnCredential) {
+        check(credential.userId != null)
+        val rpIdHashString = credential.rpIdHash.base64()
+        val encodedUserId = credential.userId.base64()
+        val encodedKeyHandle = credential.keyHandle.base64()
+        val rpPrefs = getResidentKeyPrefsForRpId(credential.rpIdHash)
+        rpPrefs.edit {
+            remove("uid+$encodedUserId")
+            remove("kh+$encodedKeyHandle")
+        }
+        if (rpPrefs.all.none { it.key.startsWith("uid+") || it.key.startsWith("kh+") }) {
+            // This was the last resident credential for this RP, delete its record.
+            context.deleteSharedPreferences(RESIDENT_KEY_PREFERENCE_FILE_PREFIX + rpIdHashString)
+            context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).edit {
+                remove(rpIdHashString)
+            }
+        }
+    }
+
+    fun getResidentKeyUserIdsForRpId(rpIdHash: ByteArray): List<String> {
         require(rpIdHash.size == 32)
         val prefs = getResidentKeyPrefsForRpId(rpIdHash)
         return prefs.all.keys.filter { it.startsWith("uid+") }
-            .mapNotNull { it.substring(4).base64() }.toList()
+            .map { it.substring(4) }.toList()
     }
 
     private fun getResidentKeyPrefsForRpId(rpIdHash: ByteArray): SharedPreferences {
@@ -542,6 +561,30 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
 
                 initAuthenticator(context)
             }
+        }
+
+        fun getAllResidentCredentials(context: Context): Map<String, List<WebAuthnCredential>> {
+            var unknownSiteCounter = 1
+            return context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).all.keys
+                .sorted() // Guarantee deterministic assignment of indices to RPs without stored rpId
+                .mapNotNull {
+                    it.base64()
+                }
+                .map { rpIdHash ->
+                    val rpPrefs =
+                        context.sharedPreferences(RESIDENT_KEY_PREFERENCE_FILE_PREFIX + rpIdHash.base64())
+                    val rpId = rpPrefs.getString("rpId", null)
+                        ?: "Unknown site #$unknownSiteCounter".also { unknownSiteCounter++ }
+                    val credentials = rpPrefs.all.keys
+                        .filter { it.startsWith("uid+") }
+                        .mapNotNull {
+                            WebAuthnCredential.deserialize(
+                                rpPrefs.getString(it, null) ?: return@mapNotNull null,
+                                rpIdHash
+                            )
+                        }.sortedByDescending { it.creationDate }
+                    Pair(rpId, credentials)
+                }.toMap()
         }
 
         fun isScreenLockEnabled(context: Context) = context.keyguardManager?.isDeviceSecure == true

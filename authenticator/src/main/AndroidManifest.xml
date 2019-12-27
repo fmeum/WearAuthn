@@ -95,6 +95,7 @@
                 <category android:name="android.support.wearable.complications.category.PROVIDER_CONFIG" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.main.ResidentCredentialsList" />
 
         <service android:name="me.henneke.wearauthn.sync.UnlockComplicationListenerService">
             <intent-filter>

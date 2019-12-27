@@ -346,7 +346,7 @@ object Authenticator {
         } else {
             // Locate all rk credentials bound to the provided rpId
             context.getResidentKeyUserIdsForRpId(rpIdHash).asSequence()
-                .mapNotNull { userId -> context.getResidentCredential(rpIdHash, userId.base64()) }
+                .mapNotNull { userId -> context.getResidentCredential(rpIdHash, userId) }
                 .sortedByDescending { it.creationDate }
         }.filter {
             // If the hmac-secret extension is requested, we must only offer credentials that were

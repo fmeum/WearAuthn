@@ -46,6 +46,14 @@
             android:persistent="false" />
 
         <Preference
+            android:icon="@drawable/ic_btn_key"
+            android:key="@string/preference_credential_management"
+            android:order="@integer/order_device_list_credential_management"
+            android:title="Manage single-factor credentials"
+            android:enabled="false"
+            android:persistent="false" />
+
+        <Preference
             android:icon="@drawable/ic_btn_info"
             android:key="@string/preference_about"
             android:order="@integer/order_device_list_about"

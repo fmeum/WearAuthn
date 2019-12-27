@@ -28,10 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import me.henneke.wearauthn.R
-import me.henneke.wearauthn.bthid.HidDataSender
-import me.henneke.wearauthn.bthid.HidDeviceProfile
-import me.henneke.wearauthn.bthid.canUseAuthenticator
-import me.henneke.wearauthn.bthid.hasCompatibleBondedDevice
+import me.henneke.wearauthn.bthid.*
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
 import me.henneke.wearauthn.fido.context.armUserVerificationFuse
 import me.henneke.wearauthn.fido.context.getUserVerificationState
@@ -55,6 +52,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
     private lateinit var discoverableSwitchPreference: SwitchPreference
     private lateinit var nfcSettingsPreference: Preference
     private lateinit var singleFactorModeSwitchPreference: SwitchPreference
+    private lateinit var manageCredentialsPreference: Preference
 
     private val REQUEST_CODE_ENABLE_BLUETOOTH = 1
     private val REQUEST_CODE_MAKE_DISCOVERABLE = 2
@@ -79,6 +77,8 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
         nfcSettingsPreference = findPreference(getString(R.string.preference_nfc_settings))
         singleFactorModeSwitchPreference =
             findPreference(getString(R.string.preference_single_factor_mode)) as SwitchPreference
+        manageCredentialsPreference =
+            findPreference(getString(R.string.preference_credential_management))
     }
 
     override fun onResume() {
@@ -256,8 +256,9 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
     }
 
     private fun updateUserVerificationPreferencesState() {
+        val userVerificationState = getUserVerificationState(context)
         singleFactorModeSwitchPreference.apply {
-            when (getUserVerificationState(context)) {
+            when (userVerificationState) {
                 true -> {
                     isEnabled = false
                     isChecked = true
@@ -314,6 +315,43 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
                     isChecked = false
                     setSummary(R.string.summary_single_factor_mode_disabled)
                 }
+            }
+        }
+        manageCredentialsPreference.apply {
+            if (userVerificationState != false) {
+                isEnabled = true
+                setIcon(R.drawable.ic_btn_key)
+                summary = null
+            } else {
+                isEnabled = false
+                icon = null
+                summary = getString(R.string.summary_manage_credentials_disabled)
+            }
+            setOnPreferenceClickListener {
+                val intent =
+                    Intent(
+                        context,
+                        ConfirmDeviceCredentialActivity::class.java
+                    ).apply {
+                        putExtra(
+                            EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER,
+                            object : ResultReceiver(Handler()) {
+                                override fun onReceiveResult(
+                                    resultCode: Int,
+                                    resultData: Bundle?
+                                ) {
+                                    if (resultCode == Activity.RESULT_OK)
+                                        context.startActivity(
+                                            Intent(
+                                                context,
+                                                ResidentCredentialsList::class.java
+                                            )
+                                        )
+                                }
+                            })
+                    }
+                context.startActivity(intent)
+                true
             }
         }
     }
