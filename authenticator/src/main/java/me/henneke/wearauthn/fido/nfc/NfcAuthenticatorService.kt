@@ -201,7 +201,7 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
         }
     }
 
-    inner class NfcAuthenticatorContext() :
+    inner class NfcAuthenticatorContext :
         AuthenticatorContext(applicationContext, isHidTransport = false) {
 
         override fun notifyUser(info: RequestInfo) {

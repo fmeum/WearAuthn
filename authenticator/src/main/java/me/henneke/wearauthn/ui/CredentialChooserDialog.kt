@@ -11,7 +11,6 @@ import kotlinx.android.synthetic.main.credential_chooser_dialog.*
 import kotlinx.coroutines.*
 import me.henneke.wearauthn.R
 import me.henneke.wearauthn.fido.context.WebAuthnCredential
-import java.text.SimpleDateFormat
 
 private const val TAG = "CredentialChooserDialog"
 

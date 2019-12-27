@@ -26,10 +26,6 @@ fun Context.showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
     Toast.makeText(this, message, duration).show()
 }
 
-val Context.batteryManager
-    get() = ContextCompat.getSystemService(this, BatteryManager::class.java)
-val Context.devicePolicyManager
-    get() = ContextCompat.getSystemService(this, DevicePolicyManager::class.java)
 val Context.keyguardManager
     get() = ContextCompat.getSystemService(this, KeyguardManager::class.java)
 val Context.notificationManager

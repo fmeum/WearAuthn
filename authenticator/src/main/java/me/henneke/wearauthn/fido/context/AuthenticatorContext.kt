@@ -296,10 +296,6 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
         }
     }
 
-    fun armUserVerificationFuse() {
-        armUserVerificationFuse(context)
-    }
-
     suspend fun confirmDeviceCredential() {
         confirmDeviceCredentialInternal(updateAuthenticatorStatus = false)
     }
@@ -460,12 +456,6 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
         counterPrefs.edit {
             remove(keyAlias)
         }
-    }
-
-    internal suspend fun deleteAllData() {
-        deleteAllData(
-            context
-        )
     }
 
     companion object {
