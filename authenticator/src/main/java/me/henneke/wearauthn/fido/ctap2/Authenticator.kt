@@ -436,7 +436,10 @@ object Authenticator {
             }
         }
 
-        return if (!context.isHidTransport) {
+        // If the transport does not allow for interactive credential selection or if silent
+        // authentication is requested, return a list of assertions for all applicable credentials.
+        // Otherwise, let the user select one to return an assertion for.
+        return if (!context.isHidTransport || !requireUserPresence) {
             // Step 10
             val assertionOperationsIterator = credentialsToUse
                 .mapIndexed { credentialCounter, nextCredential ->
