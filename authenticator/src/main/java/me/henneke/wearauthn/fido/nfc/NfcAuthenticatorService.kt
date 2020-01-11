@@ -15,9 +15,11 @@ import me.henneke.wearauthn.fido.ApduException
 import me.henneke.wearauthn.fido.CommandApdu
 import me.henneke.wearauthn.fido.ResponseApdu
 import me.henneke.wearauthn.fido.StatusWord
-import me.henneke.wearauthn.fido.context.*
+import me.henneke.wearauthn.fido.context.AuthenticatorContext
+import me.henneke.wearauthn.fido.context.AuthenticatorSpecialStatus
 import me.henneke.wearauthn.fido.context.AuthenticatorSpecialStatus.RESET
 import me.henneke.wearauthn.fido.context.AuthenticatorSpecialStatus.USER_NOT_AUTHENTICATED
+import me.henneke.wearauthn.fido.context.RequestInfo
 import me.henneke.wearauthn.fido.ctap2.Authenticator
 import me.henneke.wearauthn.ui.isDoNotDisturbEnabled
 import me.henneke.wearauthn.ui.showToast
@@ -66,9 +68,11 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
     private var confirmDeviceCredentialOnDeactivated: Boolean = false
     private var vibrationTimeout = Runnable { cancelVibration() }
 
+    private lateinit var authenticatorContext: NfcAuthenticatorContext
+
     override fun onCreate() {
         super.onCreate()
-        authenticatorContext.commitContext(this)
+        authenticatorContext = NfcAuthenticatorContext()
     }
 
     override fun processCommandApdu(commandApdu: ByteArray, extras: Bundle?): ByteArray? {
@@ -197,9 +201,9 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
         }
     }
 
-    private val authenticatorContext = object : AuthenticatorContext(
-        isHidTransport = false
-    ) {
+    inner class NfcAuthenticatorContext() :
+        AuthenticatorContext(applicationContext, isHidTransport = false) {
+
         override fun notifyUser(info: RequestInfo) {
             onDeactivatedMessage = info.successMessage
         }

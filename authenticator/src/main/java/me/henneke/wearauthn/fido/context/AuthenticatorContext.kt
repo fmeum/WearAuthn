@@ -186,7 +186,7 @@ enum class AuthenticatorSpecialStatus {
 }
 
 @ExperimentalUnsignedTypes
-abstract class AuthenticatorContext(val isHidTransport: Boolean) {
+abstract class AuthenticatorContext(private val context: Context, val isHidTransport: Boolean) {
     abstract fun notifyUser(info: RequestInfo)
     abstract fun handleSpecialStatus(specialStatus: AuthenticatorSpecialStatus)
     abstract suspend fun confirmRequestWithUser(info: RequestInfo): Boolean
@@ -199,19 +199,10 @@ abstract class AuthenticatorContext(val isHidTransport: Boolean) {
     var getNextAssertionBuffer: Iterator<CborValue>? = null
     var getNextAssertionRequestInfo: RequestInfo? = null
 
-    private lateinit var counterPrefs: SharedPreferences
-    private lateinit var context: Context
+    private val counterPrefs by lazy { context.sharedPreferences(COUNTERS_PREFERENCE_FILE) }
 
-    fun commitContext(context: Context) {
-        this.context = context
-        // Even if the context changes, the SharedPreferences instance will remain the same - so we keep it
-        if (!::counterPrefs.isInitialized) {
-            counterPrefs = context.sharedPreferences(COUNTERS_PREFERENCE_FILE)
-        }
-
-        initAuthenticator(
-            context
-        )
+    init {
+        initAuthenticator(context)
     }
 
     fun getUserVerificationState(obeyTimeout: Boolean = false): Boolean? {
