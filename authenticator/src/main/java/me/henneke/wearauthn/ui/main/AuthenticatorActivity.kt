@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.support.wearable.preference.WearablePreferenceActivity
 import kotlinx.coroutines.*
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
-import me.henneke.wearauthn.fido.context.refreshCachedWebAuthnCredentialIfNecessary
 import kotlin.coroutines.CoroutineContext
 
 
@@ -26,9 +25,7 @@ class AuthenticatorActivity : WearablePreferenceActivity(), CoroutineScope {
         super.onResume()
         launch {
             AuthenticatorContext.initAuthenticator(this@AuthenticatorActivity.applicationContext)
-            refreshCachedWebAuthnCredentialIfNecessary(
-                applicationContext
-            )
+            AuthenticatorContext.refreshCachedWebAuthnCredentialIfNecessary(applicationContext)
         }
     }
 

@@ -144,36 +144,6 @@ data class Ctap2RequestInfo(
     }
 }
 
-fun refreshCachedWebAuthnCredentialIfNecessary(context: Context) {
-    synchronized(CACHED_CREDENTIAL_ALIAS_WRITE_LOCK) {
-        val keyAlias = getCachedCredentialKeyAlias(context)
-        if (keyAlias == null) {
-            val newKeyAlias = generateWebAuthnCredential()
-            if (newKeyAlias == null) {
-                Log.e(TAG, "Failed to refresh WebAuthn credential cache")
-            } else {
-                setCachedCredentialKeyAlias(
-                    context,
-                    newKeyAlias
-                )
-                Log.i(TAG, "Refreshed the credential cache")
-            }
-        }
-    }
-}
-
-private fun getCachedCredentialKeyAlias(context: Context): String? {
-    return context.defaultSharedPreferences.getString(
-        CACHED_CREDENTIAL_ALIAS_PREFERENCE_KEY, null
-    )
-}
-
-private fun setCachedCredentialKeyAlias(context: Context, keyAlias: String?) {
-    context.defaultSharedPreferences.edit {
-        putString(CACHED_CREDENTIAL_ALIAS_PREFERENCE_KEY, keyAlias)
-    }
-}
-
 enum class AuthenticatorStatus {
     IDLE,
     PROCESSING,
@@ -286,9 +256,7 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
     }
 
     fun isValidWebAuthnCredentialKeyAlias(keyAlias: String): Boolean {
-        return getCounter(keyAlias) != null && isValidKeyAlias(
-            keyAlias
-        )
+        return getCounter(keyAlias) != null && isValidKeyAlias(keyAlias)
     }
 
     suspend fun <T> authenticateUserFor(block: () -> T): T? {
@@ -435,30 +403,11 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
         val serialized =
             getResidentKeyPrefsForRpId(rpIdHash).getString("uid+$encodedUserId", null)
                 ?: return null
-        return WebAuthnCredential.deserialize(
-            serialized,
-            rpIdHash
-        )
+        return WebAuthnCredential.deserialize(serialized, rpIdHash)
     }
 
-    fun deleteResidentCredential(credential: WebAuthnCredential) {
-        check(credential.userId != null)
-        val rpIdHashString = credential.rpIdHash.base64()
-        val encodedUserId = credential.userId.base64()
-        val encodedKeyHandle = credential.keyHandle.base64()
-        val rpPrefs = getResidentKeyPrefsForRpId(credential.rpIdHash)
-        rpPrefs.edit {
-            remove("uid+$encodedUserId")
-            remove("kh+$encodedKeyHandle")
-        }
-        if (rpPrefs.all.none { it.key.startsWith("uid+") || it.key.startsWith("kh+") }) {
-            // This was the last resident credential for this RP, delete its record.
-            context.deleteSharedPreferences(RESIDENT_KEY_PREFERENCE_FILE_PREFIX + rpIdHashString)
-            context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).edit {
-                remove(rpIdHashString)
-            }
-        }
-    }
+    fun deleteResidentCredential(credential: WebAuthnCredential) =
+        Companion.deleteResidentCredential(context, credential)
 
     fun getResidentKeyUserIdsForRpId(rpIdHash: ByteArray): List<String> {
         require(rpIdHash.size == 32)
@@ -467,13 +416,8 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
             .map { it.substring(4) }.toList()
     }
 
-    private fun getResidentKeyPrefsForRpId(rpIdHash: ByteArray): SharedPreferences {
-        val rpIdHashString = rpIdHash.base64()
-        context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).edit {
-            putBoolean(rpIdHashString, true)
-        }
-        return context.sharedPreferences(RESIDENT_KEY_PREFERENCE_FILE_PREFIX + rpIdHashString)
-    }
+    private fun getResidentKeyPrefsForRpId(rpIdHash: ByteArray) =
+        Companion.getResidentKeyPrefsForRpId(context, rpIdHash)
 
     suspend fun requestReset(): Boolean {
         return try {
@@ -538,6 +482,37 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
             pokeMasterSigningKey()
         }
 
+        fun refreshCachedWebAuthnCredentialIfNecessary(context: Context) {
+            synchronized(CACHED_CREDENTIAL_ALIAS_WRITE_LOCK) {
+                val keyAlias = getCachedCredentialKeyAlias(context)
+                if (keyAlias == null) {
+                    val newKeyAlias = generateWebAuthnCredential()
+                    if (newKeyAlias == null) {
+                        Log.e(TAG, "Failed to refresh WebAuthn credential cache")
+                    } else {
+                        setCachedCredentialKeyAlias(
+                            context,
+                            newKeyAlias
+                        )
+                        Log.i(TAG, "Refreshed the credential cache")
+                    }
+                }
+            }
+        }
+
+        private fun getCachedCredentialKeyAlias(context: Context): String? {
+            return context.defaultSharedPreferences.getString(
+                CACHED_CREDENTIAL_ALIAS_PREFERENCE_KEY, null
+            )
+        }
+
+        private fun setCachedCredentialKeyAlias(context: Context, keyAlias: String?) {
+            context.defaultSharedPreferences.edit {
+                putString(CACHED_CREDENTIAL_ALIAS_PREFERENCE_KEY, keyAlias)
+            }
+        }
+
+
         @WorkerThread
         suspend fun deleteAllData(context: Context) {
             withContext(Dispatchers.IO) {
@@ -561,6 +536,37 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
 
                 initAuthenticator(context)
             }
+        }
+
+        fun deleteResidentCredential(context: Context, credential: WebAuthnCredential) {
+            check(credential.userId != null)
+            val rpIdHashString = credential.rpIdHash.base64()
+            val encodedUserId = credential.userId.base64()
+            val encodedKeyHandle = credential.keyHandle.base64()
+            val rpPrefs = getResidentKeyPrefsForRpId(context, credential.rpIdHash)
+            rpPrefs.edit {
+                remove("uid+$encodedUserId")
+                remove("kh+$encodedKeyHandle")
+            }
+            if (rpPrefs.all.none { it.key.startsWith("uid+") || it.key.startsWith("kh+") }) {
+                // This was the last resident credential for this RP, delete its record.
+                context.deleteSharedPreferences(RESIDENT_KEY_PREFERENCE_FILE_PREFIX + rpIdHashString)
+                context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).edit {
+                    remove(rpIdHashString)
+                }
+            }
+        }
+
+
+        private fun getResidentKeyPrefsForRpId(
+            context: Context,
+            rpIdHash: ByteArray
+        ): SharedPreferences {
+            val rpIdHashString = rpIdHash.base64()
+            context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).edit {
+                putBoolean(rpIdHashString, true)
+            }
+            return context.sharedPreferences(RESIDENT_KEY_PREFERENCE_FILE_PREFIX + rpIdHashString)
         }
 
         fun getAllResidentCredentials(context: Context): Map<String, List<WebAuthnCredential>> {
