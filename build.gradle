@@ -2,7 +2,7 @@
 
 ext.versionMajor = 0
 ext.versionMinor = 9
-ext.versionPatch = 9
+ext.versionPatch = 10
 
 buildscript {
     ext.kotlin_version = '1.3.61'
