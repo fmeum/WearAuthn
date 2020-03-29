@@ -18,7 +18,7 @@ class BillingManager private constructor(private val application: Application) :
 
     private lateinit var billingClient: BillingClient
 
-    private val _isComplicationUnlockedLiveData = MutableLiveData<Boolean>(false)
+    private val _isComplicationUnlockedLiveData = MutableLiveData(false)
     val isComplicationUnlockedLiveData: LiveData<Boolean?>
         get() = _isComplicationUnlockedLiveData
 
@@ -28,7 +28,7 @@ class BillingManager private constructor(private val application: Application) :
     val skusLiveData: Map<WearAuthnInAppProduct, LiveData<SkuDetails>>
         get() = _skusLiveData
 
-    private val _isBillingReady = MutableLiveData<Boolean>(false)
+    private val _isBillingReady = MutableLiveData(false)
     val isBillingReady: LiveData<Boolean>
         get() = _isBillingReady
 
