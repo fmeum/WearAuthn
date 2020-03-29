@@ -1,6 +1,7 @@
 package me.henneke.wearauthn.fido.context
 
 import android.content.Context
+import android.os.Build
 import android.security.keystore.*
 import android.util.Log
 import androidx.core.content.edit
@@ -40,15 +41,27 @@ private const val AES_CBC_NO_PADDING = "AES/CBC/NoPadding"
 const val USER_VERIFICATION_TIMEOUT_S = 5 * 60 // 5 minutes
 
 fun KeyStore.getSecretKey(keyAlias: String): SecretKey? {
-    return (getEntry(keyAlias, null) as? KeyStore.SecretKeyEntry)?.secretKey
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        getKey(keyAlias, null) as? SecretKey
+    } else {
+        (getEntry(keyAlias, null) as? KeyStore.SecretKeyEntry)?.secretKey
+    }
 }
 
 fun KeyStore.getPrivateKey(keyAlias: String): PrivateKey? {
-    return (getEntry(keyAlias, null) as? KeyStore.PrivateKeyEntry)?.privateKey
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        getKey(keyAlias, null) as? PrivateKey
+    } else {
+        (getEntry(keyAlias, null) as? KeyStore.PrivateKeyEntry)?.privateKey
+    }
 }
 
 fun KeyStore.getPublicKey(keyAlias: String): PublicKey? {
-    return (getEntry(keyAlias, null) as? KeyStore.PrivateKeyEntry)?.certificate?.publicKey
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        getCertificate(keyAlias).publicKey
+    } else {
+        (getEntry(keyAlias, null) as? KeyStore.PrivateKeyEntry)?.certificate?.publicKey
+    }
 }
 
 private fun generateSymmetricKey(
