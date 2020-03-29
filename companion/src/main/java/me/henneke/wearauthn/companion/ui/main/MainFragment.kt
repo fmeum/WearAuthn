@@ -88,14 +88,14 @@ class MainFragment : Fragment() {
             })
             watchConfirmedUnlock.observe(viewLifecycleOwner, Observer { model ->
                 Snackbar.make(
-                    activity!!.findViewById(android.R.id.content),
+                    requireActivity().findViewById(android.R.id.content),
                     getString(R.string.message_unlocked_on_watch, model),
                     Snackbar.LENGTH_LONG
                 ).show()
             })
         }
         complicationUnlockPurchase.setOnClickListener {
-            viewModel.buyComplicationUnlock(activity!!)
+            viewModel.buyComplicationUnlock(requireActivity())
         }
         @Suppress("DEPRECATION")
         changelogView.text = if (Build.VERSION.SDK_INT >= 24)
