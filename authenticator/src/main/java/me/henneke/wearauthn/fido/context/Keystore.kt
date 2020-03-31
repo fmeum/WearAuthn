@@ -147,6 +147,7 @@ fun decryptSalt(
     if (!MessageDigest.isEqual(saltAuth, saltAuthComputed))
         return null
     // hmac-secret uses an IV consisting of 0s since the plaintexts are (approximately) random
+    // NOTE: This causes a warning on insecure uses of cryptography in the Play Console.
     val iv = IvParameterSpec(ByteArray(16))
     return Cipher.getInstance(AES_CBC_NO_PADDING).run {
         init(Cipher.DECRYPT_MODE, SecretKeySpec(sharedSecret, AES_CBC_NO_PADDING), iv)
@@ -156,6 +157,7 @@ fun decryptSalt(
 
 fun encryptHmacOutput(sharedSecret: ByteArray, hmacSecret: ByteArray): ByteArray {
     // hmac-secret uses an IV consisting of 0s since the plaintexts are (approximately) random
+    // NOTE: This causes a warning on insecure uses of cryptography in the Play Console.
     val iv = IvParameterSpec(ByteArray(16))
     return Cipher.getInstance(AES_CBC_NO_PADDING).run {
         init(Cipher.ENCRYPT_MODE, SecretKeySpec(sharedSecret, AES_CBC_NO_PADDING), iv)
