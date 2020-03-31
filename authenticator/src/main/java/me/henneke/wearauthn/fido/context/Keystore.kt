@@ -40,6 +40,10 @@ private const val AES_CBC_NO_PADDING = "AES/CBC/NoPadding"
 
 const val USER_VERIFICATION_TIMEOUT_S = 5 * 60 // 5 minutes
 
+// Resident keys created with a validity not sufficiently long in the past lead to spurious errors.
+// As a workaround, we shift all validity dates one day into the past.
+const val RESIDENT_KEY_CREATION_TIME_SHIFT_S = 24 * 60 * 60L // 1 day
+
 fun KeyStore.getSecretKey(keyAlias: String): SecretKey? {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
         getKey(keyAlias, null) as? SecretKey
@@ -174,7 +178,13 @@ fun generateWebAuthnCredential(
         setKeySize(256)
         setAttestationChallenge(attestationChallenge)
         if (createResidentKey) {
-            setKeyValidityStart(Date.from(Instant.now().minusSeconds(24 * 60 * 60)))
+            setKeyValidityStart(
+                Date.from(
+                    Instant.now().minusSeconds(
+                        RESIDENT_KEY_CREATION_TIME_SHIFT_S
+                    )
+                )
+            )
         }
     }
     generateEllipticCurveKey(ecParameterSpec) ?: return null
@@ -211,6 +221,9 @@ private fun getOrCreateUserInfoEncryptionKeyIfNecessary(): SecretKey? {
             setBlockModes(KeyProperties.BLOCK_MODE_GCM)
             setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             setUserAuthenticationRequired(true)
+            // Long enough that users should not be asked to confirm their device credentials
+            // because of it in normal usage scenarios, but short enough not to trigger undocumented
+            // Keystore failures (at around a week).
             setUserAuthenticationValidityDurationSeconds(3 * 24 * 60 * 60)
         }
     return generateSymmetricKey(
@@ -426,7 +439,12 @@ abstract class Credential {
     val isResident: Boolean
         get() = creationDate != null
     val creationDate: Date?
-        get() = keyInfo?.keyValidityStart
+        get() {
+            val validityStart = keyInfo?.keyValidityStart ?: return null
+            return Date.from(
+                validityStart.toInstant().plusSeconds(RESIDENT_KEY_CREATION_TIME_SHIFT_S)
+            )
+        }
     val isKeyMaterialInTEE: Boolean
         get() = keyInfo?.isInsideSecureHardware == true
 
