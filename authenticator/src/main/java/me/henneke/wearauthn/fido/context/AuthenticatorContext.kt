@@ -233,7 +233,9 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
                 attestationChallenge = null
             )
         }
-        return Pair(credential, AttestationType.ANDROID_KEYSTORE)
+        val attestationType =
+            if (actualAttestationChallenge != null) AttestationType.ANDROID_KEYSTORE else AttestationType.SELF
+        return Pair(credential, attestationType)
     }
 
     fun refreshCachedWebAuthnCredentialIfNecessary() {
