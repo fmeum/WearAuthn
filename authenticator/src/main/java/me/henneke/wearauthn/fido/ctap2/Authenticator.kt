@@ -234,8 +234,16 @@ object Authenticator {
             Log.e(TAG, "Failed to get raw public key")
             CTAP_ERR(Other)
         }
+
+        // As per
+        // https://www.w3.org/TR/webauthn/#credentialcreationdata-attestationconveyancepreferenceoption
+        // self attestation is only indicated to the client if the AAGUID consists of zero bytes.
+        val aaguid = when (attestationType) {
+            AttestationType.SELF -> SELF_ATTESTATION_AAGUID
+            AttestationType.ANDROID_KEYSTORE -> WEARAUTHN_AAGUID
+        }
         val attestedCredentialData =
-            WEARAUTHN_AAGUID + credential.keyHandle.size.toUShort().bytes() + credential.keyHandle + credentialPublicKey.toCbor()
+            aaguid + credential.keyHandle.size.toUShort().bytes() + credential.keyHandle + credentialPublicKey.toCbor()
 
         // At this point, if we have not returned CtapError.OperationDenied, the user has been
         // verified successfully if UV had been requested.
