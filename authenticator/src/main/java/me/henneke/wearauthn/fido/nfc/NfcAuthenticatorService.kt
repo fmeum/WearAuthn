@@ -1,8 +1,5 @@
 package me.henneke.wearauthn.fido.nfc
 
-import android.content.ComponentName
-import android.content.Context
-import android.content.pm.PackageManager
 import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.os.Handler
@@ -48,6 +45,7 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
             0x01u
         )
     )
+    private val DESELECT_FIDO_APDU_HEADER = ubyteArrayOf(0x80u, 0x12u, 0x01u, 0x00u)
     private val GET_RESPONSE_APDU_HEADERS = setOf(
         ubyteArrayOf(0x00u, 0xC0u, 0x00u, 0x00u),
         ubyteArrayOf(0x80u, 0xC0u, 0x00u, 0x00u)
@@ -62,6 +60,7 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
 
     private val handler = Handler()
 
+    private var isSelected: Boolean = false
     private var lastResponseApdu: ResponseApdu? = null
     private var chainedRequestBuffer = ubyteArrayOf()
     private var onDeactivatedMessage: String? = null
@@ -76,25 +75,31 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
     }
 
     override fun processCommandApdu(commandApdu: ByteArray, extras: Bundle?): ByteArray? {
-        if (!enabled) {
-            return StatusWord.CONDITIONS_NOT_SATISFIED.value.asByteArray()
-        }
-        @Suppress("NAME_SHADOWING") val commandApdu = commandApdu.asUByteArray()
-        if (SELECT_FIDO_APDUS.any { commandApdu.contentEquals(it) }) {
+        val rawCommandApdu = commandApdu.asUByteArray()
+        if (SELECT_FIDO_APDUS.any { rawCommandApdu.contentEquals(it) }) {
+            isSelected = true
             initiateVibration()
             lastResponseApdu = null
             chainedRequestBuffer = ubyteArrayOf()
             onDeactivatedMessage = null
             return (CTAP_VERSION_STRING_BYTES + StatusWord.NO_ERROR.value).asByteArray()
         }
+        if (!isSelected) {
+            return StatusWord.CONDITIONS_NOT_SATISFIED.value.asByteArray()
+        }
+        val apdu = CommandApdu(rawCommandApdu)
+        if (apdu.headerEquals(DESELECT_FIDO_APDU_HEADER)) {
+            isSelected = false
+            return StatusWord.NO_ERROR.value.asByteArray()
+        }
         launch {
             val response = try {
-                handleRequestApdu(CommandApdu(commandApdu))
+                handleRequestApdu(apdu)
             } catch (e: ApduException) {
                 Log.e(
                     TAG,
                     "Unable to handle APDU with header ${Hex.bytesToStringUppercase(
-                        commandApdu.asByteArray().sliceArray(0..3)
+                        rawCommandApdu.asByteArray().sliceArray(0..3)
                     )}; returned ${e.statusWord}"
                 )
                 lastResponseApdu = null
@@ -156,6 +161,7 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
     }
 
     override fun onDeactivated(reason: Int) {
+        isSelected = false
         handler.removeCallbacks(vibrationTimeout)
         cancelVibration()
 
@@ -227,38 +233,6 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
 
         override suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String? {
             throw IllegalStateException("Transaction confirmation not possible via NFC")
-        }
-    }
-
-    companion object {
-        var enabled = true
-            private set
-
-        private fun setEnabledState(context: Context, enable: Boolean) {
-            val component = ComponentName(context, NfcAuthenticatorService::class.java)
-            context.packageManager.setComponentEnabledSetting(
-                component,
-                if (enable) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP
-            )
-        }
-
-        fun hardEnable(context: Context) {
-            enable()
-            setEnabledState(context, true)
-        }
-
-        fun hardDisable(context: Context) {
-            disable()
-            setEnabledState(context, false)
-        }
-
-        private fun enable() {
-            enabled = true
-        }
-
-        private fun disable() {
-            enabled = false
         }
     }
 }
