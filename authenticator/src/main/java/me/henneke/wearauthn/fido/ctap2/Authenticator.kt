@@ -556,25 +556,23 @@ object Authenticator {
                 // * a null byte (WebAuthn only)
                 // * the rpName truncated to 64 UTF-16 code units (every UTF-16 code unit can be
                 //   coded on at most three UTF-8 bytes)
-                GET_INFO_RESPONSE_MAX_CREDENTIAL_ID_LENGTH to CborLong(32 + 32 + 1 + 3 * 64)
-                // TODO: Uncomment once understood by at least one client
-//                ,
-//                GET_INFO_RESPONSE_TRANSPORTS to CborArray(
-//                    arrayOf(
-//                        CborTextString("nfc"),
-//                        CborTextString("usb")
-//                    )
-//                ),
-//                GET_INFO_RESPONSE_ALGORITHMS to CborArray(
-//                    arrayOf(
-//                        CborTextStringMap(
-//                            mapOf(
-//                                "alg" to CborLong(-7),
-//                                "type" to CborTextString("public-key")
-//                            )
-//                        )
-//                    )
-//                )
+                GET_INFO_RESPONSE_MAX_CREDENTIAL_ID_LENGTH to CborLong(32 + 32 + 1 + 3 * 64),
+                GET_INFO_RESPONSE_TRANSPORTS to CborArray(
+                    arrayOf(
+                        CborTextString("nfc"),
+                        CborTextString("usb")
+                    )
+                ),
+                GET_INFO_RESPONSE_ALGORITHMS to CborArray(
+                    arrayOf(
+                        CborTextStringMap(
+                            mapOf(
+                                "alg" to CborLong(-7),
+                                "type" to CborTextString("public-key")
+                            )
+                        )
+                    )
+                )
             )
         )
     }
