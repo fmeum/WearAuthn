@@ -35,6 +35,7 @@ enum class RequestCommand(val value: Byte) {
 
 enum class AttestationType(val format: String) {
     SELF("packed"),
+    BASIC("packed"),
     ANDROID_KEYSTORE("android-key"),
 }
 
@@ -140,12 +141,15 @@ const val FLAGS_USER_VERIFIED = (1 shl 2).toByte()
 const val FLAGS_AT_INCLUDED = (1 shl 6).toByte()
 const val FLAGS_ED_INCLUDED = (1 shl 7).toByte()
 
-@ExperimentalUnsignedTypes
-val WEARAUTHN_AAGUID = byteArrayOf(
+val ANDROID_KEYSTORE_ATTESTATION_AAGUID = byteArrayOf(
     0x2b, 0x21, 0x31, 0xa6.toByte(), 0x89.toByte(), 0x01, 0x4d, 0x2d,
     0x8e.toByte(), 0x77, 0xe9.toByte(), 0x90.toByte(), 0xa6.toByte(), 0x2b, 0xfd.toByte(), 0x41
 )
 val SELF_ATTESTATION_AAGUID = ByteArray(16)
+val BASIC_ATTESTATION_AAGUID = byteArrayOf(
+    0x1d, 0x6e, 0x98.toByte(), 0x93.toByte(), 0x51, 0x70, 0x7e, 0xdf.toByte(),
+    0xfd.toByte(), 0x42, 0xce.toByte(), 0x36, 0x9b.toByte(), 0x6f, 0xaa.toByte(), 0xb4.toByte()
+)
 
 const val HMAC_SECRET_KEY_AGREEMENT = 0x1L
 const val HMAC_SECRET_SALT_ENC = 0x2L

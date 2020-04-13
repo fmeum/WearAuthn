@@ -6,6 +6,8 @@ import me.henneke.wearauthn.*
 import me.henneke.wearauthn.fido.context.*
 import me.henneke.wearauthn.fido.context.AuthenticatorAction.*
 import me.henneke.wearauthn.fido.ctap2.CtapError.*
+import me.henneke.wearauthn.fido.u2f.WEB_AUTHN_RAW_BASIC_ATTESTATION_CERT
+import me.henneke.wearauthn.fido.u2f.signWithWebAuthnBatchAttestationKey
 import kotlin.experimental.or
 
 
@@ -240,7 +242,8 @@ object Authenticator {
         // self attestation is only indicated to the client if the AAGUID consists of zero bytes.
         val aaguid = when (attestationType) {
             AttestationType.SELF -> SELF_ATTESTATION_AAGUID
-            AttestationType.ANDROID_KEYSTORE -> WEARAUTHN_AAGUID
+            AttestationType.BASIC -> BASIC_ATTESTATION_AAGUID
+            AttestationType.ANDROID_KEYSTORE -> ANDROID_KEYSTORE_ATTESTATION_AAGUID
         }
         val attestedCredentialData =
             aaguid + credential.keyHandle.size.toUShort().bytes() + credential.keyHandle + credentialPublicKey.toCbor()
@@ -256,19 +259,22 @@ object Authenticator {
             rpIdHash + flags.bytes() + 0.toUInt().bytes() + attestedCredentialData +
                     (extensionOutputs?.toCbor() ?: byteArrayOf())
 
-        val signature = credential.sign(authenticatorData, clientDataHash)
-
         context.initCounter(keyAlias)
 
         val attestationStatement = CborTextStringMap(
             when (attestationType) {
                 AttestationType.SELF -> mapOf(
                     "alg" to CborLong(COSE_ID_ES256),
-                    "sig" to CborByteString(signature)
+                    "sig" to CborByteString(credential.sign(authenticatorData, clientDataHash))
+                )
+                AttestationType.BASIC -> mapOf(
+                    "alg" to CborLong(COSE_ID_ES256),
+                    "sig" to CborByteString(signWithWebAuthnBatchAttestationKey(authenticatorData, clientDataHash)),
+                    "x5c" to CborArray(arrayOf(CborByteString(WEB_AUTHN_RAW_BASIC_ATTESTATION_CERT)))
                 )
                 AttestationType.ANDROID_KEYSTORE -> mapOf(
                     "alg" to CborLong(COSE_ID_ES256),
-                    "sig" to CborByteString(signature),
+                    "sig" to CborByteString(credential.sign(authenticatorData, clientDataHash)),
                     "x5c" to credential.androidKeystoreAttestation
                 )
             }
@@ -537,7 +543,7 @@ object Authenticator {
                             Extension.identifiersAsCbor
                         else
                             Extension.noDisplayIdentifiersAsCbor,
-                GET_INFO_RESPONSE_AAGUID to CborByteString(WEARAUTHN_AAGUID),
+                GET_INFO_RESPONSE_AAGUID to CborByteString(BASIC_ATTESTATION_AAGUID),
                 GET_INFO_RESPONSE_OPTIONS to CborTextStringMap(optionsMap),
                 GET_INFO_RESPONSE_MAX_MSG_SIZE to CborLong(MAX_CBOR_MSG_SIZE),
                 // This value is chosen such that most credential lists will fit into a single

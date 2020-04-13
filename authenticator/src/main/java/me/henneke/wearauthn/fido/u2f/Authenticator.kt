@@ -57,7 +57,7 @@ object Authenticator {
             // val attestationCert = createU2fSelfAttestationCert(credential)
             // val signature = credential.sign(
             val attestationCert = U2F_RAW_BATCH_ATTESTATION_CERT
-            val signature = signWithBatchAttestationKey(
+            val signature = signWithU2fBatchAttestationKey(
                 byteArrayOf(0x00),
                 req.application,
                 req.challenge,

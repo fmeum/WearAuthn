@@ -203,17 +203,17 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
                         null
                     )
                     // attestationChallenge is ignored when using a cached key
-                    return Pair(keyAlias, AttestationType.SELF)
+                    return Pair(keyAlias, AttestationType.BASIC)
                 }
             }
         }
 
-        val credential = generateWebAuthnCredential(
+        val keyAlias = generateWebAuthnCredential(
             createResidentKey = createResidentKey,
             createHmacSecret = createHmacSecret,
             attestationChallenge = actualAttestationChallenge
         )
-        if (credential == null) {
+        if (keyAlias == null) {
             if (actualAttestationChallenge == null) {
                 Log.e(TAG, "Key generation failed without attestation; giving up")
                 return null
@@ -233,9 +233,10 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
                 attestationChallenge = null
             )
         }
-        val attestationType =
-            if (actualAttestationChallenge != null) AttestationType.ANDROID_KEYSTORE else AttestationType.SELF
-        return Pair(credential, attestationType)
+        // For the foreseeable future, we use Basic attestation even if we managed to generate a
+        // credential with Android KeyStore attestation since most RPs that rely on attestation are
+        // not compatible with this type.
+        return Pair(keyAlias, AttestationType.BASIC)
     }
 
     fun refreshCachedWebAuthnCredentialIfNecessary() {
