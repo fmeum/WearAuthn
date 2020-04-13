@@ -611,7 +611,7 @@ object Authenticator {
 
         // Deny reset requests over NFC since there is now way to confirm them with the user.
         if (!context.isHidTransport)
-            CTAP_ERR(OperationDenied)
+            CTAP_ERR(NotAllowed)
         if (context.requestReset()) {
             return null
         } else {
