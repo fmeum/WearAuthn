@@ -25,7 +25,8 @@ enum class RequestCommand(val value: Byte) {
     GetNextAssertion(0x08),
     GetInfo(0x04),
     ClientPIN(0x06),
-    Reset(0x07);
+    Reset(0x07),
+    Selection(0x0B);
 
     companion object {
         private val REVERSE_MAP = values().associateBy(RequestCommand::value)
@@ -55,6 +56,7 @@ enum class CtapError(val value: Byte) {
     InvalidOption(0x2c),
     KeepaliveCancel(0x2d),
     NoCredentials(0x2e),
+    UserActionTimeout(0x2f),
     NotAllowed(0x30),
     PinAuthInvalid(0x33),
     RequestTooLarge(0x39),

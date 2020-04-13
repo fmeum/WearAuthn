@@ -63,6 +63,12 @@ object Authenticator {
                         CTAP_ERR(InvalidLength, "Non-empty params for Reset")
                     handleReset(context)
                 }
+                RequestCommand.Selection -> {
+                    Log.i(TAG, "Selection called")
+                    if (rawRequest.size != 1)
+                        CTAP_ERR(InvalidLength, "Non-empty params for Selection")
+                    handleSelection(context)
+                }
             }.toCtapSuccessResponse()
         } catch (e: CtapErrorException) {
             byteArrayOf(e.error.value)
@@ -611,6 +617,15 @@ object Authenticator {
         } else {
             context.handleSpecialStatus(AuthenticatorSpecialStatus.RESET)
             CTAP_ERR(OperationDenied)
+        }
+    }
+
+    private suspend fun handleSelection(context: AuthenticatorContext): Nothing? {
+        val info = Ctap2RequestInfo(PLATFORM_GET_TOUCH, "")
+        return when (context.confirmRequestWithUser(info)) {
+            true -> null
+            false -> CTAP_ERR(OperationDenied)
+            null -> CTAP_ERR(UserActionTimeout)
         }
     }
 
