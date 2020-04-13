@@ -159,7 +159,7 @@ enum class AuthenticatorSpecialStatus {
 abstract class AuthenticatorContext(private val context: Context, val isHidTransport: Boolean) {
     abstract fun notifyUser(info: RequestInfo)
     abstract fun handleSpecialStatus(specialStatus: AuthenticatorSpecialStatus)
-    abstract suspend fun confirmRequestWithUser(info: RequestInfo): Boolean
+    abstract suspend fun confirmRequestWithUser(info: RequestInfo): Boolean?
     abstract suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String?
 
     // We use cached credentials only over NFC, where low latency responses are very important

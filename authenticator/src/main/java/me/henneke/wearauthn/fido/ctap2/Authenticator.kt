@@ -107,7 +107,7 @@ object Authenticator {
         if ((rpId == ".dummy" && userName == "dummy") /* Chrome */ ||
                 (rpId == "SelectDevice" && userName == "SelectDevice") /* Windows Hello */) {
             val requestInfo = Ctap2RequestInfo(PLATFORM_GET_TOUCH, rpId)
-            val followUpInClient = context.confirmRequestWithUser(requestInfo)
+            val followUpInClient = context.confirmRequestWithUser(requestInfo) == true
             if (followUpInClient)
                 return DUMMY_MAKE_CREDENTIAL_RESPONSE
             else
@@ -125,7 +125,7 @@ object Authenticator {
                         rpId = rpId,
                         rpName = rpName
                     )
-                val revealRegistration = context.confirmRequestWithUser(requestInfo)
+                val revealRegistration = context.confirmRequestWithUser(requestInfo) == true
                 if (revealRegistration)
                     CTAP_ERR(CredentialExcluded)
                 else
@@ -183,7 +183,7 @@ object Authenticator {
             requiresUserVerification = requireUserVerification
         )
 
-        if (!context.confirmRequestWithUser(requestInfo))
+        if (context.confirmRequestWithUser(requestInfo) != true)
             CTAP_ERR(OperationDenied)
 
         if (requireUserVerification && !context.verifyUser())
@@ -416,7 +416,7 @@ object Authenticator {
             // We have not found any credentials, ask the user for permission to reveal this fact.
             Ctap2RequestInfo(AUTHENTICATE_NO_CREDENTIALS, rpId)
         }
-        if (requireUserPresence && !context.confirmRequestWithUser(requestInfo))
+        if (requireUserPresence && context.confirmRequestWithUser(requestInfo) != true)
             CTAP_ERR(OperationDenied)
         if (!requireUserPresence)
             Log.i(TAG, "Processing silent GetAssertion request")

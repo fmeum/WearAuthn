@@ -28,7 +28,11 @@ class HidAuthenticatorContext(private val activity: Activity) :
         // a special status.
     }
 
-    override suspend fun confirmRequestWithUser(info: RequestInfo): Boolean {
+    /**
+     * Returns true if the user confirms the request, false if the user denies it explicitly and
+     * null if the confirmation dialog times out.
+     */
+    override suspend fun confirmRequestWithUser(info: RequestInfo): Boolean? {
         return try {
             status = AuthenticatorStatus.WAITING_FOR_UP
             withContext(Dispatchers.Main) {
@@ -40,13 +44,16 @@ class HidAuthenticatorContext(private val activity: Activity) :
                         setVibrateOnShow(true)
                         setWakeOnShow(true)
                     }
-                suspendCancellableCoroutine<Boolean> { continuation ->
+                suspendCancellableCoroutine<Boolean?> { continuation ->
                     dialog.apply {
                         setPositiveButton(DialogInterface.OnClickListener { _, _ ->
                             continuation.resume(true)
                         })
                         setNegativeButton(DialogInterface.OnClickListener { _, _ ->
                             continuation.resume(false)
+                        })
+                        setTimeoutListener(DialogInterface.OnCancelListener {
+                            continuation.resume(null)
                         })
                     }.show()
                     continuation.invokeOnCancellation {

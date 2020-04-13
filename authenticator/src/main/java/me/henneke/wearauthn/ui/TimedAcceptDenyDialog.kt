@@ -43,20 +43,27 @@ class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
     private var vibrateOnShow = false
     private var positiveButtonListener: DialogInterface.OnClickListener? = null
     private var negativeButtonListener: DialogInterface.OnClickListener? = null
+    private var timeoutListener: DialogInterface.OnCancelListener? = null
 
     private var wakeLock: PowerManager.WakeLock? = null
 
     private val actionHandler: (View) -> Unit = { v: View ->
-        when (v) {
-            positiveButton -> {
+        when {
+            v == positiveButton -> {
                 positiveButtonListener?.let {
                     it.onClick(this, DialogInterface.BUTTON_POSITIVE)
                     dismiss()
                 }
             }
-            negativeButton, negativeTimeout -> {
+            v == negativeButton || (v == negativeTimeout && timeoutListener == null) -> {
                 negativeButtonListener?.let {
                     it.onClick(this, DialogInterface.BUTTON_NEGATIVE)
+                    dismiss()
+                }
+            }
+            v == negativeTimeout -> {
+                timeoutListener?.let {
+                    it.onCancel(this)
                     dismiss()
                 }
             }
@@ -148,6 +155,10 @@ class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
 
     fun setPositiveButton(listener: DialogInterface.OnClickListener) {
         setButton(DialogInterface.BUTTON_POSITIVE, listener)
+    }
+
+    fun setTimeoutListener(listener: DialogInterface.OnCancelListener) {
+        timeoutListener = listener
     }
 
     fun setTimeout(timeout: Long) {
