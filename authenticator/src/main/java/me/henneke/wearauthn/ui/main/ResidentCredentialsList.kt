@@ -31,7 +31,11 @@ class ResidentCredentialsPreferenceFragment : PreferenceFragment() {
         preferenceScreen = preferenceManager.createPreferenceScreen(context)
         val credentialsPerRp = AuthenticatorContext.getAllResidentCredentials(context)
         preferenceScreen.title =
-            if (credentialsPerRp.isEmpty()) "No single-factor credentials" else "Single-factor credentials"
+            if (credentialsPerRp.isEmpty()) {
+                getString(R.string.credential_management_title_no_credentials)
+            } else {
+                getString(R.string.credential_management_title)
+            }
         for ((rpId, credentials) in credentialsPerRp) {
             if (credentials.isEmpty())
                 continue
@@ -61,7 +65,12 @@ class ResidentCredentialsPreferenceFragment : PreferenceFragment() {
                                 setPositiveButton(R.string.button_delete) { _, _ ->
                                     AcceptDenyDialog(context).run {
                                         setTitle(rpId)
-                                        setMessage("Delete credential for\n${credentialTwoLineInfo.first}\n?")
+                                        setMessage(
+                                            getString(
+                                                R.string.prompt_delete_resident_credential_message,
+                                                credentialTwoLineInfo.first
+                                            )
+                                        )
                                         setPositiveButton { _, _ ->
                                             AuthenticatorContext.deleteResidentCredential(
                                                 context,

@@ -8,6 +8,7 @@ import android.util.Log
 import android.widget.Toast
 import com.google.android.gms.common.util.Hex
 import kotlinx.coroutines.*
+import me.henneke.wearauthn.R
 import me.henneke.wearauthn.fido.ApduException
 import me.henneke.wearauthn.fido.CommandApdu
 import me.henneke.wearauthn.fido.ResponseApdu
@@ -217,10 +218,10 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
         override fun handleSpecialStatus(specialStatus: AuthenticatorSpecialStatus) {
             when (specialStatus) {
                 RESET -> {
-                    onDeactivatedMessage = "Reset only possible via Bluetooth"
+                    onDeactivatedMessage = getString(R.string.reset_via_bluetooth_only)
                 }
                 USER_NOT_AUTHENTICATED -> {
-                    onDeactivatedMessage = "Verify screen lock credential and try again"
+                    onDeactivatedMessage = getString(R.string.verify_screen_lock_and_retry)
                     confirmDeviceCredentialOnDeactivated = true
                 }
             }

@@ -43,8 +43,8 @@ class UnlockComplicationListenerService : WearableListenerService() {
                 if (enableComplication && !isComplicationEnabled()) {
                     val notification = Notification.Builder(this, UNLOCKED_CHANNEL).run {
                         setSmallIcon(R.drawable.ic_launcher_outline)
-                        setContentTitle(getString(R.string.title_complication_unlocked_notification))
-                        setContentText(getString(R.string.text_complication_unlocked_notification))
+                        setContentTitle(getString(R.string.notification_complication_unlocked_title))
+                        setContentText(getString(R.string.notification_complication_unlocked_message))
                         build()
                     }
                     notificationManager?.notify(COMPLICATION_UNLOCKED_ID, notification)

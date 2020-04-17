@@ -30,13 +30,13 @@ class ManageSpaceActivity : FragmentActivity(), CoroutineScope {
         super.onStart()
         AcceptDenyDialog(this).apply {
             setTitle(R.string.app_family_name)
-            setMessage(getText(R.string.prompt_delete_all_data))
+            setMessage(getText(R.string.prompt_delete_all_data_first_step_message))
             setPositiveButton { _, _ ->
                 // We ask again with the buttons in a different place to prevent
                 // accidental deletions.
                 AcceptDenyDialog(this@ManageSpaceActivity).apply {
                     setTitle(R.string.app_family_name)
-                    setMessage(getText(R.string.second_prompt_delete_all_data))
+                    setMessage(getText(R.string.prompt_delete_all_data_second_step_message))
                     setPositiveButton { _, _ -> deleteAllData() }
                     setNegativeButton { _, _ -> returnResult(Activity.RESULT_CANCELED) }
                     setOnCancelListener { returnResult(Activity.RESULT_CANCELED) }
@@ -69,7 +69,7 @@ class ManageSpaceActivity : FragmentActivity(), CoroutineScope {
                             )
                             putExtra(
                                 ConfirmationActivity.EXTRA_MESSAGE,
-                                getString(R.string.message_delete_all_data)
+                                getString(R.string.message_deleted_all_data)
                             )
                         })
                     returnResult(Activity.RESULT_OK)

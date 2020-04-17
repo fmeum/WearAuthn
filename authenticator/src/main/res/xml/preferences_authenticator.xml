@@ -1,64 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:title="Use via Bluetooth with">
+    android:title="@string/preference_title">
 
     <Preference
-        android:key="@string/preference_nfc_settings"
+        android:key="@string/preference_nfc_settings_key"
         android:order="@integer/order_device_list_nfc_settings"
         android:persistent="false"
-        tools:summary="Hold to NFC-capable phone, even while on watch face.">
+        tools:summary="@string/status_nfc_explanation">
         <intent android:action="android.settings.NFC_SETTINGS" />
     </Preference>
 
     <PreferenceCategory
         android:order="@integer/order_device_list_bluetooth_category"
-        android:title="Bluetooth">
+        android:title="@string/preference_category_bluetooth_title">
 
         <Preference
             android:icon="@drawable/ic_btn_bluetooth"
-            android:key="@string/preference_bluetooth_settings"
+            android:key="@string/preference_bluetooth_settings_key"
             android:order="@integer/order_device_list_bluetooth_settings"
             android:persistent="false"
-            android:title="Settings"
+            android:title="@string/preference_bluetooth_settings_title"
             tools:summary="@string/status_bluetooth_tap_and_pair">
             <intent android:action="android.settings.BLUETOOTH_SETTINGS" />
         </Preference>
 
         <SwitchPreference
-            android:key="@string/preference_discoverable"
+            android:key="@string/preference_discoverable_key"
             android:order="@integer/order_device_list_discoverable"
             android:persistent="false"
-            android:summaryOn="Visible to other devices for 1 min"
-            android:summaryOff="Make visible to other devices"
-            android:title="Discoverable" />
+            android:summaryOn="@string/preference_discoverable_summary_on"
+            android:summaryOff="@string/preference_discoverable_summary_off"
+            android:title="@string/preference_discoverable_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
         android:order="@integer/order_device_list_more_category"
-        android:title="Advanced">
+        android:title="@string/preference_category_advanced_title">
 
         <SwitchPreference
-            android:key="@string/preference_single_factor_mode"
+            android:key="@string/preference_single_factor_mode_key"
             android:order="@integer/order_device_list_single_factor_mode"
-            android:title="Single-factor mode"
+            android:title="@string/preference_single_factor_mode_title"
             android:enabled="false"
             android:persistent="false" />
 
         <Preference
             android:icon="@drawable/ic_btn_key"
-            android:key="@string/preference_credential_management"
+            android:key="@string/preference_credential_management_key"
             android:order="@integer/order_device_list_credential_management"
-            android:title="Manage single-factor credentials"
+            android:title="@string/preference_credential_management_title"
             android:enabled="false"
             android:persistent="false" />
 
         <Preference
             android:icon="@drawable/ic_btn_info"
-            android:key="@string/preference_about"
+            android:key="@string/preference_about_key"
             android:order="@integer/order_device_list_about"
             android:persistent="false"
-            android:title="About">
+            android:title="@string/preference_about_title">
             <intent
                 android:targetClass="me.henneke.wearauthn.ui.main.AboutActivity"
                 android:targetPackage="@string/application_id" />

@@ -14,6 +14,7 @@ import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.core.content.edit
 import kotlinx.coroutines.*
+import me.henneke.wearauthn.R
 import me.henneke.wearauthn.base64
 import me.henneke.wearauthn.escapeHtml
 import me.henneke.wearauthn.fido.context.AuthenticatorAction.*
@@ -50,40 +51,83 @@ enum class AuthenticatorAction {
     PLATFORM_GET_TOUCH
 }
 
-sealed class RequestInfo(open val action: AuthenticatorAction) {
+sealed class RequestInfo(private val context: Context, protected val action: AuthenticatorAction) {
     protected abstract val formattedRp: String?
     protected abstract val shortRp: String?
     protected abstract val formattedUser: String?
     protected abstract val formattedAdditionalInfo: String
     protected abstract val shortAdditionalInfo: String
 
-    private val formattedRpPart by lazy { if (formattedRp != null) " to $formattedRp" else "" }
-    private val shortRpPart by lazy { if (shortRp != null) " to $shortRp" else "" }
-    private val formattedUserPart by lazy { if (formattedUser != null) " as $formattedUser" else "" }
+    private val formattedRpPart by lazy {
+        if (formattedRp != null) context.getString(
+            R.string.generic_part_to,
+            formattedRp
+        ) else ""
+    }
+    private val shortRpPart by lazy {
+        if (shortRp != null) context.getString(
+            R.string.generic_part_to,
+            shortRp
+        ) else ""
+    }
+    private val formattedUserPart by lazy {
+        if (formattedUser != null) context.getString(
+            R.string.generic_part_as,
+            formattedUser
+        ) else ""
+    }
 
     val confirmationPrompt: Spanned
         get() = Html.fromHtml(
             when (action) {
-                AUTHENTICATE -> "Authenticate$formattedRpPart$formattedUserPart?$formattedAdditionalInfo"
-                AUTHENTICATE_NO_CREDENTIALS -> "Reveal that you are not registered?"
-                REGISTER -> "Register$formattedRpPart$formattedUserPart?$formattedAdditionalInfo"
-                REGISTER_CREDENTIAL_EXCLUDED -> "Reveal previous registration or error$formattedRpPart?"
-                PLATFORM_GET_TOUCH -> "Continue with this security key?"
+                AUTHENTICATE -> context.getString(
+                    R.string.prompt_authenticate,
+                    formattedRpPart,
+                    formattedUserPart,
+                    formattedAdditionalInfo
+                )
+                AUTHENTICATE_NO_CREDENTIALS -> context.getString(R.string.prompt_authenticate_no_credentials)
+                REGISTER -> context.getString(
+                    R.string.prompt_register,
+                    formattedRpPart,
+                    formattedUserPart,
+                    formattedAdditionalInfo
+                )
+                REGISTER_CREDENTIAL_EXCLUDED -> context.getString(
+                    R.string.prompt_register_credential_excluded,
+                    formattedRpPart
+                )
+                PLATFORM_GET_TOUCH -> context.getString(R.string.prompt_platform_get_touch)
             }, Html.FROM_HTML_MODE_LEGACY
         )
 
     val successMessage: String
         get() = when (action) {
-            AUTHENTICATE -> "Authenticated$shortRpPart$shortAdditionalInfo"
-            AUTHENTICATE_NO_CREDENTIALS -> "Revealed that you are not registered"
-            REGISTER -> "Registered$shortRpPart$shortAdditionalInfo"
-            REGISTER_CREDENTIAL_EXCLUDED -> "Revealed previous registration or error$shortRpPart"
-            PLATFORM_GET_TOUCH -> "Not registered or error encountered"
+            AUTHENTICATE -> context.getString(
+                R.string.message_authenticate,
+                shortRpPart,
+                shortAdditionalInfo
+            )
+            AUTHENTICATE_NO_CREDENTIALS -> context.getString(R.string.message_authenticate_no_credentials)
+            REGISTER -> context.getString(
+                R.string.message_register,
+                shortRpPart,
+                shortAdditionalInfo
+            )
+            REGISTER_CREDENTIAL_EXCLUDED -> context.getString(
+                R.string.message_register_credential_excluded,
+                shortRpPart
+            )
+            PLATFORM_GET_TOUCH -> context.getString(R.string.message_platform_get_touch)
         }
 }
 
-data class U2fRequestInfo(override val action: AuthenticatorAction, val appIdHash: ByteArray) :
-    RequestInfo(action) {
+class U2fRequestInfo(
+    context: Context,
+    action: AuthenticatorAction,
+    private val appIdHash: ByteArray
+) :
+    RequestInfo(context, action) {
     override val formattedRp = resolveAppIdHash(appIdHash)?.let { "<br/><b>$it</b><br/>" }
     override val shortRp = resolveAppIdHash(appIdHash)
     override val formattedUser: String? = null
@@ -91,16 +135,17 @@ data class U2fRequestInfo(override val action: AuthenticatorAction, val appIdHas
     override val shortAdditionalInfo = ""
 }
 
-data class Ctap2RequestInfo(
-    override val action: AuthenticatorAction,
-    val rpId: String,
-    val rpName: String? = null,
-    val userName: String? = null,
-    val userDisplayName: String? = null,
-    val requiresUserVerification: Boolean = false,
-    val usesResidentKey: Boolean = false
+class Ctap2RequestInfo(
+    context: Context,
+    action: AuthenticatorAction,
+    private val rpId: String,
+    private val rpName: String? = null,
+    private val userName: String? = null,
+    private val userDisplayName: String? = null,
+    private val requiresUserVerification: Boolean = false,
+    private val addResidentKeyHint: Boolean = false
 ) :
-    RequestInfo(action) {
+    RequestInfo(context, action) {
 
     override val formattedRp = if (!rpName.isNullOrBlank())
         "<br/><b>${rpId.escapeHtml()}</b><br/>(“${rpName.escapeHtml()}”)<br/>"
@@ -115,22 +160,22 @@ data class Ctap2RequestInfo(
         userDisplayName.escapeHtml()
     else null
 
-    override val formattedAdditionalInfo = if (requiresUserVerification || usesResidentKey) {
+    override val formattedAdditionalInfo = if (requiresUserVerification || addResidentKeyHint) {
         "<br/>"
     } else {
         ""
     } + if (requiresUserVerification) {
         when (action) {
-            AUTHENTICATE -> "<br/>You may have to reconfirm your screen lock."
-            REGISTER -> "<br/>You may have to reconfirm your screen lock to log in and <b>loose access if you disable it</b>."
+            AUTHENTICATE -> context.getString(R.string.prompt_authenticate_user_verification)
+            REGISTER -> context.getString(R.string.prompt_register_user_verification)
             else -> ""
         }
     } else {
         ""
-    } + if (usesResidentKey) {
+    } + if (addResidentKeyHint) {
         when (action) {
-            AUTHENTICATE -> "<br/>You will be asked to select an account."
-            REGISTER -> "<br/>Your association with the site will be stored on your watch."
+            AUTHENTICATE -> context.getString(R.string.prompt_authenticate_resident_key)
+            REGISTER -> context.getString(R.string.prompt_register_resident_key)
             else -> ""
         }
     } else {
@@ -138,7 +183,7 @@ data class Ctap2RequestInfo(
     }
 
     override val shortAdditionalInfo = if (requiresUserVerification && action == REGISTER) {
-        ". Do not disable the screen lock."
+        context.getString(R.string.message_register_user_verification)
     } else {
         ""
     }
@@ -421,6 +466,28 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
             .map { it.substring(4) }.toList()
     }
 
+    fun makeU2fRequestInfo(action: AuthenticatorAction, appIdHash: ByteArray) =
+        U2fRequestInfo(context.applicationContext, action = action, appIdHash = appIdHash)
+
+    fun makeCtap2RequestInfo(
+        action: AuthenticatorAction,
+        rpId: String,
+        rpName: String? = null,
+        userName: String? = null,
+        userDisplayName: String? = null,
+        requiresUserVerification: Boolean = false,
+        addResidentKeyHint: Boolean = false
+    ) = Ctap2RequestInfo(
+        context.applicationContext,
+        action = action,
+        rpId = rpId,
+        rpName = rpName,
+        userName = userName,
+        userDisplayName = userDisplayName,
+        requiresUserVerification = requiresUserVerification,
+        addResidentKeyHint = addResidentKeyHint
+    )
+
     private fun getResidentKeyPrefsForRpId(rpIdHash: ByteArray) =
         Companion.getResidentKeyPrefsForRpId(context, rpIdHash)
 
@@ -579,7 +646,10 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
                     val rpPrefs =
                         context.sharedPreferences(RESIDENT_KEY_PREFERENCE_FILE_PREFIX + rpIdHash.base64())
                     val rpId = rpPrefs.getString("rpId", null)
-                        ?: "Unknown site #$unknownSiteCounter".also { unknownSiteCounter++ }
+                        ?: context.getString(
+                            R.string.title_prefix_unknown_site_with_number,
+                            unknownSiteCounter
+                        ).also { unknownSiteCounter++ }
                     val credentials = rpPrefs.all.keys
                         .filter { it.startsWith("uid+") }
                         .mapNotNull {

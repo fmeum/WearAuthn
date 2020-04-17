@@ -114,7 +114,7 @@ object Authenticator {
         // https://cs.chromium.org/chromium/src/device/fido/make_credential_task.cc?l=66&rcl=eb40dba9a062951578292de39424d7479f723463
         if ((rpId == ".dummy" && userName == "dummy") /* Chrome */ ||
                 (rpId == "SelectDevice" && userName == "SelectDevice") /* Windows Hello */) {
-            val requestInfo = Ctap2RequestInfo(PLATFORM_GET_TOUCH, rpId)
+            val requestInfo = context.makeCtap2RequestInfo(PLATFORM_GET_TOUCH, rpId)
             val followUpInClient = context.confirmRequestWithUser(requestInfo) == true
             if (followUpInClient)
                 return DUMMY_MAKE_CREDENTIAL_RESPONSE
@@ -128,7 +128,7 @@ object Authenticator {
                 if (Credential.fromCborCredential(cborCredential, rpIdHash, context) == null)
                     continue
                 val requestInfo =
-                    Ctap2RequestInfo(
+                    context.makeCtap2RequestInfo(
                         action = REGISTER_CREDENTIAL_EXCLUDED,
                         rpId = rpId,
                         rpName = rpName
@@ -181,13 +181,13 @@ object Authenticator {
             CTAP_ERR(PinAuthInvalid, "pinAuth sent with MakeCredential")
 
         // Step 8
-        val requestInfo = Ctap2RequestInfo(
+        val requestInfo = context.makeCtap2RequestInfo(
             action = REGISTER,
             rpId = rpId,
             rpName = rpName,
             userName = userName,
             userDisplayName = userDisplayName,
-            usesResidentKey = requireResidentKey,
+            addResidentKeyHint = requireResidentKey,
             requiresUserVerification = requireUserVerification
         )
 
@@ -415,18 +415,18 @@ object Authenticator {
             val firstCredential = credentialsToUse.first() as? WebAuthnCredential
             val singleCredential = numberOfCredentials == 1
             check(!singleCredential implies useResidentKey)
-            Ctap2RequestInfo(
+            context.makeCtap2RequestInfo(
                 action = AUTHENTICATE,
                 rpId = rpId,
                 rpName = firstCredential?.rpName,
                 userName = if (singleCredential) firstCredential?.userName else null,
                 userDisplayName = if (singleCredential) firstCredential?.userDisplayName else null,
                 requiresUserVerification = requireUserVerification,
-                usesResidentKey = !singleCredential
+                addResidentKeyHint = !singleCredential
             )
         } else {
             // We have not found any credentials, ask the user for permission to reveal this fact.
-            Ctap2RequestInfo(AUTHENTICATE_NO_CREDENTIALS, rpId)
+            context.makeCtap2RequestInfo(AUTHENTICATE_NO_CREDENTIALS, rpId)
         }
         if (requireUserPresence && context.confirmRequestWithUser(requestInfo) != true)
             CTAP_ERR(OperationDenied)
@@ -621,7 +621,7 @@ object Authenticator {
     }
 
     private suspend fun handleSelection(context: AuthenticatorContext): Nothing? {
-        val info = Ctap2RequestInfo(PLATFORM_GET_TOUCH, "")
+        val info = context.makeCtap2RequestInfo(PLATFORM_GET_TOUCH, "")
         return when (context.confirmRequestWithUser(info)) {
             true -> null
             false -> CTAP_ERR(OperationDenied)

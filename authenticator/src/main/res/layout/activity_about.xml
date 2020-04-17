@@ -32,7 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingHorizontal="@dimen/text_horizontal_padding"
-            android:text="@string/about_nfc_how_to_use"
+            android:text="@string/about_how_to_use"
             android:textAppearance="@android:style/TextAppearance.Material.Body1" />
 
         <ImageButton

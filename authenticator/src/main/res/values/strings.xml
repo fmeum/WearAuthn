@@ -1,53 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">WearAuthn</string>
-    <string name="servicedesc">WebAuthn/U2F authenticator</string>
-    <string name="aiddescription">WebAuthn/U2F authenticator</string>
+    <string name="app_name" translatable="false">WearAuthn</string>
+    <string name="servicedesc">FIDO2/U2F Security Key</string>
+    <string name="aiddescription">FIDO2/U2F Security Key</string>
     <string name="connected_to_device_message"><![CDATA[Attached to<br><b>%1$s</b>]]></string>
     <string name="connecting_to_device_message"><![CDATA[Attaching to<br><b>%1$s</b>…]]></string>
-    <string name="connected_to_device_explanation">Use as if a USB security key were attached to that device.\nSetup steps available on your phone.</string>
-    <string name="preference_about">preference_about</string>
-    <string name="preference_bluetooth_settings">preference_bluetooth_settings</string>
-    <string name="message_key_storage_type_unknown">Key storage: Scanning…</string>
-    <string name="message_key_storage_type_software">Key storage: Software</string>
-    <string name="message_key_storage_type_hardware">Key storage: Hardware</string>
+    <string name="connected_to_device_explanation">Use as if a USB security key were attached to that device.\nHelp with common issues is available on your phone.</string>
+    <string name="preference_about_key" translatable="false">preference_about</string>
+    <string name="preference_bluetooth_settings_key" translatable="false">preference_bluetooth_settings</string>
+    <string name="message_key_storage_type_unknown">Credential storage: Scanning…</string>
+    <string name="message_key_storage_type_software">Credential storage: Software</string>
+    <string name="message_key_storage_type_hardware">Credential storage: Hardware</string>
     <string name="status_bluetooth_connecting">Attaching…</string>
     <string name="status_bluetooth_connected">Attached</string>
     <string name="status_bluetooth_tap_and_pair">Tap and pair device</string>
     <string name="status_bluetooth_tap_to_enable">Tap to enable</string>
-    <string name="preference_nfc_settings">preference_nfc_settings</string>
-    <string name="status_nfc_explanation">Hold to NFC-capable phone, even while on watch face.</string>
+    <string name="preference_nfc_settings_key" translatable="false">preference_nfc_settings</string>
+    <string name="status_nfc_explanation">Or hold to NFC-capable phone (even while on watch face).</string>
     <string name="status_nfc_not_available">NFC is not available on your watch</string>
     <string name="status_nfc_tap_and_enable">Tap and enable</string>
-    <string name="preference_discoverable">preference_discoverable</string>
-    <string name="preference_single_factor_mode">preference_single_factor_mode</string>
-    <string name="message_single_factor_mode_prompt"><![CDATA[Registrations made in single-factor mode allow you to log in to certain sites without username or password.<br/><br/>Single-factor mode and passwordless login will be disabled if you turn off your screen lock and cannot be activated again without a full reset of WearAuthn.<br/><br/>Continue?]]></string>
-    <string name="title_single_factor_mode_prompt">Enable single-factor mode?</string>
-    <string name="summary_single_factor_mode_available">Log in to certain sites without username and password</string>
-    <string name="summary_single_factor_mode_active">Active</string>
-    <string name="summary_single_factor_mode_enable_lock">Set a screen lock first</string>
-    <string name="summary_single_factor_mode_disabled">Requires a full reset since screen lock had been disabled</string>
-    <string name="title_nfc_preference">Phone via NFC</string>
-    <string name="about_nfc_how_to_use"><b>How to use</b>\nPair a Bluetooth&#8203;-&#8203;enabled device running Windows 10 (with Chrome, Firefox or Edge), macOS (with Chrome) or ChromeOS with your watch and connect to it from the WearAuthn main menu. You will be able to use your watch just like you would a USB security key plugged into the device.\n\nTo use WearAuthn with your NFC&#8203;-&#8203;enabled Android phone or iPhone (iOS 13.3+), just hold it to your watch when it tells you to &#8220;Use your Security Key&#8221;. This works even if WearAuthn is not running, as long as you wake your watch before holding it to your phone.</string>
+    <string name="preference_discoverable_key" translatable="false">preference_discoverable</string>
+    <string name="preference_single_factor_mode_key" translatable="false">preference_single_factor_mode</string>
+    <string name="prompt_single_factor_mode_message"><![CDATA[Registrations made in passwordless mode allow you to log in to certain sites without username or password.<br/><br/>Passwordless logins will no longer work after you turn off your screen lock and cannot be enabled again without a full reset of WearAuthn.<br/><br/>Continue?]]></string>
+    <string name="prompt_single_factor_mode_title">Enable passwordless mode?</string>
+    <string name="preference_single_factor_mode_summary_available">Log in to certain sites without a password</string>
+    <string name="preference_single_factor_mode_summary_active">Active</string>
+    <string name="preference_single_factor_mode_summary_enable_lock">Set a screen lock first</string>
+    <string name="preference_single_factor_mode_summary_disabled">Requires a full reset since screen lock had been disabled</string>
+    <string name="preference_nfc_title">Phone via NFC</string>
+    <string name="about_how_to_use"><b>Use via Bluetooth</b>\nPair a Bluetooth&#8203;-&#8203;enabled device running Windows 10 (Chrome, Firefox or Edge), macOS (Chrome) or Linux (Chrome) with your watch and connect to it from the WearAuthn main menu. Afterwards, you can use your watch like a plugged-in USB security key.\n\n<b>Use via NFC</b>\nHold your NFC&#8203;-&#8203;enabled Android phone or iPhone (iOS 13.3+) to your watch when you are asked to &#8220;Use your Security Key&#8221;. This works even from your watch face while it is not in &#8220;always-on&#8221; mode.</string>
     <string name="label_licenses">Licenses</string>
-    <string name="url_usage">https://github.com/FabianHenneke/WearAuthn/blob/master/README.md#usage</string>
-    <string name="url_setup" tools:ignore="TypographyDashes">https://github.com/FabianHenneke/WearAuthn/blob/master/README.md#compatibility--setup</string>
-    <string name="label_support">Unlock complication</string>
+    <string name="url_usage" translatable="false">https://github.com/FabianHenneke/WearAuthn/blob/master/README.md#usage</string>
+    <string name="url_setup" translatable="false" tools:ignore="TypographyDashes">https://github.com/FabianHenneke/WearAuthn/blob/master/README.md#compatibility--setup</string>
+    <string name="label_support">Support WearAuthn</string>
     <string name="label_privacy">Privacy policy</string>
-    <string name="app_family_name">WearAuthn</string>
+    <string name="app_family_name" translatable="false">WearAuthn</string>
     <string name="generic_accept">Accept</string>
     <string name="generic_deny">Deny</string>
     <string name="generic_icon">Icon</string>
-    <string name="prompt_delete_all_data">Confirm deletion of all credentials?\nYou will <b>lose access to your accounts</b> if you don\'t have a backup second factor.</string>
-    <string name="second_prompt_delete_all_data">Scroll down for the confirmation button.\n\n\n\n\n\n\n\n\n\n\n<b>Really confirm deletion of all credentials?</b></string>
-    <string name="message_delete_all_data">Authenticator has been reset</string>
+    <string name="prompt_delete_all_data_first_step_message">Delete all credentials?\nYou will <b>lose access to your accounts</b> if you don\'t have a backup second factor.</string>
+    <string name="prompt_delete_all_data_second_step_message">Scroll down for the confirmation button.\n\n\n\n\n\n\n\n\n\n\n<b>Really delete all credentials?</b></string>
+    <string name="message_deleted_all_data">WearAuthn has been reset</string>
     <string name="status_bluetooth_use_via_nfc_instead">Use via NFC instead</string>
     <string name="preference_screen_title_shortcut_picker">Add a device shortcut to your watch face</string>
     <string name="message_continue_on_phone">Continue on your phone</string>
     <string name="name_unlocked_channel">Unlocked functionality</string>
     <string name="description_unlocked_channel">Informs you about functionality unlocked on your watch by in-app purchases made on your phone.</string>
-    <string name="title_complication_unlocked_notification">Complication unlocked</string>
-    <string name="text_complication_unlocked_notification">Add a device shortcut complication from your watch face\'s settings.</string>
-    <string name="preference_credential_management">preference_credential_management</string>
+    <string name="notification_complication_unlocked_title">Watch face shortcut unlocked</string>
+    <string name="notification_complication_unlocked_message">Add a device shortcut complication from your watch face\'s settings.</string>
+    <string name="preference_credential_management_key" translatable="false">preference_credential_management</string>
     <string name="button_delete">Delete</string>
-    <string name="summary_manage_credentials_disabled">Enable single-factor mode first</string>
+    <string name="preference_manage_credentials_summary_disabled">Enable single-factor mode first</string>
+    <string name="preference_bluetooth_settings_title">Settings</string>
+    <string name="preference_discoverable_summary_on">Visible to other devices for 1 min</string>
+    <string name="preference_discoverable_summary_off">Make visible to other devices</string>
+    <string name="preference_discoverable_title">Discoverable</string>
+    <string name="preference_single_factor_mode_title">Passwordless mode</string>
+    <string name="preference_credential_management_title">Manage credentials for passwordless login</string>
+    <string name="preference_about_title">About</string>
+    <string name="preference_title">Use via Bluetooth with</string>
+    <string name="preference_category_advanced_title">Advanced</string>
+    <string name="preference_category_bluetooth_title" translatable="false">Bluetooth</string>
+    <string name="credential_management_title_no_credentials">No credentials for passwordless login</string>
+    <string name="credential_management_title">Credentials for passwordless login</string>
+    <string name="prompt_delete_resident_credential_message">Delete credential for\n%1$s\n?</string>
+    <string name="reset_via_bluetooth_only">Reset only possible via Bluetooth</string>
+    <string name="verify_screen_lock_and_retry">Verify screen lock credential and try again</string>
+    <string name="prompt_authenticate_user_verification"><![CDATA[<br/>May require your screen lock password.]]></string>
+    <string name="prompt_register_user_verification"><![CDATA[<br/>Logging in via your watch may require your screen lock password and <b>will no longer be possible after you disable it</b>.]]></string>
+    <string name="prompt_authenticate_resident_key"><![CDATA[<br/>You will be asked to select an account.]]></string>
+    <string name="prompt_register_resident_key"><![CDATA[<br/>The site\'s address and your username will be stored on your watch.]]></string>
+    <string name="message_register_user_verification">. Do not disable the screen lock.</string>
+    <string name="prompt_platform_get_touch">Continue with this security key?</string>
+    <string name="message_platform_get_touch">Not registered or error encountered</string>
+    <string name="prompt_authenticate_no_credentials">Reveal that you are not registered?</string>
+    <string name="message_authenticate_no_credentials">Revealed that you are not registered</string>
+    <string name="generic_part_to">" to %1$s"</string>
+    <string name="generic_part_as">" as %1$s"</string>
+    <string name="title_prefix_unknown_site_with_number">Unknown site #%1$d</string>
+    <string name="message_register_credential_excluded">Revealed previous registration or error%1$s</string>
+    <string name="message_register">Registered%1$s%2$s</string>
+    <string name="message_authenticate">Authenticated%1$s%2$s</string>
+    <string name="prompt_register_credential_excluded">Reveal previous registration or error%1$s?</string>
+    <string name="prompt_register">Register%1$s%2$s?%3$s</string>
+    <string name="prompt_authenticate">Authenticate%1$s%2$s?%3$s</string>
 </resources>

@@ -37,7 +37,7 @@ object Authenticator {
             else
                 AuthenticatorAction.REGISTER
         val requestInfo =
-            U2fRequestInfo(action, req.application)
+            context.makeU2fRequestInfo(action, req.application)
         return Pair(requestInfo) {
             val (keyAlias, _) = context.getOrCreateFreshWebAuthnCredential()
                 ?: throw ApduException(StatusWord.MEMORY_FAILURE)
@@ -97,7 +97,7 @@ object Authenticator {
             }
             AuthenticateControlByte.ENFORCE_USER_PRESENCE_AND_SIGN -> {
                 val requestInfo =
-                    U2fRequestInfo(action, req.application)
+                    context.makeU2fRequestInfo(action, req.application)
                 return Pair(requestInfo) {
                     credential.assertU2f(
                         clientDataHash = req.challenge,

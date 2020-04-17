@@ -71,14 +71,14 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         bluetoothSettingsPreference =
-            findPreference(getString(R.string.preference_bluetooth_settings))
+            findPreference(getString(R.string.preference_bluetooth_settings_key))
         discoverableSwitchPreference =
-            findPreference(getString(R.string.preference_discoverable)) as SwitchPreference
-        nfcSettingsPreference = findPreference(getString(R.string.preference_nfc_settings))
+            findPreference(getString(R.string.preference_discoverable_key)) as SwitchPreference
+        nfcSettingsPreference = findPreference(getString(R.string.preference_nfc_settings_key))
         singleFactorModeSwitchPreference =
-            findPreference(getString(R.string.preference_single_factor_mode)) as SwitchPreference
+            findPreference(getString(R.string.preference_single_factor_mode_key)) as SwitchPreference
         manageCredentialsPreference =
-            findPreference(getString(R.string.preference_credential_management))
+            findPreference(getString(R.string.preference_credential_management_key))
     }
 
     override fun onResume() {
@@ -174,14 +174,14 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
                 false -> {
                     icon = context.getDrawable(R.drawable.ic_btn_settings)
                     isEnabled = true
-                    setTitle(R.string.title_nfc_preference)
+                    setTitle(R.string.preference_nfc_title)
                     setSummary(R.string.status_nfc_tap_and_enable)
                     onPreferenceClickListener = null
                 }
                 null -> {
                     icon = null
                     isEnabled = false
-                    setTitle(R.string.title_nfc_preference)
+                    setTitle(R.string.preference_nfc_title)
                     setSummary(R.string.status_nfc_not_available)
                     setOnPreferenceClickListener { true }
                 }
@@ -262,20 +262,20 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
                 true -> {
                     isEnabled = false
                     isChecked = true
-                    setSummary(R.string.summary_single_factor_mode_active)
+                    setSummary(R.string.preference_single_factor_mode_summary_active)
                 }
                 false -> {
                     isChecked = false
                     if (AuthenticatorContext.isScreenLockEnabled(context)) {
                         isEnabled = true
-                        setSummary(R.string.summary_single_factor_mode_available)
+                        setSummary(R.string.preference_single_factor_mode_summary_available)
                         setOnPreferenceChangeListener { _, _ ->
                             isEnabled = false
                             AcceptDenyDialog(context).run {
-                                setTitle(R.string.title_single_factor_mode_prompt)
+                                setTitle(R.string.prompt_single_factor_mode_title)
                                 setMessage(
                                     Html.fromHtml(
-                                        getString(R.string.message_single_factor_mode_prompt),
+                                        getString(R.string.prompt_single_factor_mode_message),
                                         Html.FROM_HTML_MODE_LEGACY
                                     )
                                 )
@@ -307,13 +307,13 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
                         }
                     } else {
                         isEnabled = false
-                        setSummary(R.string.summary_single_factor_mode_enable_lock)
+                        setSummary(R.string.preference_single_factor_mode_summary_enable_lock)
                     }
                 }
                 null -> {
                     isEnabled = false
                     isChecked = false
-                    setSummary(R.string.summary_single_factor_mode_disabled)
+                    setSummary(R.string.preference_single_factor_mode_summary_disabled)
                 }
             }
         }
@@ -325,7 +325,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
             } else {
                 isEnabled = false
                 icon = null
-                summary = getString(R.string.summary_manage_credentials_disabled)
+                summary = getString(R.string.preference_manage_credentials_summary_disabled)
             }
             setOnPreferenceClickListener {
                 val intent =
