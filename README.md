@@ -66,11 +66,11 @@ No setup required, but only supported by Chrome at the moment.
 
 ### Chrome OS (Bluetooth)
 
-Will not work with some devices, which is most likely because Chrome OS applies its own set of rules for low-level device access. This is currently being investigated in [crbug/1036698](https://bugs.chromium.org/p/chromium/issues/detail?id=1036698).  
+Will not work with some devices, which is most likely because Chrome OS applies its own set of rules for low-level device access. This is currently being investigated in [crbug/1036698](https://bugs.chromium.org/p/chromium/issues/detail?id=1036698).
 
 ### Linux (Bluetooth)
 
-Works with Chrome, but may require manually adding a udev rule so that software on your device can access WearAuthn without running as root.
+Works with Chrome, assuming that appropriate udev rules allow access to the device for software not running as root. If your Linux distribution comes with systemd 244 or higher (run `systemd --version` to check the installed version), it will automatically configure these rules for WearAuthn and any other security key.
 
 If WearAuthn is connected to your Linux device, but you still do not receive confirmation prompts when a security key operation is initiated in Chrome, follow these steps depending on your Linux distribution:
 
@@ -98,7 +98,7 @@ Your Android device has to be equipped with NFC in order to use it with WearAuth
 
 ### iPhones (NFC)
 
-You will be able to use WearAuthn with Safari on your NFC-capable iPhones running iOS version 13.3. 
+You will be able to use WearAuthn with Safari on your NFC-capable iPhones running iOS version 13.3.
 
 ## Security
 
