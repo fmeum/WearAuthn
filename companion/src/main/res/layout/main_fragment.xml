@@ -11,10 +11,10 @@
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="60dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingBottom="60dp">
 
-        <androidx.cardview.widget.CardView
+        <androidx.cardview.widget.CardView xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/complicationUnlockCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -24,7 +24,8 @@
             card_view:contentPadding="8dp"
             tools:visibility="visible">
 
-            <RelativeLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/relativeLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -32,40 +33,47 @@
                     android:id="@+id/complicationUnlockTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentStart="@id/complicationUnlockPrice"
                     android:text="@string/title_complication_unlock_card"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
-
-                <TextView
-                    android:id="@+id/complicationUnlockPrice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignBaseline="@id/complicationUnlockTitle"
-                    android:layout_alignParentEnd="true"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                    tools:text="$1.99 (+tax)" />
+                    app:layout_constraintBottom_toTopOf="@id/complicationUnlockDescription"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
                     android:id="@+id/complicationUnlockDescription"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/complicationUnlockTitle"
                     android:text="@string/description_complication_unlock_card"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                    app:layout_constraintBottom_toTopOf="@id/complicationUnlockPurchase"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/complicationUnlockTitle" />
+
+                <TextView
+                    android:id="@+id/complicationUnlockPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/complicationUnlockDescription"
+                    tools:text="$1.99 (+tax)" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/complicationUnlockPurchase"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/complicationUnlockDescription"
-                    android:layout_alignParentEnd="true"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/complicationUnlockDescription"
                     tools:enabled="true"
                     tools:text="Purchase" />
 
-            </RelativeLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
-        <androidx.cardview.widget.CardView
+        <androidx.cardview.widget.CardView xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/installWatchAppCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -73,48 +81,63 @@
             card_view:cardCornerRadius="4dp"
             card_view:contentPadding="8dp">
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/linearLayout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_height="wrap_content">
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:id="@+id/textView"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:text="@string/title_install_watch_card"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                    app:layout_constraintBottom_toTopOf="@id/textView2"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed" />
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:id="@+id/textView2"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:text="@string/description_install_watch_card"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                    app:layout_constraintBottom_toTopOf="@id/installWatchAppScreenshot1"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/textView" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+
+                <ImageView
+                    android:id="@+id/installWatchAppScreenshot1"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_margin="8dp"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@string/screenshot1_install_watch_card"
+                    android:src="@mipmap/install_wear_app_1"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/installWatchAppScreenshot2"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/textView2" />
 
-                    <ImageView
-                        android:id="@+id/installWatchAppScreenshot1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="8dp"
-                        android:layout_weight="1"
-                        android:adjustViewBounds="true"
-                        android:src="@mipmap/install_wear_app_1" />
+                <ImageView
+                    android:id="@+id/installWatchAppScreenshot2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@string/screenshot2_install_watch_card"
+                    android:src="@mipmap/install_wear_app_2"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/installWatchAppScreenshot1"
+                    app:layout_constraintTop_toBottomOf="@id/textView2" />
 
-                    <ImageView
-                        android:id="@+id/installWatchAppScreenshot2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="8dp"
-                        android:layout_weight="1"
-                        android:adjustViewBounds="true"
-                        android:src="@mipmap/install_wear_app_2" />
-                </LinearLayout>
 
-            </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView

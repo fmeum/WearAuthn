@@ -1,19 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">WearAuthn</string>
+    <string name="app_name" translatable="false">WearAuthn</string>
     <string name="changelog"><![CDATA[<h4>Recent changes</h4><b>Version 0.9.13</b><br/>• Compatibility with Microsoft AAD<br/>• Compliance with CTAP 2.1<br/><br/><b>Version 0.9.12</b><br/>• Bugfixes related to attestation<br/>• Fixed a crash when user verification times out over NFC<br/>• Fixed display of creation dates of stored credentials<br/><br/><b>Version 0.9.11</b><br/>• Bugfix for watches on Android P+<br/><br/><b>Version 0.9.10</b><br/>• Manage your single-factor credentials on the watch<br/><br/><b>Version 0.9.9</b><br/>• Improved interoperability with Windows 10<br/>• Added RP ID to resident key metadata<br/><br/><b>Version 0.9.8</b><br/>• Improved the UI for resets and errors<br/><br/><b>Version 0.9.7</b><br/>• UI improvements in the phone app<br/><br/><b>Version 0.9.6</b><br/>• Fixed a missing toast after a single CTAP2 assertion via NFC<br/><br/><b>Version 0.9.5</b><br/>• Added support for transaction confirmation via the "txAuthSimple" extension<br/><br/><b>Version 0.9.4</b><br/>• Added support for offline login via the "hmac-secret" extension<br/>• Fixed a crash when extensions were requested with an assertion]]></string>
-    <string name="url_new_issue">https://github.com/FabianHenneke/WearAuthn/issues/new?assignees=FabianHenneke&amp;template=bug_report.md</string>
+    <string name="url_new_issue" translatable="false">https://github.com/FabianHenneke/WearAuthn/issues/new?assignees=FabianHenneke&amp;template=bug_report.md</string>
     <string name="label_purchase_button_purchased">Purchased</string>
     <string name="label_purchase_button_pending">Purchase pending</string>
     <string name="label_purchase_button_available">Purchase</string>
     <string name="label_purchase_button_install_watch_app">Watch app not installed</string>
     <string name="label_price_without_tax">%1$s (+tax)</string>
-    <string name="message_unlocked_on_watch">Complication is now available on your %1$s!</string>
-    <string name="title_complication_unlock_card">Unlock complication</string>
-    <string name="description_complication_unlock_card">Support the development of WearAuthn and unlock a watch face complication that directly connects WearAuthn to a preset device.</string>
+    <string name="message_unlocked_on_watch">Shortcut is now available on your %1$s!</string>
+    <string name="title_complication_unlock_card">Unlock watch face shortcut</string>
+    <string name="description_complication_unlock_card">Support the development of WearAuthn and unlock a watch face shortcut that directly connects WearAuthn to a preset device.</string>
     <string name="title_install_watch_card">Install WearAuthn on your watch</string>
     <string name="description_install_watch_card">Open the Play Store on your watch and install WearAuthn from the \'Apps on your phone\' section. If you cannot find it there, just search for \'wearauthn\'.</string>
-    <string name="file_bug_email_address">wearauthn@henneke.me</string>
+    <string name="file_bug_email_address" translatable="false">wearauthn@henneke.me</string>
     <string name="file_bug_email_subject">Bug report</string>
-    <string name="file_bug_email_body">Thank you for reporting a bug! Please provide as much information as possible below to help fix it.\n\nWhat went wrong?\n\n\nSteps taken before experiencing the bug\n\n1.\n2.\n3.\n4.\n\nWhat is the model of your watch?\n(find under Settings -> System -> About)\n\n%1$s\n\nWhich Android version runs on your watch?\n(find under Settings -> System -> About -> Version)\n\n\nWhich version of WearAuthn are you using?\n(shown at the top of WearAuthn\'s About screen)</string>
+    <string name="file_bug_email_body">Thank you for reporting a bug! Please provide as much information as possible below to help fix it.\n\nWhat went wrong?\n\n\nSteps taken before experiencing the bug:\n\n1.\n2.\n3.\n4.\n\nWhat is the model of your watch?\n(find under Settings -> System -> About)\n\n%1$s\n\nWhich system version runs on your watch?\n(find under Settings -> System -> About -> Version)\n\n\nWhich version of WearAuthn are you using?\n(shown at the top of WearAuthn\'s About screen)</string>
     <string name="label_report_a_bug">Report a bug</string>
+    <string name="screenshot1_install_watch_card">Go to \'Apps on your phone\' in the Play Store on your watch</string>
+    <string name="screenshot2_install_watch_card">Choose \'WearAuthn\' from the list and install it</string>
 </resources>
