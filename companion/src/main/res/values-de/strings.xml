@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog"><![CDATA[<h4>Letzte Änderungen</h4><br/><b>Version 0.9.13</b><br/>• Compatibility with Microsoft AAD<br/>• Compliance with CTAP 2.1<br/><br/><b>Version 0.9.12</b><br/>• Bugfixes related to attestation<br/>• Fixed a crash when user verification times out over NFC<br/>• Fixed display of creation dates of stored credentials<br/><br/><b>Version 0.9.11</b><br/>• Bugfix for watches on Android P+<br/><br/><b>Version 0.9.10</b><br/>• Manage your single-factor credentials on the watch<br/><br/><b>Version 0.9.9</b><br/>• Improved interoperability with Windows 10<br/>• Added RP ID to resident key metadata<br/><br/><b>Version 0.9.8</b><br/>• Improved the UI for resets and errors<br/><br/><b>Version 0.9.7</b><br/>• UI improvements in the phone app<br/><br/><b>Version 0.9.6</b><br/>• Fixed a missing toast after a single CTAP2 assertion via NFC<br/><br/><b>Version 0.9.5</b><br/>• Added support for transaction confirmation via the "txAuthSimple" extension<br/><br/><b>Version 0.9.4</b><br/>• Added support for offline login via the "hmac-secret" extension<br/>• Fixed a crash when extensions were requested with an assertion]]></string>
+    <string name="label_purchase_button_purchased">Gekauft</string>
+    <string name="label_purchase_button_available">Kaufen</string>
+    <string name="label_purchase_button_install_watch_app">Uhr-App nicht installiert</string>
+    <string name="label_price_without_tax">%1$s (zzgl. MwSt.)</string>
+    <string name="description_complication_unlock_card">Unterstütze die Entwicklung von WearAuthn und schalte ein Zifferblatt-Symbol frei, das WearAuthn direkt mit einem vorher gewählten Gerät verbindet.</string>
+    <string name="title_install_watch_card">WearAuthn auf der Uhr installieren</string>
+    <string name="description_install_watch_card">Öffne den Play Store auf deiner Uhr und installiere WearAuthn aus dem Bereich \"Apps auf meinem Smartphone\". Alternativ suche einfach nach \"wearauthn\".</string>
+    <string name="file_bug_email_subject">Fehlerbericht</string>
+    <string name="title_complication_unlock_card">Zifferblatt-Symbol freischalten</string>
+    <string name="message_unlocked_on_watch">Zifferblatt-Symbol verfügbar auf %1$s!</string>
+    <string name="label_purchase_button_pending">In Bearbeitung</string>
+    <string name="file_bug_email_body">Vielen Dank für diesen Fehlerbericht! Bitte gib so viele Informationen wie möglich, damit das Problem behoben werden kann.\n\nWas geht schief?\n\n\nSchritte, die zum Problem führen:\n\n1.\n2.\n3.\n4.\n\nWelches Uhren-Modell benutzt du? (zu finden unter Einstellungen -> System -> Info)\n\n%1$s\n\nWelche Systemversion läuft auf deiner Uhr? (zu finden unter Einstellungen -> System -> Info -> Versionen)\n\n\nWelche WearAuthn-Version benutzt du? (zu finden in WearAuthns Info-Bildschirm)</string>
+    <string name="label_report_a_bug">Problem melden</string>
+    <string name="screenshot1_install_watch_card">Öffne den Bereich "Apps auf meinem Smartphone" im Play Store auf deiner Uhr</string>
+    <string name="screenshot2_install_watch_card">Wähle "WearAuthn" aus und installiere es</string>
+</resources>
