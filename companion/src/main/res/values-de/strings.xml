@@ -14,6 +14,6 @@
     <string name="label_purchase_button_pending">In Bearbeitung</string>
     <string name="file_bug_email_body">Vielen Dank für diesen Fehlerbericht! Bitte gib so viele Informationen wie möglich, damit das Problem behoben werden kann.\n\nWas geht schief?\n\n\nSchritte, die zum Problem führen:\n\n1.\n2.\n3.\n4.\n\nWelches Uhren-Modell benutzt du? (zu finden unter Einstellungen -> System -> Info)\n\n%1$s\n\nWelche Systemversion läuft auf deiner Uhr? (zu finden unter Einstellungen -> System -> Info -> Versionen)\n\n\nWelche WearAuthn-Version benutzt du? (zu finden in WearAuthns Info-Bildschirm)</string>
     <string name="label_report_a_bug">Problem melden</string>
-    <string name="screenshot1_install_watch_card">Öffne den Bereich "Apps auf meinem Smartphone" im Play Store auf deiner Uhr</string>
-    <string name="screenshot2_install_watch_card">Wähle "WearAuthn" aus und installiere es</string>
+    <string name="screenshot1_install_watch_card">Öffne den Bereich \"Apps auf meinem Smartphone\" im Play Store auf deiner Uhr</string>
+    <string name="screenshot2_install_watch_card">Wähle \"WearAuthn\" aus und installiere es</string>
 </resources>
