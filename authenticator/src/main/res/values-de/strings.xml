@@ -45,7 +45,7 @@
     <string name="reset_via_bluetooth_only">Zurücksetzen nur über Bluetooth möglich</string>
     <string name="verify_screen_lock_and_retry">Displaysperre bestätigen und erneut versuchen</string>
     <string name="preference_title">Über Bluetooth nutzen mit</string>
-    <string name="connected_to_device_explanation">Zu verwenden wie ein eingesteckter USB-Sicherheitsschlüssel.\nHilfe bei häufigen Problemen ist auf deinem Smartphone verfügbar.</string>
+    <string name="connected_to_device_explanation">Zu verwenden wie ein USB-Sicherheitsschlüssel.\nWeitere Infos auf deinem Smartphone verfügbar.</string>
     <string name="credential_management_title_no_credentials">Keine Anmeldedaten für passwortlosen Login</string>
     <string name="credential_management_title">Anmeldedaten für passwortlosen Login</string>
     <string name="preference_credential_management_title">Anmeldedaten für passwortlosen Login verwalten</string>
