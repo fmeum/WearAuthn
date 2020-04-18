@@ -1,5 +1,7 @@
 package me.henneke.wearauthn.companion
 
+import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.Transformations
@@ -32,3 +34,12 @@ fun <S, T> LiveData<S>.combineLatestInitialized(that: LiveData<T>): LiveData<Pai
 }
 
 fun <S, T> LiveData<S>.map(fn: (S) -> T): LiveData<T> = Transformations.map(this, fn)
+
+fun composeEmail(to: String, subject: String, body: String): Intent {
+    return Intent(Intent.ACTION_SENDTO).apply {
+        data = Uri.parse("mailto:")
+        putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+        putExtra(Intent.EXTRA_SUBJECT, subject)
+        putExtra(Intent.EXTRA_TEXT, body)
+    }
+}
