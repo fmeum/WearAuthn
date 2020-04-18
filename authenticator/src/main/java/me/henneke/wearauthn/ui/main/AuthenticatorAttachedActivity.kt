@@ -15,11 +15,10 @@ import android.text.format.DateFormat
 import android.util.Log
 import android.view.View
 import kotlinx.android.synthetic.main.activity_authenticator_attached.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import me.henneke.wearauthn.R
 import me.henneke.wearauthn.bthid.*
 import me.henneke.wearauthn.complication.ShortcutComplicationProviderService
-import me.henneke.wearauthn.fido.context.*
+import me.henneke.wearauthn.fido.context.AuthenticatorStatus
 import me.henneke.wearauthn.fido.hid.TransactionManager
 import me.henneke.wearauthn.ui.openUrlOnPhone
 import java.util.*
@@ -35,7 +34,6 @@ class AuthenticatorAttachedActivity : WearableActivity() {
 
     private lateinit var viewsToHideOnAmbient: List<View>
 
-    @ExperimentalCoroutinesApi
     private val hidIntrDataListener = object : HidIntrDataListener {
         override fun onIntrData(
             device: BluetoothDevice,
@@ -98,7 +96,6 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         authenticatorContext = HidAuthenticatorContext(this)
     }
 
-    @ExperimentalCoroutinesApi
     override fun onStart() {
         super.onStart()
 
@@ -142,7 +139,6 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         }
     }
 
-    @ExperimentalCoroutinesApi
     override fun onStop() {
         super.onStop()
 

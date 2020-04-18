@@ -329,7 +329,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
         activeU2fConfirmation = null
     }
 
-    @ExperimentalCoroutinesApi
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun handleMessageIfComplete(submit: (rawReports: Iterable<ByteArray>) -> Unit): Boolean {
         message?.let { message ->
             val payload = message.payloadIfComplete ?: return false
@@ -494,7 +494,6 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
         return false
     }
 
-    @ExperimentalCoroutinesApi
     fun handleReport(bytes: ByteArray, submit: (rawReports: Iterable<ByteArray>) -> Unit) {
         try {
             val packet = Packet.parse(bytes)
