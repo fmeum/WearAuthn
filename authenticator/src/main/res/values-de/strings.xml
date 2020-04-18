@@ -73,4 +73,5 @@
     <string name="message_authenticate_no_credentials">Fehlende Registrierung offenbart</string>
     <string name="message_register_credential_excluded">Bestehende Registrierung%1$s oder Fehler offenbart.</string>
     <string name="prompt_register_credential_excluded">Bestehende Registrierung%1$s oder Fehler offenbaren?</string>
+    <string name="label_complication_device_shortcut">Geräte-Verknüpfung</string>
 </resources>

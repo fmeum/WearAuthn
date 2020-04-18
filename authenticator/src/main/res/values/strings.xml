@@ -84,4 +84,5 @@
     <string name="prompt_register_credential_excluded">Reveal previous registration or error%1$s?</string>
     <string name="prompt_register">Register%1$s%2$s?%3$s</string>
     <string name="prompt_authenticate">Authenticate%1$s%2$s?%3$s</string>
+    <string name="label_complication_device_shortcut">Device shortcut</string>
 </resources>

@@ -68,7 +68,7 @@
             android:enabled="false"
             android:name="me.henneke.wearauthn.complication.ShortcutComplicationProviderService"
             android:icon="@drawable/ic_launcher_outline"
-            android:label="Device shortcut"
+            android:label="@string/label_complication_device_shortcut"
             android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
             <intent-filter>
                 <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
