@@ -24,7 +24,7 @@
     <string name="notification_complication_unlocked_message">Suche die WearAuthn-Verknüpfung in den Einstellungen deines Zifferblatts.</string>
     <string name="message_continue_on_phone">Auf dem Smartphone fortfahren</string>
     <string name="message_deleted_all_data">WearAuthn zurückgesetzt</string>
-    <string name="preference_screen_title_shortcut_picker">Füge eine Geräteverknüpfung deinem Zifferblatt hinzu</string>
+    <string name="preference_screen_title_shortcut_picker">Füge deinem Zifferblatt eine Geräteverknüpfung hinzu</string>
     <string name="preference_single_factor_mode_summary_active">Aktiviert</string>
     <string name="status_nfc_not_available">Uhr hat keine NFC-Unterstützung</string>
     <string name="status_nfc_explanation">Oder an NFC-fähiges Smartphone halten (auch vom Zifferblatt aus).</string>
@@ -73,5 +73,5 @@
     <string name="message_authenticate_no_credentials">Fehlende Registrierung offenbart</string>
     <string name="message_register_credential_excluded">Bestehende Registrierung%1$s oder Fehler offenbart.</string>
     <string name="prompt_register_credential_excluded">Bestehende Registrierung%1$s oder Fehler offenbaren?</string>
-    <string name="label_complication_device_shortcut">Geräte-Verknüpfung</string>
+    <string name="label_complication_device_shortcut">Geräteverknüpfung</string>
 </resources>
