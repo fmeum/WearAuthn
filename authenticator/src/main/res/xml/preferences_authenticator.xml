@@ -69,8 +69,8 @@
             android:key="@string/preference_support_key"
             android:order="@integer/order_device_list_support"
             android:persistent="false"
-            android:summary="@string/preference_support_summary"
-            android:title="@string/preference_support_title" />
+            tools:summary="@string/preference_support_not_purchased_summary"
+            tools:title="@string/preference_support_not_purchased_title" />
     </PreferenceCategory>
 
 </PreferenceScreen>

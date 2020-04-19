@@ -103,11 +103,16 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
         updateNfcState()
         updateUserVerificationPreferencesState()
         updateDiscoverableState(BluetoothAdapter.getDefaultAdapter().scanMode)
-        supportPreference.setOnPreferenceClickListener {
-            launch {
-                openPhoneAppOrListing(activity!!)
+        supportPreference.apply {
+            val askForSupport = !UnlockComplicationListenerService.isComplicationEnabled(context)
+            setTitle(if (askForSupport) R.string.preference_support_not_purchased_title else R.string.preference_support_purchased_title)
+            setSummary(if (askForSupport) R.string.preference_support_not_purchased_summary else R.string.preference_support_purchased_summary)
+            setOnPreferenceClickListener {
+                launch {
+                    openPhoneAppOrListing(activity!!)
+                }
+                true
             }
-            true
         }
     }
 
