@@ -369,7 +369,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
             }
         }
 
-        override fun onDeviceStateChanged(device: BluetoothDevice, state: Int) {
+        override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
             Log.i(TAG, "onDeviceStateChanged(${device.name}, $state)")
             findEntryForDevice(device)?.updateProfileConnectionState()
             when (state) {

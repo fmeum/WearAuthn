@@ -30,7 +30,6 @@ class AuthenticatorAttachedActivity : WearableActivity() {
 
     private var transactionManager: TransactionManager? = null
     private var hidDeviceProfile: HidDeviceProfile? = null
-    private var deviceToConnect: BluetoothDevice? = null
     private lateinit var authenticatorContext: HidAuthenticatorContext
 
     private lateinit var viewsToHideOnAmbient: List<View>
@@ -51,7 +50,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
     }
 
     private val hidProfileListener = object : HidDataSender.ProfileListener {
-        override fun onDeviceStateChanged(device: BluetoothDevice, state: Int) {
+        override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
             when (state) {
                 BluetoothProfile.STATE_DISCONNECTING, BluetoothProfile.STATE_DISCONNECTED -> {
                     finish()
@@ -80,26 +79,9 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         override fun onAppStatusChanged(registered: Boolean) {
             if (!registered)
                 finish()
-
-            if (HidDataSender.isServiceEnabled) {
-                // onServiceStateChanged has been called first, so it is our responsibility to call
-                // requestConnect. This cannot lead to a race since requestConnect is idempotent.
-                deviceToConnect?.let { HidDataSender.requestConnect(it) }
-                deviceToConnect = null
-            }
         }
 
-        override fun onServiceStateChanged(proxy: BluetoothProfile?) {
-            if (proxy == null)
-                return
-
-            if (HidDataSender.isAppRegistered) {
-                // onAppStatusChanged has been called first, so it is our responsibility to call
-                // requestConnect. This cannot lead to a race since requestConnect is idempotent.
-                deviceToConnect?.let { HidDataSender.requestConnect(it) }
-                deviceToConnect = null
-            }
-        }
+        override fun onServiceStateChanged(proxy: BluetoothProfile?) {}
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -145,22 +127,15 @@ class AuthenticatorAttachedActivity : WearableActivity() {
                 return
             }
             // Simulate a change to connecting state in order to update the UI immediately.
-            hidProfileListener.onDeviceStateChanged(device, BluetoothProfile.STATE_CONNECTING)
-            // We defer the call to HidDataSender.requestConnect to the handlers that are invoked
-            // when the service or the app have become ready. If both have already become ready,
-            // no handler will be called and we have to connect here.
-            deviceToConnect = device
-            if (HidDataSender.isServiceEnabled && HidDataSender.isAppRegistered)
-                HidDataSender.requestConnect(device)
-            else
-                Log.i(TAG, "Deferring requestConnect call since service or app is not ready yet")
+            hidProfileListener.onConnectionStateChanged(device, BluetoothProfile.STATE_CONNECTING)
+            HidDataSender.requestConnect(device)
         } else if (hidDeviceProfile!!.connectedDevices.isEmpty()) {
             finish()
         } else {
             check(hidDeviceProfile!!.connectedDevices.size == 1)
             val connectedDevice = hidDeviceProfile!!.connectedDevices[0]
             // Simulate a change to connected state for the currently connected device to update UI.
-            hidProfileListener.onDeviceStateChanged(
+            hidProfileListener.onConnectionStateChanged(
                 connectedDevice,
                 BluetoothProfile.STATE_CONNECTED
             )
@@ -177,7 +152,6 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         }
 
         HidDataSender.requestConnect(null)
-
         transactionManager = null
     }
 

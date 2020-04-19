@@ -17,7 +17,7 @@ class AuthenticatorHostDeviceEntry(context: Context, device: BluetoothDevice, pr
     }
 
     fun updateProfileConnectionState() {
-        if (!device.canUseAuthenticatorViaBluetooth || !HidDataSender.isReady) {
+        if (!device.canUseAuthenticatorViaBluetooth || !HidDataSender.isAppRegistered) {
             isEnabled = false
             summary = null
             notifyChanged()

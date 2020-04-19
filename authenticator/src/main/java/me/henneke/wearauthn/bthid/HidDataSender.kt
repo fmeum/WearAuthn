@@ -19,15 +19,7 @@ private const val TAG = "HidDataSender"
 object HidDataSender {
 
     private val hidDeviceApp: HidDeviceApp
-    val isAppRegistered
-        get() = hidDeviceApp.isRegistered
-
     private val hidDeviceProfile: HidDeviceProfile
-    val isServiceEnabled
-        get() = hidDeviceProfile.isServiceEnabled
-
-    val isReady
-        get() = isAppRegistered && isServiceEnabled
 
     init {
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -49,10 +41,20 @@ object HidDataSender {
     @GuardedBy("lock")
     private var waitingForDevice: BluetoothDevice? = null
 
+    @GuardedBy("lock")
+    var isAppRegistered: Boolean = false
+        private set
+
     private val managingProfileListener = object : ProfileListener {
         override fun onServiceStateChanged(proxy: BluetoothProfile?) {
             synchronized(lock) {
-                if (proxy != null) {
+                if (proxy == null) {
+                    if (isAppRegistered) {
+                        // Service has disconnected before we could unregister the app.
+                        // Notify listeners, update the UI and internal state.
+                        onAppStatusChanged(false)
+                    }
+                } else {
                     hidDeviceApp.registerApp(proxy)
                 }
                 updateDeviceList()
@@ -62,7 +64,7 @@ object HidDataSender {
             }
         }
 
-        override fun onDeviceStateChanged(device: BluetoothDevice, state: Int) {
+        override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
             synchronized(lock) {
                 when (state) {
                     BluetoothProfile.STATE_CONNECTED -> {
@@ -81,15 +83,25 @@ object HidDataSender {
                 }
                 updateDeviceList()
                 for (listener in profileListeners) {
-                    listener.onDeviceStateChanged(device, state)
+                    listener.onConnectionStateChanged(device, state)
                 }
             }
         }
 
         override fun onAppStatusChanged(registered: Boolean) {
             synchronized(lock) {
+                if (registered == isAppRegistered) {
+                    // We are already in the correct state.
+                    return
+                }
+                isAppRegistered = registered
+
                 for (listener in profileListeners) {
                     listener.onAppStatusChanged(registered)
+                }
+                if (registered && waitingForDevice != null) {
+                    // Fulfill the postponed request to connect now that the app is registered.
+                    requestConnect(waitingForDevice)
                 }
             }
         }
@@ -181,23 +193,21 @@ object HidDataSender {
      * connected, it will be disconnected first. If the parameter is `null`, then the service
      * will only disconnect from the current device.
      *
-     * This function is idempotent, meaning that calling it twice in a row with the same parameter
-     * will not lead to different state than calling it just once.
-     *
      * @param device New HID Host to connect to or `null` to disconnect.
      */
     fun requestConnect(device: BluetoothDevice?) {
-        if (device == connectedDevice) {
+        waitingForDevice = device
+        if (!isAppRegistered) {
+            // Request will be fulfilled as soon as the app becomes registered.
             return
         }
-        waitingForDevice = device
-        connectedDevice = null
 
+        connectedDevice = null
         updateDeviceList()
 
         if (device != null && device == connectedDevice) {
             for (listener in profileListeners) {
-                listener.onDeviceStateChanged(device, BluetoothProfile.STATE_CONNECTED)
+                listener.onConnectionStateChanged(device, BluetoothProfile.STATE_CONNECTED)
             }
         }
     }
