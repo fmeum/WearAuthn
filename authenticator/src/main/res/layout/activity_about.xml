@@ -44,14 +44,6 @@
             android:background="?android:selectableItemBackgroundBorderless"
             android:src="@drawable/ic_btn_open_on_phone" />
 
-        <Button
-            android:id="@+id/supportButtton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginVertical="@dimen/diag_button_bottom_padding"
-            android:text="@string/label_support" />
-
         <TextView
             android:id="@+id/keyStorageView"
             android:layout_width="wrap_content"

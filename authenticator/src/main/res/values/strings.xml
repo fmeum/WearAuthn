@@ -85,4 +85,7 @@
     <string name="prompt_register">Register%1$s%2$s?%3$s</string>
     <string name="prompt_authenticate">Authenticate%1$s%2$s?%3$s</string>
     <string name="label_complication_device_shortcut">Device shortcut</string>
+    <string name="preference_support_key" translatable="false">preference_support</string>
+    <string name="preference_support_title">Support WearAuthn</string>
+    <string name="preference_support_summary">and unlock a watch face shortcut</string>
 </resources>

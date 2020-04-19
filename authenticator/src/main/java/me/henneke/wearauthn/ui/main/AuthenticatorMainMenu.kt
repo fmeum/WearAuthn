@@ -27,6 +27,7 @@ import android.view.View
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import me.henneke.wearauthn.R
 import me.henneke.wearauthn.bthid.HidDataSender
 import me.henneke.wearauthn.bthid.HidDeviceProfile
@@ -37,6 +38,7 @@ import me.henneke.wearauthn.fido.context.armUserVerificationFuse
 import me.henneke.wearauthn.fido.context.getUserVerificationState
 import me.henneke.wearauthn.ui.ConfirmDeviceCredentialActivity
 import me.henneke.wearauthn.ui.EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER
+import me.henneke.wearauthn.ui.openPhoneAppOrListing
 import kotlin.coroutines.CoroutineContext
 
 private const val TAG = "AuthenticatorMainMenu"
@@ -56,6 +58,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
     private lateinit var nfcSettingsPreference: Preference
     private lateinit var singleFactorModeSwitchPreference: SwitchPreference
     private lateinit var manageCredentialsPreference: Preference
+    private lateinit var supportPreference: Preference
 
     private val REQUEST_CODE_ENABLE_BLUETOOTH = 1
     private val REQUEST_CODE_MAKE_DISCOVERABLE = 2
@@ -82,6 +85,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
             findPreference(getString(R.string.preference_single_factor_mode_key)) as SwitchPreference
         manageCredentialsPreference =
             findPreference(getString(R.string.preference_credential_management_key))
+        supportPreference = findPreference(getString(R.string.preference_support_key))
     }
 
     override fun onResume() {
@@ -99,6 +103,12 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
         updateNfcState()
         updateUserVerificationPreferencesState()
         updateDiscoverableState(BluetoothAdapter.getDefaultAdapter().scanMode)
+        supportPreference.setOnPreferenceClickListener {
+            launch {
+                openPhoneAppOrListing(activity!!)
+            }
+            true
+        }
     }
 
     override fun onPause() {

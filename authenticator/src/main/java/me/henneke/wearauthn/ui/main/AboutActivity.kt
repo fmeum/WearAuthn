@@ -9,7 +9,6 @@ import kotlinx.coroutines.*
 import me.henneke.wearauthn.BuildConfig
 import me.henneke.wearauthn.R
 import me.henneke.wearauthn.fido.context.checkAllKeysInHardware
-import me.henneke.wearauthn.ui.openPhoneAppOrListing
 import me.henneke.wearauthn.ui.openUrlOnPhone
 import kotlin.coroutines.CoroutineContext
 
@@ -24,11 +23,6 @@ class AboutActivity : WearableActivity(), CoroutineScope {
         versionView.text = BuildConfig.VERSION_NAME
         howToUseOpenOnPhoneButton.setOnClickListener {
             openUrlOnPhone(this, getString(R.string.url_usage))
-        }
-        supportButtton.setOnClickListener {
-            launch {
-                openPhoneAppOrListing(this@AboutActivity)
-            }
         }
         privacyButtton.setOnClickListener {
             showTextDialog(privacyPolicy)

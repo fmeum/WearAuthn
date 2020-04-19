@@ -63,6 +63,14 @@
                 android:targetClass="me.henneke.wearauthn.ui.main.AboutActivity"
                 android:targetPackage="@string/application_id" />
         </Preference>
+
+        <Preference
+            android:icon="@drawable/ic_launcher_outline"
+            android:key="@string/preference_support_key"
+            android:order="@integer/order_device_list_support"
+            android:persistent="false"
+            android:summary="@string/preference_support_summary"
+            android:title="@string/preference_support_title" />
     </PreferenceCategory>
 
 </PreferenceScreen>

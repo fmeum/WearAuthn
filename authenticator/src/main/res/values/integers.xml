@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <integer name="button_icon_viewport_size">24</integer>
-    <integer name="order_device_list_nfc_settings">300</integer>
     <integer name="order_device_list_compatible_device">100</integer>
     <integer name="order_device_list_incompatible_device">200</integer>
+    <integer name="order_device_list_nfc_settings">300</integer>
     <integer name="order_device_list_bluetooth_category">310</integer>
     <integer name="order_device_list_bluetooth_settings">312</integer>
     <integer name="order_device_list_discoverable">314</integer>
     <integer name="order_device_list_more_category">320</integer>
     <integer name="order_device_list_single_factor_mode">321</integer>
-    <integer name="order_device_list_about">324</integer>
     <integer name="order_device_list_credential_management">322</integer>
+    <integer name="order_device_list_about">324</integer>
+    <integer name="order_device_list_support">325</integer>
 </resources>

@@ -74,4 +74,6 @@
     <string name="message_register_credential_excluded">Bestehende Registrierung%1$s oder Fehler offenbart.</string>
     <string name="prompt_register_credential_excluded">Bestehende Registrierung%1$s oder Fehler offenbaren?</string>
     <string name="label_complication_device_shortcut">Geräteverknüpfung</string>
+    <string name="preference_support_title">Unterstütze WearAuthn</string>
+    <string name="preference_support_summary">und schalte ein Zifferblatt-Symbol frei</string>
 </resources>
