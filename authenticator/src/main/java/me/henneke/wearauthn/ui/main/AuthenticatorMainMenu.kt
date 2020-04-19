@@ -28,7 +28,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import me.henneke.wearauthn.R
-import me.henneke.wearauthn.bthid.*
+import me.henneke.wearauthn.bthid.HidDataSender
+import me.henneke.wearauthn.bthid.HidDeviceProfile
+import me.henneke.wearauthn.bthid.canUseAuthenticator
+import me.henneke.wearauthn.bthid.hasCompatibleBondedDevice
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
 import me.henneke.wearauthn.fido.context.armUserVerificationFuse
 import me.henneke.wearauthn.fido.context.getUserVerificationState
@@ -357,9 +360,13 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
     }
 
     private val hidProfileListener = object : HidDataSender.ProfileListener {
-        override fun onAppUnregistered() {
-            Log.i(TAG, "onAppUnregistered()")
-            activity?.finish()
+        override fun onAppStatusChanged(registered: Boolean) {
+            Log.i(TAG, "onAppStatusChanged($registered)")
+            if (!registered)
+                activity?.finish()
+            for (entry in bondedDeviceEntries) {
+                entry.updateProfileConnectionState()
+            }
         }
 
         override fun onDeviceStateChanged(device: BluetoothDevice, state: Int) {
@@ -379,9 +386,6 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
 
         override fun onServiceStateChanged(proxy: BluetoothProfile?) {
             Log.i(TAG, "onServiceStateChanged($proxy)")
-            if (proxy == null) {
-                return
-            }
             for (entry in bondedDeviceEntries) {
                 entry.updateProfileConnectionState()
             }

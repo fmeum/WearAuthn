@@ -19,7 +19,15 @@ private const val TAG = "HidDataSender"
 object HidDataSender {
 
     private val hidDeviceApp: HidDeviceApp
+    val isAppRegistered
+        get() = hidDeviceApp.isRegistered
+
     private val hidDeviceProfile: HidDeviceProfile
+    val isServiceEnabled
+        get() = hidDeviceProfile.isServiceEnabled
+
+    val isReady
+        get() = isAppRegistered && isServiceEnabled
 
     init {
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -78,10 +86,10 @@ object HidDataSender {
             }
         }
 
-        override fun onAppUnregistered() {
+        override fun onAppStatusChanged(registered: Boolean) {
             synchronized(lock) {
                 for (listener in profileListeners) {
-                    listener.onAppUnregistered()
+                    listener.onAppStatusChanged(registered)
                 }
             }
         }
@@ -173,9 +181,15 @@ object HidDataSender {
      * connected, it will be disconnected first. If the parameter is `null`, then the service
      * will only disconnect from the current device.
      *
+     * This function is idempotent, meaning that calling it twice in a row with the same parameter
+     * will not lead to different state than calling it just once.
+     *
      * @param device New HID Host to connect to or `null` to disconnect.
      */
     fun requestConnect(device: BluetoothDevice?) {
+        if (device == connectedDevice) {
+            return
+        }
         waitingForDevice = device
         connectedDevice = null
 

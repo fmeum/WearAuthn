@@ -17,6 +17,9 @@ abstract class HidDeviceProfile(private val bluetoothAdapter: BluetoothAdapter) 
     private var serviceStateListener: ServiceStateListener? = null
     private var service: BluetoothProfile? = null
 
+    val isServiceEnabled
+        get() = service != null
+
     /**
      * Get all devices that are in the "Connected" state.
      *

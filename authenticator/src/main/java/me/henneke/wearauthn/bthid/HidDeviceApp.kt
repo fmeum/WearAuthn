@@ -22,6 +22,9 @@ abstract class HidDeviceApp {
     protected var ioListener: HidIntrDataListener? = null
     protected abstract val inputHost: InputHostWrapper?
 
+    var isRegistered: Boolean = false
+        private set
+
     /** Used to call back when a device connection state has changed.  */
     interface DeviceStateListener {
         /**
@@ -32,8 +35,8 @@ abstract class HidDeviceApp {
          */
         fun onDeviceStateChanged(device: BluetoothDevice, state: Int)
 
-        /** Callback that receives the app unregister event.  */
-        fun onAppUnregistered()
+        /** Callback that receives the app events.  */
+        fun onAppStatusChanged(registered: Boolean)
     }
 
     /**
@@ -78,21 +81,12 @@ abstract class HidDeviceApp {
     }
 
     fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
-        mainThreadHandler.post { onDeviceStateChanged(device, state) }
+        mainThreadHandler.post { deviceStateListener?.onDeviceStateChanged(device, state) }
     }
 
     fun onAppStatusChanged(registered: Boolean) {
-        if (!registered) {
-            mainThreadHandler.post { this.onAppUnregistered() }
-        }
-    }
-
-    private fun onDeviceStateChanged(device: BluetoothDevice, state: Int) {
-        deviceStateListener?.run { onDeviceStateChanged(device, state) }
-    }
-
-    private fun onAppUnregistered() {
-        deviceStateListener?.run { onAppUnregistered() }
+        isRegistered = registered
+        mainThreadHandler.post { deviceStateListener?.onAppStatusChanged(registered) }
     }
 
 }

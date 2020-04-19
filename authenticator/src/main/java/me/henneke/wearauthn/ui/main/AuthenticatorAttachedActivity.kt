@@ -30,6 +30,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
 
     private var transactionManager: TransactionManager? = null
     private var hidDeviceProfile: HidDeviceProfile? = null
+    private var deviceToConnect: BluetoothDevice? = null
     private lateinit var authenticatorContext: HidAuthenticatorContext
 
     private lateinit var viewsToHideOnAmbient: List<View>
@@ -76,9 +77,29 @@ class AuthenticatorAttachedActivity : WearableActivity() {
             }
         }
 
-        override fun onAppUnregistered() {}
+        override fun onAppStatusChanged(registered: Boolean) {
+            if (!registered)
+                finish()
 
-        override fun onServiceStateChanged(proxy: BluetoothProfile?) {}
+            if (HidDataSender.isServiceEnabled) {
+                // onServiceStateChanged has been called first, so it is our responsibility to call
+                // requestConnect. This cannot lead to a race since requestConnect is idempotent.
+                deviceToConnect?.let { HidDataSender.requestConnect(it) }
+                deviceToConnect = null
+            }
+        }
+
+        override fun onServiceStateChanged(proxy: BluetoothProfile?) {
+            if (proxy == null)
+                return
+
+            if (HidDataSender.isAppRegistered) {
+                // onAppStatusChanged has been called first, so it is our responsibility to call
+                // requestConnect. This cannot lead to a race since requestConnect is idempotent.
+                deviceToConnect?.let { HidDataSender.requestConnect(it) }
+                deviceToConnect = null
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,6 +115,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         }
 
         authenticatorContext = HidAuthenticatorContext(this)
+        hidDeviceProfile = HidDataSender.register(this, hidProfileListener, hidIntrDataListener)
     }
 
     override fun onStart() {
@@ -104,7 +126,6 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         }
 
         transactionManager = TransactionManager(authenticatorContext)
-        hidDeviceProfile = HidDataSender.register(this, hidProfileListener, hidIntrDataListener)
         if (hidDeviceProfile == null) {
             finish()
             return
@@ -123,15 +144,22 @@ class AuthenticatorAttachedActivity : WearableActivity() {
                 finish()
                 return
             }
-            // Simulate a change to connecting state for the device to update GUI immediately.
+            // Simulate a change to connecting state in order to update the UI immediately.
             hidProfileListener.onDeviceStateChanged(device, BluetoothProfile.STATE_CONNECTING)
-            HidDataSender.requestConnect(device)
+            // We defer the call to HidDataSender.requestConnect to the handlers that are invoked
+            // when the service or the app have become ready. If both have already become ready,
+            // no handler will be called and we have to connect here.
+            deviceToConnect = device
+            if (HidDataSender.isServiceEnabled && HidDataSender.isAppRegistered)
+                HidDataSender.requestConnect(device)
+            else
+                Log.i(TAG, "Deferring requestConnect call since service or app is not ready yet")
         } else if (hidDeviceProfile!!.connectedDevices.isEmpty()) {
             finish()
         } else {
             check(hidDeviceProfile!!.connectedDevices.size == 1)
             val connectedDevice = hidDeviceProfile!!.connectedDevices[0]
-            // Simulate a change to connected state for the currently connected device.
+            // Simulate a change to connected state for the currently connected device to update UI.
             hidProfileListener.onDeviceStateChanged(
                 connectedDevice,
                 BluetoothProfile.STATE_CONNECTED
@@ -151,8 +179,6 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         HidDataSender.requestConnect(null)
 
         transactionManager = null
-        HidDataSender.unregister(hidProfileListener, hidIntrDataListener)
-        hidDeviceProfile = null
     }
 
     override fun onEnterAmbient(ambientDetails: Bundle?) {
@@ -181,6 +207,11 @@ class AuthenticatorAttachedActivity : WearableActivity() {
             view.visibility = View.VISIBLE
         }
         textClock.visibility = View.INVISIBLE
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        HidDataSender.unregister(hidProfileListener, hidIntrDataListener)
     }
 
     companion object {
