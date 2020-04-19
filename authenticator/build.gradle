@@ -6,7 +6,7 @@ apply plugin: 'kotlin-android-extensions'
 
 android {
     kotlinOptions {
-        freeCompilerArgs = ["-XXLanguage:+InlineClasses -Xopt-in=kotlin.RequiresOptIn"]
+        freeCompilerArgs = ["-XXLanguage:+InlineClasses", "-Xopt-in=org.mylibrary.OptInAnnotation"]
         jvmTarget = "1.8"
     }
     signingConfigs {
