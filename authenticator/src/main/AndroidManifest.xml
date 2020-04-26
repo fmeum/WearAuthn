@@ -48,8 +48,8 @@
         <activity android:name="me.henneke.wearauthn.ui.main.AboutActivity" />
         <activity android:name="me.henneke.wearauthn.ui.ConfirmDeviceCredentialActivity" />
         <activity android:name="me.henneke.wearauthn.ui.ManageSpaceActivity" />
-        <activity android:name="android.support.wearable.preference.WearablePreferenceActivity" />
-        <activity android:name="android.support.wearable.activity.ConfirmationActivity" />
+        <activity android:name="androidx.support.wearable.preference.WearablePreferenceActivity" />
+        <activity android:name="androidx.support.wearable.activity.ConfirmationActivity" />
 
         <service
             android:name="me.henneke.wearauthn.fido.nfc.NfcAuthenticatorService"
