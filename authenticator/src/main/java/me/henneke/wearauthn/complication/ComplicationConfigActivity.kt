@@ -13,8 +13,6 @@ import me.henneke.wearauthn.bthid.defaultAdapter
 import me.henneke.wearauthn.ui.BluetoothDevicePreference
 
 
-private const val TAG = "ComplicationConfigActivity"
-
 class ComplicationConfigActivity : WearablePreferenceActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

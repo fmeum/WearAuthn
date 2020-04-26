@@ -4,11 +4,12 @@ import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.os.Handler
 import android.os.VibrationEffect
-import android.util.Log
 import android.widget.Toast
 import com.google.android.gms.common.util.Hex
 import kotlinx.coroutines.*
+import me.henneke.wearauthn.Logging
 import me.henneke.wearauthn.R
+import me.henneke.wearauthn.d
 import me.henneke.wearauthn.fido.ApduException
 import me.henneke.wearauthn.fido.CommandApdu
 import me.henneke.wearauthn.fido.ResponseApdu
@@ -22,13 +23,11 @@ import me.henneke.wearauthn.fido.ctap2.Authenticator
 import me.henneke.wearauthn.ui.isDoNotDisturbEnabled
 import me.henneke.wearauthn.ui.showToast
 import me.henneke.wearauthn.ui.vibrator
+import me.henneke.wearauthn.v
 import java.lang.Runnable
 import kotlin.coroutines.CoroutineContext
 import me.henneke.wearauthn.fido.u2f.Authenticator as U2fAuthenticator
 import me.henneke.wearauthn.fido.u2f.Request as U2fRequest
-
-
-private const val TAG = "NfcAuthenticatorService"
 
 @ExperimentalUnsignedTypes
 class NfcAuthenticatorService : HostApduService(), CoroutineScope {
@@ -76,6 +75,7 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
     }
 
     override fun processCommandApdu(commandApdu: ByteArray, extras: Bundle?): ByteArray? {
+        v { "<- ${Hex.bytesToStringUppercase(commandApdu)}" }
         val rawCommandApdu = commandApdu.asUByteArray()
         if (SELECT_FIDO_APDUS.any { rawCommandApdu.contentEquals(it) }) {
             isSelected = true
@@ -83,29 +83,35 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
             lastResponseApdu = null
             chainedRequestBuffer = ubyteArrayOf()
             onDeactivatedMessage = null
-            return (CTAP_VERSION_STRING_BYTES + StatusWord.NO_ERROR.value).asByteArray()
+            return (CTAP_VERSION_STRING_BYTES + StatusWord.NO_ERROR.value).asByteArray().also {
+                v { "-> ${Hex.bytesToStringUppercase(it)}" }
+            }
         }
         if (!isSelected) {
-            return StatusWord.CONDITIONS_NOT_SATISFIED.value.asByteArray()
+            return StatusWord.CONDITIONS_NOT_SATISFIED.value.asByteArray().also {
+                v { "-> ${Hex.bytesToStringUppercase(it)}" }
+            }
         }
         val apdu = CommandApdu(rawCommandApdu)
         if (apdu.headerEquals(DESELECT_FIDO_APDU_HEADER)) {
             isSelected = false
-            return StatusWord.NO_ERROR.value.asByteArray()
+            return StatusWord.NO_ERROR.value.asByteArray().also {
+                v { "-> ${Hex.bytesToStringUppercase(it)}" }
+            }
         }
         launch {
             val response = try {
                 handleRequestApdu(apdu)
-            } catch (e: ApduException) {
-                Log.e(
-                    TAG,
+            } catch (error: ApduException) {
+                d {
                     "Unable to handle APDU with header ${Hex.bytesToStringUppercase(
                         rawCommandApdu.asByteArray().sliceArray(0..3)
-                    )}; returned ${e.statusWord}"
-                )
+                    )}; returned ${error.statusWord}"
+                }
                 lastResponseApdu = null
-                e.statusWord.value
+                error.statusWord.value
             }
+            v { "-> ${Hex.bytesToStringUppercase(response.asByteArray())}" }
             sendResponseApdu(response.asByteArray())
         }
         resetVibrationTimeout()
@@ -150,6 +156,7 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
                     authenticatorContext.notifyUser(requestInfo)
                 // User presence is always certain via NFC, always continue
                 val u2fResponse = cont()
+                Logging.v(U2fAuthenticator.TAG) { "-> $u2fResponse" }
                 ResponseApdu(
                     u2fResponse.data,
                     u2fResponse.statusWord
@@ -235,5 +242,9 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
         override suspend fun confirmTransactionWithUser(rpId: String, prompt: String): String? {
             throw IllegalStateException("Transaction confirmation not possible via NFC")
         }
+    }
+
+    companion object : Logging {
+        override val TAG = "NfcAuthenticatorService"
     }
 }

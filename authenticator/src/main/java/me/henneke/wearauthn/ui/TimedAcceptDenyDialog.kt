@@ -29,10 +29,7 @@ import android.view.ViewTreeObserver
 import kotlinx.android.synthetic.main.timed_accept_deny_dialog.*
 import me.henneke.wearauthn.R
 
-private const val TAG = "TimedAcceptDenyDialog"
-
 private const val DEFAULT_TIMEOUT = 5_000L
-
 
 class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
 

@@ -12,18 +12,16 @@ import android.support.wearable.complications.ProviderUpdateRequester
 import android.text.Html
 import android.text.TextUtils
 import android.text.format.DateFormat
-import android.util.Log
 import android.view.View
+import com.google.android.gms.common.util.Hex
 import kotlinx.android.synthetic.main.activity_authenticator_attached.*
-import me.henneke.wearauthn.R
+import me.henneke.wearauthn.*
 import me.henneke.wearauthn.bthid.*
 import me.henneke.wearauthn.complication.ShortcutComplicationProviderService
 import me.henneke.wearauthn.fido.context.AuthenticatorStatus
 import me.henneke.wearauthn.fido.hid.TransactionManager
 import me.henneke.wearauthn.ui.openUrlOnPhone
 import java.util.*
-
-private const val TAG = "AuthenticatorAttachedActivity"
 
 @ExperimentalUnsignedTypes
 class AuthenticatorAttachedActivity : WearableActivity() {
@@ -41,8 +39,12 @@ class AuthenticatorAttachedActivity : WearableActivity() {
             data: ByteArray,
             host: InputHostWrapper
         ) {
+            i { "Received report" }
+            d { "Report ID: $reportId" }
+            v { "<- ${Hex.bytesToStringUppercase(data)}" }
             transactionManager?.handleReport(data) {
                 for (rawReport in it) {
+                    v { "-> ${Hex.bytesToStringUppercase(rawReport)}" }
                     host.sendReport(device, reportId.toInt(), rawReport)
                 }
             }
@@ -53,9 +55,11 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
             when (state) {
                 BluetoothProfile.STATE_DISCONNECTING, BluetoothProfile.STATE_DISCONNECTED -> {
+                    i { "Disconnecting; finishing" }
                     finish()
                 }
                 BluetoothProfile.STATE_CONNECTING -> {
+                    i { "Connecting..." }
                     val connectingToDeviceMessage =
                         getString(
                             R.string.connecting_to_device_message,
@@ -65,6 +69,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
                         Html.fromHtml(connectingToDeviceMessage, Html.FROM_HTML_MODE_LEGACY)
                 }
                 BluetoothProfile.STATE_CONNECTED -> {
+                    i { "Connected"}
                     val connectedToDeviceMessage =
                         getString(
                             R.string.connected_to_device_message,
@@ -77,8 +82,10 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         }
 
         override fun onAppStatusChanged(registered: Boolean) {
-            if (!registered)
+            if (!registered) {
+                i { "App no longer registered; finishing" }
                 finish()
+            }
         }
 
         override fun onServiceStateChanged(proxy: BluetoothProfile?) {}
@@ -109,12 +116,14 @@ class AuthenticatorAttachedActivity : WearableActivity() {
 
         transactionManager = TransactionManager(authenticatorContext)
         if (hidDeviceProfile == null) {
+            e { "hidDeviceProfile is null" }
             finish()
             return
         }
 
         if (hidDeviceProfile!!.connectedDevices.isEmpty() && intent.hasExtra(EXTRA_DEVICE)) {
             if (intent.hasExtra(ComplicationProviderService.EXTRA_COMPLICATION_ID)) {
+                i { "Updating complication" }
                 ProviderUpdateRequester(
                     this,
                     ComponentName(this, ShortcutComplicationProviderService::class.java)
@@ -122,6 +131,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
             }
             val device = intent.getParcelableExtra<BluetoothDevice>(EXTRA_DEVICE)
             if (device == null || device !in defaultAdapter.bondedDevices) {
+                i { "No device extra or no longer bonded; finishing" }
                 startActivity(Intent(this, AuthenticatorActivity::class.java))
                 finish()
                 return
@@ -130,6 +140,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
             hidProfileListener.onConnectionStateChanged(device, BluetoothProfile.STATE_CONNECTING)
             HidDataSender.requestConnect(device)
         } else if (hidDeviceProfile!!.connectedDevices.isEmpty()) {
+            e { "Started without connected device or device extra; finishing" }
             finish()
         } else {
             check(hidDeviceProfile!!.connectedDevices.size == 1)
@@ -147,7 +158,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
 
         // Do not disconnect if another activity is launched by the authenticator.
         if (authenticatorContext.status != AuthenticatorStatus.IDLE) {
-            Log.e(TAG, "onStop() called during authenticator action")
+            w { "onStop() called during authenticator action" }
             return
         }
 
@@ -188,7 +199,8 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         HidDataSender.unregister(hidProfileListener, hidIntrDataListener)
     }
 
-    companion object {
+    companion object : Logging {
+        override val TAG = "AuthenticatorAttachedActivity"
         const val EXTRA_DEVICE = "me.henneke.wearauthn.extra.DEVICE"
     }
 }

@@ -78,4 +78,8 @@
     <string name="preference_support_not_purchased_summary">und schalte ein Zifferblatt-Symbol frei</string>
     <string name="preference_support_purchased_title">Danke für deine Unterstützung!</string>
     <string name="preference_support_purchased_summary">Letzte Änderungen ansehen</string>
+    <string name="preference_log_level_title">Log-Level</string>
+    <string name="preference_log_level_dialog_title">Log-Level wählen</string>
+    <string name="preference_log_level_dialog_message">Auf \"Debug\" oder \"Verbose\" können Logs persönliche Informationen enthalten.</string>
 </resources>
+

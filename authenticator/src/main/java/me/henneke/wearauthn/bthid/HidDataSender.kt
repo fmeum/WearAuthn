@@ -13,8 +13,6 @@ import androidx.annotation.GuardedBy
 import me.henneke.wearauthn.bthid.api28.HidDeviceApp28
 import me.henneke.wearauthn.bthid.api28.HidDeviceProfile28
 
-private const val TAG = "HidDataSender"
-
 /** Central point for enabling the HID SDP record and sending all data.  */
 object HidDataSender {
 

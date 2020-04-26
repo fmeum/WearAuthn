@@ -12,7 +12,6 @@ import me.henneke.wearauthn.R
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
 import kotlin.coroutines.CoroutineContext
 
-
 const val EXTRA_MANAGE_SPACE_RECEIVER = "me.henneke.wearauthn.common.EXTRA_MANAGE_SPACE_RECEIVER"
 
 @ExperimentalUnsignedTypes

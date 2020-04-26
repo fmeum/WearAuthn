@@ -2,10 +2,11 @@ package me.henneke.wearauthn.fido.hid
 
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import com.google.android.gms.common.util.Hex
 import kotlinx.coroutines.*
-import me.henneke.wearauthn.bytes
+import me.henneke.wearauthn.*
+import me.henneke.wearauthn.Logging.Companion.i
+import me.henneke.wearauthn.Logging.Companion.v
 import me.henneke.wearauthn.fido.ApduException
 import me.henneke.wearauthn.fido.CommandApdu
 import me.henneke.wearauthn.fido.ResponseApdu
@@ -15,16 +16,12 @@ import me.henneke.wearauthn.fido.context.AuthenticatorStatus
 import me.henneke.wearauthn.fido.ctap2.CtapError
 import me.henneke.wearauthn.fido.u2f.Request
 import me.henneke.wearauthn.fido.u2f.Response
-import me.henneke.wearauthn.uIntOf
-import me.henneke.wearauthn.uShortOf
 import kotlin.coroutines.CoroutineContext
 import kotlin.experimental.and
 import kotlin.experimental.or
 import kotlin.math.min
 import me.henneke.wearauthn.fido.ctap2.Authenticator as Ctap2Authenticator
 import me.henneke.wearauthn.fido.u2f.Authenticator as U2fAuthenticator
-
-private const val TAG = "Framing"
 
 @ExperimentalUnsignedTypes
 internal sealed class Packet {
@@ -293,7 +290,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
         hidException: CtapHidException,
         submit: (rawReports: Iterable<ByteArray>) -> Unit
     ) {
-        Log.w(TAG, "HID error: ${hidException.error}")
+        w { "HID error: ${hidException.error}" }
         hidException.channelId?.let {
             if (message?.channelId == it) {
                 resetTransaction()
@@ -314,7 +311,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
     private fun rearmU2fRetryTimeout() {
         haltU2fRetryTimeout()
         u2fRetryTimeoutHandler.postDelayed({
-            Log.w(TAG, "Request requiring user confirmation timed out")
+            i { "Request requiring user confirmation timed out" }
             resetU2fContinuation()
         }, HID_MSG_TIMEOUT_MS)
     }
@@ -333,7 +330,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
     private fun handleMessageIfComplete(submit: (rawReports: Iterable<ByteArray>) -> Unit): Boolean {
         message?.let { message ->
             val payload = message.payloadIfComplete ?: return false
-            Log.i(TAG, "Handling complete ${message.cmd} message")
+            i { "Handling complete ${message.cmd} message" }
             when (message.cmd) {
                 CtapHidCommand.Ping -> submit(
                     OutMessage.PingResponse(message.channelId, payload).toRawReports()
@@ -349,6 +346,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                                 it.confirmationRequest.isActive -> {
                                     // Still waiting for user confirmation; let the client retry.
                                     rearmU2fRetryTimeout()
+                                    i { "Still waiting for user confirmation" }
                                     submit(
                                         OutMessage.MsgResponse(
                                             message.channelId,
@@ -357,7 +355,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                                     )
                                 }
                                 it.confirmationRequest.isCancelled -> {
-                                    Log.w(TAG, "Confirmation request already cancelled")
+                                    i { "Confirmation request already cancelled" }
                                     resetU2fContinuation()
                                 }
                                 else -> {
@@ -365,6 +363,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                                     if (userPresent) {
                                         val responsePayload = try {
                                             val u2fResponse = it.cont()
+                                            v(U2fAuthenticator.TAG) { "-> $u2fResponse" }
                                             val u2fResponseApdu =
                                                 ResponseApdu(
                                                     u2fResponse.data,
@@ -372,10 +371,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                                                 )
                                             u2fResponseApdu.next()
                                         } catch (e: ApduException) {
-                                            Log.w(
-                                                TAG,
-                                                "Continued transaction failed with status ${e.statusWord}"
-                                            )
+                                            i { "Continued transaction failed with status: ${e.statusWord}" }
                                             e.statusWord.value
                                         }
                                         submit(
@@ -391,9 +387,9 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                             resetTransaction()
                             return true
                         }
-                        Log.i(TAG, "Received new message, cancelling user confirmation")
+                        i(TAG) { "Received new message, cancelling user confirmation" }
                         resetU2fContinuation()
-                        // Fall through to usual message handling
+                        // Fall through to usual message handling.
                     }
                     val responsePayload = try {
                         val u2fRequestApdu =
@@ -402,7 +398,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                         val (requestInfo, cont) =
                             U2fAuthenticator.handle(authenticatorContext, u2fRequest)
                         if (requestInfo == null) {
-                            // No user presence check needed, continue right away
+                            // No user presence check needed, continue right away.
                             val u2fResponse = cont()
                             val u2fResponseApdu =
                                 ResponseApdu(
@@ -421,7 +417,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                                 cont
                             )
                             rearmU2fRetryTimeout()
-                            Log.i(TAG, "User confirmation required; expecting client to retry")
+                            i(TAG) { "User confirmation required; expecting client to retry" }
                             StatusWord.CONDITIONS_NOT_SATISFIED.value.toByteArray()
                         }
                     } catch (e: ApduException) {
@@ -431,10 +427,8 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                             val payloadHeader = Hex.bytesToStringUppercase(
                                 payload.sliceArray(0 until min(payload.size, 4))
                             )
-                            Log.w(
-                                TAG,
-                                "Transaction failed with status ${e.statusWord}, request header was $payloadHeader"
-                            )
+                            i { "Transaction failed with status ${e.statusWord} " }
+                            d { "Request header: $payloadHeader" }
                             e.statusWord.value.toByteArray()
                         }
                     }
@@ -477,7 +471,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                                     byteArrayOf(CtapError.KeepaliveCancel.value)
                                 ).toRawReports()
                             )
-                            Log.i(TAG, "Current transaction was cancelled by the client.")
+                            i { "Current transaction was cancelled by the client" }
                         } finally {
                             resetTransaction()
                         }
@@ -497,6 +491,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
     fun handleReport(bytes: ByteArray, submit: (rawReports: Iterable<ByteArray>) -> Unit) {
         try {
             val packet = Packet.parse(bytes)
+            v { "-> $packet" }
             if (packet.channelId == 0.toUInt()) {
                 throw CtapHidException(CtapHidError.InvalidCid, packet.channelId)
             }
@@ -509,6 +504,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                             }
                             if (packet.channelId == message?.channelId) {
                                 // INIT command used to resync on the active channel.
+                                i { "INIT received on current channel; resetting transaction" }
                                 resetTransaction()
                             }
                             val newChannelId: UInt
@@ -518,8 +514,10 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                                 if (freeChannelId == BROADCAST_CHANNEL_ID) {
                                     freeChannelId = 1u
                                 }
+                                d { "Assigning new channel ID: $newChannelId" }
                             } else {
                                 newChannelId = packet.channelId
+                                d { "Using previous channel ID: $newChannelId" }
                             }
                             submit(
                                 OutMessage.InitResponse(
@@ -533,7 +531,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                         CtapHidCommand.Cancel -> message?.let {
                             if (it.channelId == packet.channelId) {
                                 activeCborJob?.cancel()
-                                Log.i(TAG, "Cancelling current transaction")
+                                i { "Cancelling current transaction" }
                                 activeCborJob = null
                             }
                             // Spurious cancels are silently ignored.
@@ -542,6 +540,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                         else -> {
                             if (packet.channelId == BROADCAST_CHANNEL_ID) {
                                 // Only INIT messages are allowed on the broadcast channel.
+                                i { "Received non-INIT message on broadcast channel" }
                                 throw CtapHidException(CtapHidError.InvalidCid, packet.channelId)
                             }
                             if (message == null) {
@@ -550,11 +549,13 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                                 // Received a second INIT packet, either on the same or another
                                 // channel as the first.
                                 if (message!!.channelId == packet.channelId) {
+                                    i { "Received second INIT packet on the active channel" }
                                     throw CtapHidException(
                                         CtapHidError.InvalidSeq,
                                         packet.channelId
                                     )
                                 } else {
+                                    i { "Received INIT packet while channel was busy" }
                                     throw CtapHidException(
                                         CtapHidError.ChannelBusy,
                                         packet.channelId
@@ -567,6 +568,7 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                 is Packet.ContPacket -> {
                     if (packet.channelId == BROADCAST_CHANNEL_ID) {
                         // Only INIT messages are allowed on the broadcast channel.
+                        i { "Received non-INIT message on broadcast channel" }
                         throw CtapHidException(CtapHidError.InvalidCid, packet.channelId)
                     }
                     if (message?.append(packet) != true) {
@@ -580,7 +582,18 @@ class TransactionManager(private val authenticatorContext: AuthenticatorContext)
                 startTimeout(submit)
             }
         } catch (hidException: CtapHidException) {
+            if (hidException.error in listOf(
+                    CtapHidError.InvalidLen,
+                    CtapHidError.InvalidCmd,
+                    CtapHidError.InvalidSeq
+                )
+            )
+                v { "-> ${Hex.bytesToStringUppercase(bytes)}" }
             return handleError(hidException, submit)
         }
+    }
+
+    companion object : Logging {
+        override val TAG = "TransactionManager"
     }
 }

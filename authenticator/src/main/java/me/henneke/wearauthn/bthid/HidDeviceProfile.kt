@@ -10,8 +10,6 @@ import android.bluetooth.BluetoothProfile
 import android.content.Context
 import androidx.annotation.MainThread
 
-private const val TAG = "HidDeviceProfile"
-
 /** Wrapper for BluetoothInputHost profile that manages paired HID Host devices.  */
 abstract class HidDeviceProfile(private val bluetoothAdapter: BluetoothAdapter) {
     private var serviceStateListener: ServiceStateListener? = null

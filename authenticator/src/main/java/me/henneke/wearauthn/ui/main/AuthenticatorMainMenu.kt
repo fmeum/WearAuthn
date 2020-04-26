@@ -17,18 +17,18 @@ import android.nfc.NfcManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.ResultReceiver
+import android.preference.ListPreference
 import android.preference.Preference
 import android.preference.PreferenceFragment
 import android.preference.SwitchPreference
 import android.support.wearable.view.AcceptDenyDialog
 import android.text.Html
-import android.util.Log
 import android.view.View
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import me.henneke.wearauthn.R
+import me.henneke.wearauthn.*
 import me.henneke.wearauthn.bthid.HidDataSender
 import me.henneke.wearauthn.bthid.HidDeviceProfile
 import me.henneke.wearauthn.bthid.canUseAuthenticator
@@ -36,15 +36,17 @@ import me.henneke.wearauthn.bthid.hasCompatibleBondedDevice
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
 import me.henneke.wearauthn.fido.context.armUserVerificationFuse
 import me.henneke.wearauthn.fido.context.getUserVerificationState
+import me.henneke.wearauthn.sync.UnlockComplicationListenerService
 import me.henneke.wearauthn.ui.ConfirmDeviceCredentialActivity
 import me.henneke.wearauthn.ui.EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER
+import me.henneke.wearauthn.ui.defaultSharedPreferences
 import me.henneke.wearauthn.ui.openPhoneAppOrListing
 import kotlin.coroutines.CoroutineContext
 
-private const val TAG = "AuthenticatorMainMenu"
-
 @ExperimentalUnsignedTypes
-class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
+class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
+
+    override val TAG = "AuthenticatorMainMenu"
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
@@ -59,9 +61,6 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
     private lateinit var singleFactorModeSwitchPreference: SwitchPreference
     private lateinit var manageCredentialsPreference: Preference
     private lateinit var supportPreference: Preference
-
-    private val REQUEST_CODE_ENABLE_BLUETOOTH = 1
-    private val REQUEST_CODE_MAKE_DISCOVERABLE = 2
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -114,6 +113,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
                 true
             }
         }
+        updateLogLevelSwitcher()
     }
 
     override fun onPause() {
@@ -374,9 +374,37 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
         }
     }
 
+    private fun updateLogLevelSwitcher() {
+        findPreference(getString(R.string.preference_log_level_key))?.let {
+            preferenceScreen.removePreference(it)
+        }
+        if (!context.isDeveloperModeEnabled)
+            return
+        preferenceScreen.addPreference(ListPreference(activity!!).apply {
+            key = getString(R.string.preference_log_level_key)
+            setIcon(R.drawable.ic_btn_bug_report)
+            setTitle(R.string.preference_log_level_title)
+            order = context.resources.getInteger(R.integer.order_device_list_log_level)
+            entries = LogLevel.values().map { it.name }.asReversed().toTypedArray()
+            entryValues = LogLevel.values().map { it.name }.asReversed().toTypedArray()
+            setDefaultValue(LogLevel.Disabled.name)
+            setDialogIcon(R.drawable.ic_bug_report)
+            setDialogTitle(R.string.preference_log_level_dialog_title)
+            summary = context.defaultSharedPreferences.getString(
+                getString(R.string.preference_log_level_key),
+                LogLevel.Disabled.name
+            )
+            setOnPreferenceChangeListener { preference, newValue ->
+                Logging.init(context.applicationContext, newValue as? String)
+                preference.summary = newValue as? String
+                true
+            }
+        })
+    }
+
     private val hidProfileListener = object : HidDataSender.ProfileListener {
         override fun onAppStatusChanged(registered: Boolean) {
-            Log.i(TAG, "onAppStatusChanged($registered)")
+            i { "onAppStatusChanged($registered)" }
             if (!registered)
                 activity?.finish()
             for (entry in bondedDeviceEntries) {
@@ -385,7 +413,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
         }
 
         override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
-            Log.i(TAG, "onDeviceStateChanged(${device.name}, $state)")
+            i { "onDeviceStateChanged(_, $state)" }
             findEntryForDevice(device)?.updateProfileConnectionState()
             when (state) {
                 BluetoothProfile.STATE_CONNECTED -> {
@@ -400,7 +428,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
         }
 
         override fun onServiceStateChanged(proxy: BluetoothProfile?) {
-            Log.i(TAG, "onServiceStateChanged($proxy)")
+            i { "onServiceStateChanged(_)" }
             for (entry in bondedDeviceEntries) {
                 entry.updateProfileConnectionState()
             }
@@ -410,7 +438,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
     private val bluetoothBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (context == null || intent == null) {
-                Log.w(TAG, "bluetoothBroadcastReceiver received null context or intent")
+                w { "bluetoothBroadcastReceiver received null context or intent" }
                 return
             }
             if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
@@ -441,5 +469,10 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope {
                 }
             }
         }
+    }
+
+    companion object {
+        private const val REQUEST_CODE_ENABLE_BLUETOOTH = 1
+        private const val REQUEST_CODE_MAKE_DISCOVERABLE = 2
     }
 }

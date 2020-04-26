@@ -1,6 +1,5 @@
 package me.henneke.wearauthn.fido.ctap2
 
-import android.util.Log
 import kotlinx.coroutines.delay
 import me.henneke.wearauthn.*
 import me.henneke.wearauthn.fido.context.*
@@ -10,10 +9,9 @@ import me.henneke.wearauthn.fido.u2f.WEB_AUTHN_RAW_BASIC_ATTESTATION_CERT
 import me.henneke.wearauthn.fido.u2f.signWithWebAuthnBatchAttestationKey
 import kotlin.experimental.or
 
-
 @ExperimentalUnsignedTypes
-object Authenticator {
-    private const val TAG = "Ctap2Authenticator"
+object Authenticator : Logging {
+    override val TAG = "Ctap2Authenticator"
 
     suspend fun handle(context: AuthenticatorContext, rawRequest: ByteArray): ByteArray {
         context.status = AuthenticatorStatus.PROCESSING
@@ -28,48 +26,48 @@ object Authenticator {
                 ?: CTAP_ERR(InvalidCommand, "Unsupported command: $rawCommand")
             when (command) {
                 RequestCommand.MakeCredential -> {
-                    Log.i(TAG, "MakeCredential called")
+                    i { "MakeCredential called" }
                     val params = fromCborToEnd(rawRequestIterator)
                         ?: CTAP_ERR(InvalidCbor, "Invalid CBOR in MakeCredential request")
                     handleMakeCredential(context, params)
                 }
                 RequestCommand.GetAssertion -> {
-                    Log.i(TAG, "GetAssertion called")
+                    i { "GetAssertion called" }
                     val params = fromCborToEnd(rawRequestIterator)
                         ?: CTAP_ERR(InvalidCbor, "Invalid CBOR in GetAssertion request")
                     handleGetAssertion(context, params)
                 }
                 RequestCommand.GetNextAssertion -> {
-                    Log.i(TAG, "GetNextAssertion called")
+                    i { "GetNextAssertion called" }
                     if (rawRequest.size != 1)
                         CTAP_ERR(InvalidLength, "Non-empty params for GetNextAssertion")
                     handleGetNextAssertion(context)
                 }
                 RequestCommand.GetInfo -> {
-                    Log.i(TAG, "GetInfo called")
+                    i { "GetInfo called" }
                     if (rawRequest.size != 1)
                         CTAP_ERR(InvalidLength, "Non-empty params for GetInfo")
                     handleGetInfo(context)
                 }
                 RequestCommand.ClientPIN -> {
-                    Log.i(TAG, "ClientPIN called")
+                    i { "ClientPIN called" }
                     val params = fromCborToEnd(rawRequestIterator)
                         ?: CTAP_ERR(InvalidCbor, "Invalid CBOR in ClientPIN request")
                     handleClientPIN(params)
                 }
                 RequestCommand.Reset -> {
-                    Log.i(TAG, "Reset called")
+                    i { "Reset called" }
                     if (rawRequest.size != 1)
                         CTAP_ERR(InvalidLength, "Non-empty params for Reset")
                     handleReset(context)
                 }
                 RequestCommand.Selection -> {
-                    Log.i(TAG, "Selection called")
+                    i { "Selection called" }
                     if (rawRequest.size != 1)
                         CTAP_ERR(InvalidLength, "Non-empty params for Selection")
                     handleSelection(context)
                 }
-            }.toCtapSuccessResponse()
+            }.also { v { "-> $it" } }.toCtapSuccessResponse()
         } catch (e: CtapErrorException) {
             byteArrayOf(e.error.value)
         } finally {
@@ -114,6 +112,7 @@ object Authenticator {
         // https://cs.chromium.org/chromium/src/device/fido/make_credential_task.cc?l=66&rcl=eb40dba9a062951578292de39424d7479f723463
         if ((rpId == ".dummy" && userName == "dummy") /* Chrome */ ||
                 (rpId == "SelectDevice" && userName == "SelectDevice") /* Windows Hello */) {
+            i { "GetTouch request received" }
             val requestInfo = context.makeCtap2RequestInfo(PLATFORM_GET_TOUCH, rpId)
             val followUpInClient = context.confirmRequestWithUser(requestInfo) == true
             if (followUpInClient)
@@ -124,6 +123,7 @@ object Authenticator {
 
         // Step 1
         if (excludeList != null) {
+            i { "Exclude list present" }
             for (cborCredential in excludeList) {
                 if (Credential.fromCborCredential(cborCredential, rpIdHash, context) == null)
                     continue
@@ -239,8 +239,7 @@ object Authenticator {
         val credentialPublicKey = credential.ctap2PublicKeyRepresentation
         if (credentialPublicKey == null) {
             credential.delete(context)
-            Log.e(TAG, "Failed to get raw public key")
-            CTAP_ERR(Other)
+            CTAP_ERR(Other, "Failed to get raw public key")
         }
 
         // As per
@@ -356,7 +355,8 @@ object Authenticator {
             check(allowList != null)
             if (allowList.isEmpty()) {
                 // Step 1 of the spec does not list this case, hence we treat it as if there were
-                // no credentials found
+                // no credentials found.
+                i { "Allow list is empty" }
                 emptySequence()
             } else {
                 allowList.asSequence().mapNotNull { cborCredential ->
@@ -365,6 +365,7 @@ object Authenticator {
             }
         } else {
             // Locate all rk credentials bound to the provided rpId
+            i { "Locating resident credentials" }
             context.getResidentKeyUserIdsForRpId(rpIdHash).asSequence()
                 .mapNotNull { userId -> context.getResidentCredential(rpIdHash, userId) }
                 .sortedByDescending { it.creationDate }
@@ -385,6 +386,7 @@ object Authenticator {
             if (credential != null) listOf(credential) else listOf()
         }
         val numberOfCredentials = credentialsToUse.size
+        i { "Continuing with $numberOfCredentials credentials" }
 
         // Step 7
 
@@ -431,7 +433,7 @@ object Authenticator {
         if (requireUserPresence && context.confirmRequestWithUser(requestInfo) != true)
             CTAP_ERR(OperationDenied)
         if (!requireUserPresence)
-            Log.i(TAG, "Processing silent GetAssertion request")
+            i { "Processing silent GetAssertion request" }
 
         // Step 8
         // It is very important that this step happens after the user presence check of step 7.

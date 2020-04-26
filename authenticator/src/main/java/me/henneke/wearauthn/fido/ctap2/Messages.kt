@@ -1,6 +1,7 @@
 package me.henneke.wearauthn.fido.ctap2
 
-import android.util.Log
+import me.henneke.wearauthn.Logging.Companion.i
+import me.henneke.wearauthn.Logging.Companion.w
 import me.henneke.wearauthn.fido.context.AuthenticatorAction
 import me.henneke.wearauthn.fido.context.AuthenticatorAction.AUTHENTICATE
 import me.henneke.wearauthn.fido.context.AuthenticatorAction.REGISTER
@@ -13,7 +14,6 @@ import java.security.PublicKey
 import java.security.interfaces.ECPublicKey
 import java.security.spec.ECPoint
 import java.security.spec.ECPublicKeySpec
-
 
 // This size is chosen such that it can be transmitted via the HID protocol even if the maximal
 // report size is 48 bytes.
@@ -66,8 +66,10 @@ enum class CtapError(val value: Byte) {
 data class CtapErrorException(val error: CtapError) : Throwable()
 
 fun CTAP_ERR(error: CtapError, message: String? = null): Nothing {
-    if (message != null)
-        Log.w("CTAP", "${error.name}: $message")
+    if (error == Other)
+        w("CTAP") { "${error.name}: $message" }
+    else
+        i("CTAP") { "${error.name}: $message" }
     throw CtapErrorException(error)
 }
 

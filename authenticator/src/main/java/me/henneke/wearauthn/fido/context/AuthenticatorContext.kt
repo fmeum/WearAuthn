@@ -10,13 +10,11 @@ import android.os.ResultReceiver
 import android.security.keystore.UserNotAuthenticatedException
 import android.text.Html
 import android.text.Spanned
-import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.core.content.edit
 import kotlinx.coroutines.*
-import me.henneke.wearauthn.R
-import me.henneke.wearauthn.base64
-import me.henneke.wearauthn.escapeHtml
+import me.henneke.wearauthn.*
+import me.henneke.wearauthn.Logging.Companion.i
 import me.henneke.wearauthn.fido.context.AuthenticatorAction.*
 import me.henneke.wearauthn.fido.ctap2.AttestationType
 import me.henneke.wearauthn.fido.ctap2.CTAP_ERR
@@ -24,12 +22,9 @@ import me.henneke.wearauthn.fido.ctap2.CborValue
 import me.henneke.wearauthn.fido.ctap2.CtapError.OperationDenied
 import me.henneke.wearauthn.fido.ctap2.CtapError.Other
 import me.henneke.wearauthn.fido.u2f.resolveAppIdHash
-import me.henneke.wearauthn.sha256
 import me.henneke.wearauthn.ui.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-
-private const val TAG = "AuthenticatorContext"
 
 private const val COUNTERS_PREFERENCE_FILE = "counters"
 private val COUNTERS_WRITE_LOCK = Object()
@@ -209,8 +204,11 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
 
     // We use cached credentials only over NFC, where low latency responses are very important
     private val useCachedCredential = !isHidTransport
-    var status: AuthenticatorStatus =
-        AuthenticatorStatus.IDLE
+    var status: AuthenticatorStatus = AuthenticatorStatus.IDLE
+        set(value) {
+            d { "Authenticator status changed: $value" }
+            field = value
+        }
     var getNextAssertionBuffer: Iterator<CborValue>? = null
     var getNextAssertionRequestInfo: RequestInfo? = null
 
@@ -260,13 +258,13 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
         )
         if (keyAlias == null) {
             if (actualAttestationChallenge == null) {
-                Log.e(TAG, "Key generation failed without attestation; giving up")
+                w { "Key generation failed without attestation; giving up" }
                 return null
             }
             // We failed to generate a Keystore key, which may be due to attestation failing on this
             // device. Since attestation is not essential, we fall back to self attestation for all
             // future key generations.
-            Log.e(TAG, "Key generation failed; falling back to self attestation in the future")
+            w { "Key generation failed; falling back to self attestation in the future" }
             context.defaultSharedPreferences.edit {
                 putBoolean(USE_ANDROID_ATTESTATION_PREFERENCE_KEY, false)
             }
@@ -423,15 +421,16 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
                 credential.serialize(userVerified)
             } ?: CTAP_ERR(OperationDenied)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to serialize user data: $e")
+            e { "Failed to serialize user data: $e" }
             CTAP_ERR(Other)
         }
+        v { "Storing resident credential information: {'rpId': '${rpId}', 'uid+$encodedUserId': '$serializedCredential', 'kh+$encodedKeyHandle': '$encodedUserId'}" }
         getResidentKeyPrefsForRpId(rpIdHash).edit {
             putString("rpId", rpId)
             putString("uid+$encodedUserId", serializedCredential)
             putString("kh+$encodedKeyHandle", encodedUserId)
         }
-        Log.i(TAG, "Resident credential stored")
+        i { "Resident credential stored" }
     }
 
     fun lookupAndReplaceWithResidentCredential(credential: Credential): Credential {
@@ -441,7 +440,7 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
                 ?: return credential
         return (getResidentCredential(credential.rpIdHash, encodedUserId) ?: credential).also {
             if (it != credential)
-                Log.i(TAG, "Replaced allowList credential with resident credential")
+                i { "Replaced allow list credential with resident credential" }
         }
     }
 
@@ -534,14 +533,15 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
         }
     }
 
-    companion object {
+    companion object : Logging {
+        override val TAG = "AuthenticatorContext"
 
         fun initAuthenticator(context: Context) {
             if (isKeystoreEmpty) {
                 context.defaultSharedPreferences.edit {
                     putBoolean(FUSE_CREATED_PREFERENCE_KEY, false)
                 }
-                Log.i(TAG, "Set 'fuse_created' preference to false")
+                i { "Set 'fuse_created' preference to false" }
             }
             initMasterSigningKeyIfNecessary()
             // We create a dummy signature with the master signing key to get it cached.
@@ -554,13 +554,13 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
                 if (keyAlias == null) {
                     val newKeyAlias = generateWebAuthnCredential()
                     if (newKeyAlias == null) {
-                        Log.e(TAG, "Failed to refresh WebAuthn credential cache")
+                        e { "Failed to refresh WebAuthn credential cache" }
                     } else {
                         setCachedCredentialKeyAlias(
                             context,
                             newKeyAlias
                         )
-                        Log.i(TAG, "Refreshed the credential cache")
+                        i { "Refreshed the credential cache" }
                     }
                 }
             }
@@ -629,6 +629,7 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
             rpIdHash: ByteArray
         ): SharedPreferences {
             val rpIdHashString = rpIdHash.base64()
+            v { "Writing RP ID hash entry for $rpIdHashString" }
             context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).edit {
                 putBoolean(rpIdHashString, true)
             }
@@ -637,10 +638,16 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
 
         fun getAllResidentCredentials(context: Context): Map<String, List<WebAuthnCredential>> {
             var unknownSiteCounter = 1
+            i { "Looking up all resident credentials" }
             return context.sharedPreferences(RESIDENT_KEY_RP_ID_HASHES_FILE).all.keys
                 .sorted() // Guarantee deterministic assignment of indices to RPs without stored rpId
+                .also {
+                    d { "Found ${it.size} entries in RP ID hash file" }
+                }
                 .mapNotNull {
                     it.base64()
+                }.also {
+                    d { "Successfully decoded ${it.size} encoded RP ID hashes" }
                 }
                 .map { rpIdHash ->
                     val rpPrefs =
@@ -652,14 +659,21 @@ abstract class AuthenticatorContext(private val context: Context, val isHidTrans
                         ).also { unknownSiteCounter++ }
                     val credentials = rpPrefs.all.keys
                         .filter { it.startsWith("uid+") }
+                        .also {
+                            v { "Found ${it.size} user IDs for '$rpId'" }
+                        }
                         .mapNotNull {
                             WebAuthnCredential.deserialize(
                                 rpPrefs.getString(it, null) ?: return@mapNotNull null,
                                 rpIdHash
                             )
                         }.sortedByDescending { it.creationDate }
-                    Pair(rpId, credentials)
-                }.toMap()
+                    Pair(rpId, credentials).also {
+                        v { "Deserialized ${it.second.size} credentials for '$rpId'" }
+                    }
+                }.toMap().also {
+                    d { "Found resident credentials for ${it.size} RPs with ${unknownSiteCounter - 1} unknown sites" }
+                }
         }
 
         fun isScreenLockEnabled(context: Context) = context.keyguardManager?.isDeviceSecure == true

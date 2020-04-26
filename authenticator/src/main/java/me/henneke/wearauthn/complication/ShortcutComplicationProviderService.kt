@@ -11,16 +11,12 @@ import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.ComplicationManager
 import android.support.wearable.complications.ComplicationProviderService
 import android.support.wearable.complications.ComplicationText
-import android.util.Log
+
 import androidx.core.content.edit
-import me.henneke.wearauthn.BuildConfig
-import me.henneke.wearauthn.R
+import me.henneke.wearauthn.*
 import me.henneke.wearauthn.bthid.identifier
 import me.henneke.wearauthn.ui.defaultSharedPreferences
 import me.henneke.wearauthn.ui.main.AuthenticatorAttachedActivity
-
-
-private const val TAG = "ShortcutComplicationProviderService"
 
 private fun abbreviate(name: String): String {
     if (name.length <= 7) {
@@ -29,13 +25,15 @@ private fun abbreviate(name: String): String {
     return "${name.take(3)}…${name.takeLast(3)}"
 }
 
-class ShortcutComplicationProviderService : ComplicationProviderService() {
+class ShortcutComplicationProviderService : ComplicationProviderService(), Logging {
+
+    override val TAG = "ShortcutComplicationProviderService"
 
     @ExperimentalUnsignedTypes
     override fun onComplicationUpdate(
         complicationId: Int, dataType: Int, complicationManager: ComplicationManager
     ) {
-        Log.i(TAG, "Updating complication $complicationId of type $dataType")
+        d { "Updating complication $complicationId of type $dataType" }
 
         val deviceShortcut = getDeviceShortcut(this, complicationId)
         val defaultAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -46,6 +44,7 @@ class ShortcutComplicationProviderService : ComplicationProviderService() {
         val invalidDevice = device == null || device !in defaultAdapter.bondedDevices
 
         val launchIntent = if (invalidDevice) {
+            w { "Invalid device" }
             packageManager.getLaunchIntentForPackage(BuildConfig.APPLICATION_ID)
         } else {
             Intent(this, AuthenticatorAttachedActivity::class.java)

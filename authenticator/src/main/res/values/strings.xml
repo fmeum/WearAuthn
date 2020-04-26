@@ -90,4 +90,8 @@
     <string name="preference_support_not_purchased_summary">and unlock a watch face shortcut</string>
     <string name="preference_support_purchased_title">Thanks for your support!</string>
     <string name="preference_support_purchased_summary">View recent changes</string>
+    <string name="preference_log_level_key" translatable="false">preference_log_level</string>
+    <string name="preference_log_level_title">Log level</string>
+    <string name="preference_log_level_dialog_title">Choose a log level</string>
+    <string name="preference_log_level_dialog_message">Logs may contain personal information on \"Debug\" or \"Verbose\".</string>
 </resources>

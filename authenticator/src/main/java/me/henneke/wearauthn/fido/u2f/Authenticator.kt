@@ -1,27 +1,28 @@
 package me.henneke.wearauthn.fido.u2f
 
-import android.util.Log
-import me.henneke.wearauthn.fido.*
+import me.henneke.wearauthn.*
+import me.henneke.wearauthn.fido.ApduException
+import me.henneke.wearauthn.fido.StatusWord
 import me.henneke.wearauthn.fido.context.*
 import me.henneke.wearauthn.fido.u2f.Request.*
 
-private const val TAG = "U2fAuthenticator"
-
 @ExperimentalUnsignedTypes
-object Authenticator {
+object Authenticator : Logging {
+    override val TAG = "U2fAuthenticator"
 
     fun handle(context: AuthenticatorContext, req: Request): Pair<RequestInfo?, () -> Response> {
+        v { "<- $req" }
         return when (req) {
             is RegistrationRequest -> {
-                Log.i(TAG, "Register request received")
+                i { "Register request received" }
                 handleRegisterRequest(context, req)
             }
             is AuthenticationRequest -> {
-                Log.i(TAG, "Authenticate request received")
+                i { "Authenticate request received" }
                 handleAuthenticateRequest(context, req)
             }
             is VersionRequest -> {
-                Log.i(TAG, "Version request received")
+                i { "Version request received" }
                 handleVersionRequest()
             }
         }
@@ -31,11 +32,12 @@ object Authenticator {
         context: AuthenticatorContext,
         req: RegistrationRequest
     ): Pair<RequestInfo, () -> Response.RegistrationResponse> {
-        val action =
-            if (isDummyRequest(req.application, req.challenge))
-                AuthenticatorAction.AUTHENTICATE_NO_CREDENTIALS
-            else
-                AuthenticatorAction.REGISTER
+        val action = if (isDummyRequest(req.application, req.challenge)) {
+            i { "Dummy request received" }
+            AuthenticatorAction.AUTHENTICATE_NO_CREDENTIALS
+        } else {
+            AuthenticatorAction.REGISTER
+        }
         val requestInfo =
             context.makeU2fRequestInfo(action, req.application)
         return Pair(requestInfo) {
@@ -49,7 +51,7 @@ object Authenticator {
             val rawPublicKey = credential.u2fPublicKeyRepresentation
             if (rawPublicKey == null) {
                 credential.delete(context)
-                Log.e(TAG, "Failed to get raw public key")
+                w { "Failed to get raw public key" }
                 throw ApduException(StatusWord.MEMORY_FAILURE)
             }
             context.initCounter(keyAlias)
@@ -73,7 +75,7 @@ object Authenticator {
                 credential.keyHandle,
                 attestationCert,
                 signature
-            )
+            ).also { v { "-> $it" } }
         }
     }
 
@@ -83,22 +85,22 @@ object Authenticator {
     ): Pair<RequestInfo?, () -> Response.AuthenticationResponse> {
         val credential = Credential.fromKeyHandle(req.keyHandle, req.application, context)
             ?: throw ApduException(StatusWord.WRONG_DATA)
-        // CTAP2 credentials are allowed to be used via CTAP1, which greatly improves NFC  usability
+        // CTAP2 credentials are allowed to be used via CTAP1, which greatly improves NFC usability
         if (credential !is U2FCredential)
-            Log.i(TAG, "Using a CTAP2 credential via CTAP1")
+            i { "Using a CTAP2 credential via CTAP1" }
         val action =
             if (isDummyRequest(req.application, req.challenge))
                 AuthenticatorAction.REGISTER_CREDENTIAL_EXCLUDED
             else
                 AuthenticatorAction.AUTHENTICATE
-        when (req.controlByte) {
+        return when (req.controlByte) {
             AuthenticateControlByte.CHECK_ONLY -> {
                 throw ApduException(StatusWord.CONDITIONS_NOT_SATISFIED)
             }
             AuthenticateControlByte.ENFORCE_USER_PRESENCE_AND_SIGN -> {
                 val requestInfo =
                     context.makeU2fRequestInfo(action, req.application)
-                return Pair(requestInfo) {
+                Pair(requestInfo) {
                     credential.assertU2f(
                         clientDataHash = req.challenge,
                         userPresent = true,
@@ -108,8 +110,8 @@ object Authenticator {
                 }
             }
             AuthenticateControlByte.DONT_ENFORCE_USER_PRESENCE_AND_SIGN -> {
-                Log.i(TAG, "Processing silent Authenticate request")
-                return Pair(null) {
+                i { "Processing silent Authenticate request" }
+                Pair(null) {
                     credential.assertU2f(
                         clientDataHash = req.challenge,
                         userPresent = false,
@@ -119,11 +121,9 @@ object Authenticator {
                 }
             }
         }
-
     }
 
     private fun handleVersionRequest(): Pair<Nothing?, () -> Response.VersionResponse> {
         return Pair(null) { Response.VersionResponse() }
     }
-
 }

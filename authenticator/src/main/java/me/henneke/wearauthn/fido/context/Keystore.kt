@@ -3,12 +3,14 @@ package me.henneke.wearauthn.fido.context
 import android.content.Context
 import android.os.Build
 import android.security.keystore.*
-import android.util.Log
 import androidx.core.content.edit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import me.henneke.wearauthn.*
+import me.henneke.wearauthn.Logging.Companion.e
+import me.henneke.wearauthn.Logging.Companion.i
+import me.henneke.wearauthn.Logging.Companion.w
 import me.henneke.wearauthn.fido.ctap2.*
 import me.henneke.wearauthn.fido.u2f.Response
 import me.henneke.wearauthn.ui.defaultSharedPreferences
@@ -82,10 +84,10 @@ private fun generateSymmetricKey(
             init(parameterSpec)
             generateKey()
         }
-    } catch (e: Exception) {
-        if (e is UserNotAuthenticatedException)
-            throw e
-        Log.e(TAG, "Failed to generate symmetric key: $e")
+    } catch (error: Exception) {
+        if (error is UserNotAuthenticatedException)
+            throw error
+        e(TAG, error) { "Failed to generate symmetric key:" }
         null
     }
 }
@@ -102,10 +104,10 @@ private fun generateEllipticCurveKey(builder: KeyGenParameterSpec.Builder): KeyP
             initialize(parameterSpec)
             generateKeyPair()
         }
-    } catch (e: Exception) {
-        if (e is UserNotAuthenticatedException)
-            throw e
-        Log.e(TAG, "Failed to generate EC key: $e")
+    } catch (error: Exception) {
+        if (error is UserNotAuthenticatedException)
+            throw error
+        e(TAG, error) { "Failed to generate EC key:" }
         null
     }
 }
@@ -233,12 +235,12 @@ private fun getOrCreateUserInfoEncryptionKeyIfNecessary(): SecretKey? {
         parameterSpec
     ).also {
         if (it == null)
-            Log.e(TAG, "Failed to initialize user info encryption key")
+            e(TAG) { "Failed to initialize user info encryption key" }
     }
 }
 
 private fun recreateInvalidatedUserInfoEncryptionKey(): SecretKey? {
-    Log.w(TAG, "User info encryption was no longer valid and has been recreated.")
+    i(TAG) { "User info encryption was no longer valid and has been recreated" }
     deleteKey(USER_INFO_ENCRYPTION_KEY_ALIAS)
     return getOrCreateUserInfoEncryptionKeyIfNecessary()
 }
@@ -270,12 +272,12 @@ fun encryptWithUserInfoEncryptionKey(data: ByteArray): ByteArray? {
 
 fun decryptWithUserInfoEncryptionKey(data: ByteArray): ByteArray? {
     if (data.isEmpty()) {
-        Log.e(TAG, "Failed to decrypt user info: Stored data is empty.")
+        e(TAG) { "Failed to decrypt user info: Stored data is empty" }
         return null
     }
     val ivSize = data[0]
     if (data.size < 1 + ivSize) {
-        Log.e(TAG, "Failed to decrypt user info: Stored IV size is invalid.")
+        e(TAG) { "Failed to decrypt user info: Stored IV size is invalid." }
         return null
     }
     val iv = data.sliceArray(1 until 1 + ivSize)
@@ -286,13 +288,13 @@ fun decryptWithUserInfoEncryptionKey(data: ByteArray): ByteArray? {
             init(Cipher.DECRYPT_MODE, secretKey, GCMParameterSpec(128, iv))
             doFinal(cipherText)
         }
-    } catch (e: Exception) {
-        if (e is UnrecoverableEntryException || e is KeyPermanentlyInvalidatedException) {
+    } catch (error: Exception) {
+        if (error is UnrecoverableEntryException || error is KeyPermanentlyInvalidatedException) {
             recreateInvalidatedUserInfoEncryptionKey()
-        } else if (e is UserNotAuthenticatedException) {
-            throw e
+        } else if (error is UserNotAuthenticatedException) {
+            throw error
         } else {
-            Log.e(TAG, "Failed to decrypt user info: $e")
+            e(TAG, error) { "Failed to decrypt user info:" }
         }
         null
     }
@@ -321,9 +323,9 @@ fun armUserVerificationFuse(context: Context) {
             parameterSpec
         ) != null
     )
-        Log.i(TAG, "Armed user verification fuse")
+        i(TAG) { "Armed user verification fuse" }
     else
-        Log.e(TAG, "Failed to arm user verification fuse")
+        e(TAG) { "Failed to arm user verification fuse" }
 }
 
 fun getUserVerificationState(context: Context, obeyTimeout: Boolean = false): Boolean? {
@@ -333,7 +335,7 @@ fun getUserVerificationState(context: Context, obeyTimeout: Boolean = false): Bo
     return try {
         val secretKey = androidKeystore.getSecretKey(USER_VERIFICATION_FUSE_KEY_ALIAS)
             ?: return if (fuseCreated) {
-                Log.e(TAG, "Fuse not present but 'fuse_created' preference is set to true")
+                e(TAG) { "Fuse not present but 'fuse_created' preference is set to true" }
                 null
             } else {
                 false
@@ -344,24 +346,24 @@ fun getUserVerificationState(context: Context, obeyTimeout: Boolean = false): Bo
         if (fuseCreated) {
             true
         } else {
-            Log.e(TAG, "Fuse present but 'fuse_created' preference is set to false")
+            e(TAG) { "Fuse present but 'fuse_created' preference is set to false" }
             null
         }
-    } catch (e: Exception) {
-        if (e is UserNotAuthenticatedException) {
+    } catch (error: Exception) {
+        if (error is UserNotAuthenticatedException) {
             // We do not care about whether the user has recently authenticated, unless we are
             // asked explicitly to check the timeout.
             if (obeyTimeout) {
-                throw e
+                throw error
             } else {
                 true
             }
         } else {
-            if (e !is UnrecoverableEntryException && e !is KeyPermanentlyInvalidatedException)
-                Log.e(TAG, "Unexpectedly failed to access fuse: $e")
+            if (error !is UnrecoverableEntryException && error !is KeyPermanentlyInvalidatedException)
+                e(TAG, error) { "Unexpectedly failed to access fuse:" }
             null
         }
-    }.also { Log.i(TAG, "User verification state is: $it") }
+    }.also { i(TAG) { "User verification state is: $it" } }
 }
 
 private val androidKeystore = KeyStore.getInstance(PROVIDER_ANDROID_KEYSTORE).apply { load(null) }
@@ -548,14 +550,14 @@ abstract class Credential {
             // For a resident key, we have to add a "user" field to the result, which contains
             // personal information only if the authenticator does not use the display and there are
             // multiple assertions that need to be returned. At this point, the personal information
-            // is not null only if the user has been verified
+            // is not null only if the user has been verified.
             val userMap = mutableMapOf<String, CborValue>(
-                // userId is ensured to be not null in deserialize
+                // userId is ensured to be not null in deserialize.
                 "id" to CborByteString(userId!!)
             )
             if (!context.isHidTransport && usesMultipleResidentKeys) {
                 if (userDisplayName != null || userName != null || userIcon != null)
-                    Log.i(TAG, "Revealing personal information to the client")
+                    i(TAG) { "Revealing personal information to the client" }
                 userDisplayName?.let { userMap["displayName"] = CborTextString(it) }
                 userName?.let { userMap["name"] = CborTextString(it) }
                 userIcon?.let { userMap["icon"] = CborTextString(it) }
@@ -597,23 +599,26 @@ abstract class Credential {
             val nonce = keyHandleData.sliceArray(0 until 32)
             val keyAlias = nonce.base64()
             if (!context.isValidWebAuthnCredentialKeyAlias(keyAlias)) {
-                Log.e(TAG, "Valid signature, but invalid counter or Keystore entry")
+                w(TAG) { "Valid signature, but invalid counter or Keystore entry" }
                 return null
             }
             return if (keyHandleData.size == 32) {
-                // U2F: keyHandleData only consists of the nonce
+                // U2F: keyHandleData only consists of the nonce.
                 U2FCredential(keyAlias, rpIdHash)
             } else {
-                // WebAuthn: keyHandleData consists of the nonce, a null byte, and the RP name
-                // At this point, keyHandleData has size at least 33
+                // WebAuthn: keyHandleData consists of the nonce, a null byte, and the RP name.
+                // At this point, keyHandleData has size at least 33.
                 if (keyHandleData[32] != 0.toByte()) {
-                    // This should never happen since we would have had to sign an invalid handle
-                    Log.e(TAG, "Encountered invalid signed key handle: missing zero byte")
+                    // This should never happen since we would have had to sign an invalid handle.
+                    e(TAG) { "Encountered invalid signed key handle: missing zero byte" }
                     return null
                 }
                 val rawRpName = keyHandleData.sliceArray(33 until keyHandleData.size)
                 val rpName = if (rawRpName.isNotEmpty())
-                    rawRpName.decodeToStringOrNull() ?: return null
+                    rawRpName.decodeToStringOrNull() ?: run {
+                        w(TAG) { "Failed to decode RP name in key handle" }
+                        return@fromKeyHandle null
+                    }
                 else
                     null
                 WebAuthnCredential(
@@ -804,15 +809,35 @@ class WebAuthnCredential(
         }
     }
 
-    companion object {
+    companion object : Logging {
+        override val TAG = "WebAuthnCredential"
+
         fun deserialize(str: String, rpIdHash: ByteArray): WebAuthnCredential? {
-            val bytes = str.base64() ?: return null
-            val cbor = fromCborToEnd(bytes) as? CborTextStringMap ?: return null
+            i { "Deserializing a WebAuthn credential" }
+            val bytes = str.base64() ?: run {
+                w { "Deserialization failed: Invalid Base64" }
+                return null
+            }
+            val cbor = fromCborToEnd(bytes) as? CborTextStringMap ?: run {
+                w { "Deserialization failed: Invalid CBOR" }
+                return null
+            }
             val map = cbor.value
-            val keyAlias = (map["keyAlias"] as? CborTextString)?.value ?: return null
-            val rpName = (map["rpName"] as? CborTextString)?.value ?: return null
-            val userId = (map["userId"] as? CborByteString)?.value ?: return null
+            val keyAlias = (map["keyAlias"] as? CborTextString)?.value ?: run {
+                w { "Deserialization failed: Failed to read keyAlias" }
+                return null
+            }
+            val rpName = (map["rpName"] as? CborTextString)?.value ?: run {
+                w { "Deserialization failed: Failed to read rpName" }
+                return null
+            }
+            val userId = (map["userId"] as? CborByteString)?.value ?: run {
+                w { "Deserialization failed: Failed to read userId" }
+                return null
+            }
             val encryptedUserMap = (map["encryptedUser"] as? CborByteString)?.value
+            if (encryptedUserMap == null)
+                d { "Resident credential did not contain encrypted user info" }
             val credential = WebAuthnCredential(
                 keyAlias = keyAlias,
                 rpIdHash = rpIdHash,
@@ -820,8 +845,10 @@ class WebAuthnCredential(
                 userId = userId,
                 encryptedUserMap = encryptedUserMap
             )
-            if (!credential.isResident)
+            if (!credential.isResident) {
+                w { "Deserialization failed: Not a resident credential" }
                 return null
+            }
             return credential
         }
     }

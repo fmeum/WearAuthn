@@ -9,8 +9,6 @@ import android.bluetooth.BluetoothProfile
 import android.os.Handler
 import android.os.Looper
 
-private const val TAG = "HidDeviceApp"
-
 /** Helper class that holds all data about the HID Device's SDP record and wraps data sending.  */
 abstract class HidDeviceApp {
 

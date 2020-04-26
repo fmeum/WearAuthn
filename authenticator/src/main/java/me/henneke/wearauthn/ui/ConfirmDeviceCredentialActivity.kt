@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.os.ResultReceiver
 import android.support.wearable.activity.WearableActivity
 
-
 const val EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER =
     "me.henneke.wearauthn.common.EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER"
 

@@ -12,4 +12,5 @@
     <integer name="order_device_list_credential_management">322</integer>
     <integer name="order_device_list_about">324</integer>
     <integer name="order_device_list_support">325</integer>
+    <integer name="order_device_list_log_level">330</integer>
 </resources>

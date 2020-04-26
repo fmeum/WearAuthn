@@ -9,7 +9,6 @@ import me.henneke.wearauthn.bthid.HidDeviceProfile
 import me.henneke.wearauthn.bthid.canUseAuthenticatorViaBluetooth
 import me.henneke.wearauthn.ui.BluetoothDevicePreference
 
-
 class AuthenticatorHostDeviceEntry(context: Context, device: BluetoothDevice, private val hidDeviceProfile: HidDeviceProfile) : BluetoothDevicePreference(context, device) {
 
     init {
