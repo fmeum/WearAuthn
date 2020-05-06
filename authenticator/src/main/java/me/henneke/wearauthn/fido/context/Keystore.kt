@@ -830,10 +830,7 @@ class WebAuthnCredential(
                 w { "Deserialization failed: Failed to read keyAlias" }
                 return null
             }
-            val rpName = (map["rpName"] as? CborTextString)?.value ?: run {
-                w { "Deserialization failed: Failed to read rpName" }
-                return null
-            }
+            val rpName = (map["rpName"] as? CborTextString)?.value
             val userId = (map["userId"] as? CborByteString)?.value ?: run {
                 w { "Deserialization failed: Failed to read userId" }
                 return null
