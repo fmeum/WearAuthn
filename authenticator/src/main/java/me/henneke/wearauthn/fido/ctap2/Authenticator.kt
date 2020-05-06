@@ -480,6 +480,7 @@ object Authenticator : Logging {
                         userPresent = requireUserPresence,
                         userVerified = requireUserVerification,
                         numberOfCredentials = if (credentialCounter == 0) numberOfCredentials else null,
+                        userSelected = false,
                         context = context
                     )
                 }.iterator()
@@ -514,6 +515,7 @@ object Authenticator : Logging {
                 userPresent = requireUserPresence,
                 userVerified = requireUserVerification,
                 numberOfCredentials = 1,
+                userSelected = credentialsToUse.size > 1,
                 context = context
             )
         }

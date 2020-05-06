@@ -534,6 +534,7 @@ abstract class Credential {
         userPresent: Boolean,
         userVerified: Boolean,
         numberOfCredentials: Int?,
+        userSelected: Boolean,
         context: AuthenticatorContext
     ): CborLongMap {
         val assertion = assert(clientDataHash, extensionOutputs, userPresent, userVerified, context)
@@ -567,6 +568,8 @@ abstract class Credential {
         if (numberOfCredentials != null && numberOfCredentials != 1)
             resultMap[GET_ASSERTION_RESPONSE_NUMBER_OF_CREDENTIALS] =
                 CborLong(numberOfCredentials.toLong())
+        if (userSelected)
+            resultMap[GET_ASSERTION_RESPONSE_USER_SELECTED] = CborBoolean(true)
 
         return CborLongMap(resultMap)
     }
