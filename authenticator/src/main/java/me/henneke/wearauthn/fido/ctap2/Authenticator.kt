@@ -382,8 +382,7 @@ object Authenticator : Logging {
         val credentialsToUse = if (useResidentKey) {
             applicableCredentials.toList()
         } else {
-            val credential = applicableCredentials.firstOrNull()
-            if (credential != null) listOf(credential) else listOf()
+            listOfNotNull(applicableCredentials.firstOrNull())
         }
         val numberOfCredentials = credentialsToUse.size
         i { "Continuing with $numberOfCredentials credentials" }

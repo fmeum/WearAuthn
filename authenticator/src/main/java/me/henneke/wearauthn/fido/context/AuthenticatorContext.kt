@@ -46,7 +46,7 @@ enum class AuthenticatorAction {
     PLATFORM_GET_TOUCH
 }
 
-sealed class RequestInfo(private val context: Context, protected val action: AuthenticatorAction) {
+sealed class RequestInfo(private val context: Context, private val action: AuthenticatorAction) {
     protected abstract val formattedRp: String?
     protected abstract val shortRp: String?
     protected abstract val formattedUser: String?
@@ -133,12 +133,12 @@ class U2fRequestInfo(
 class Ctap2RequestInfo(
     context: Context,
     action: AuthenticatorAction,
-    private val rpId: String,
-    private val rpName: String? = null,
-    private val userName: String? = null,
-    private val userDisplayName: String? = null,
-    private val requiresUserVerification: Boolean = false,
-    private val addResidentKeyHint: Boolean = false
+    rpId: String,
+    rpName: String? = null,
+    userName: String? = null,
+    userDisplayName: String? = null,
+    requiresUserVerification: Boolean = false,
+    addResidentKeyHint: Boolean = false
 ) :
     RequestInfo(context, action) {
 
