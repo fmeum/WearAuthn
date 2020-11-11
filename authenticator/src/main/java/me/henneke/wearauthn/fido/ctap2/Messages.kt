@@ -59,6 +59,7 @@ enum class CtapError(val value: Byte) {
     UserActionTimeout(0x2f),
     NotAllowed(0x30),
     PinAuthInvalid(0x33),
+    PinRequired(0x36),
     RequestTooLarge(0x39),
     Other(0x7f),
 }
@@ -108,15 +109,18 @@ const val GET_INFO_RESPONSE_AAGUID = 0x3L
 const val GET_INFO_RESPONSE_OPTIONS = 0x4L
 const val GET_INFO_RESPONSE_MAX_MSG_SIZE = 0x5L
 const val GET_INFO_RESPONSE_PIN_PROTOCOLS = 0x6L
+
 // These parts of the GetInfo response are not yet in the public CTAP spec, but have been picked up
 // from
 // https://chromium.googlesource.com/chromium/src/+/acef6fd7468307321aeab22853f2b6d0d5d6462a
 const val GET_INFO_RESPONSE_MAX_CREDENTIAL_COUNT_IN_LIST = 0x7L
 const val GET_INFO_RESPONSE_MAX_CREDENTIAL_ID_LENGTH = 0x8L
+
 // These parts of the GetInfo response are also not yet public, but have been picked up from
 // https://groups.google.com/a/fidoalliance.org/d/msg/fido-dev/zFbMGu8rfJQ/WE5Wo6tiAgAJ
 const val GET_INFO_RESPONSE_TRANSPORTS = 0x9L
 const val GET_INFO_RESPONSE_ALGORITHMS = 0xAL
+const val GET_INFO_RESPONSE_DEFAULT_CRED_PROTECT = 0xCL
 
 const val CLIENT_PIN_PIN_PROTOCOL = 0x1L
 const val CLIENT_PIN_SUB_COMMAND = 0x2L
@@ -126,12 +130,14 @@ const val CLIENT_PIN_GET_KEY_AGREEMENT_RESPONSE_KEY_AGREEMENT = 0x1L
 
 const val COSE_ID_ES256 = -7L
 const val COSE_ID_ECDH = -25L
+
 @ExperimentalUnsignedTypes
 val COSE_KEY_ES256_TEMPLATE = mapOf(
     1L to CborLong(2), // kty: EC2 key type
     3L to CborLong(COSE_ID_ES256), // alg: ES256 signature algorithm
     -1L to CborLong(1) // crv: P-256 curve
 )
+
 @ExperimentalUnsignedTypes
 val COSE_KEY_ECDH_TEMPLATE = mapOf(
     1L to CborLong(2), // kty: EC2 key type
@@ -182,11 +188,14 @@ enum class Extension(val identifier: String) {
     fun parseInput(
         input: CborValue,
         action: AuthenticatorAction,
-        canUseDisplay: Boolean
+        canUseDisplay: Boolean,
+        requireUserPresence: Boolean
     ): ExtensionInput {
         require(action == AUTHENTICATE || action == REGISTER)
         return when (this) {
             HmacSecret -> {
+                if (!requireUserPresence)
+                    CTAP_ERR(UnsupportedOption, "hmac-secret requires user presence check")
                 when (action) {
                     AUTHENTICATE -> {
                         val cosePublicKey = input.getRequired(HMAC_SECRET_KEY_AGREEMENT)
@@ -244,14 +253,14 @@ enum class Extension(val identifier: String) {
             }
             SupportedExtensions -> {
                 if (action != REGISTER)
-                    CTAP_ERR(InvalidParameter, "exts not supported during GetAssertion")
+                    CTAP_ERR(UnsupportedExtension, "exts not supported during GetAssertion")
                 if (!input.unbox<Boolean>())
                     CTAP_ERR(InvalidParameter, "Input was not 'true' for exts")
                 NoInput
             }
             TxAuthSimple -> {
                 if (action != AUTHENTICATE)
-                    CTAP_ERR(InvalidParameter, "txAuthSimple not supported during MakeCredential")
+                    CTAP_ERR(UnsupportedExtension, "txAuthSimple not supported during MakeCredential")
                 // txAuthSimple requires interactive confirmation and therefore requires a transport
                 // that can use the display.
                 if (!canUseDisplay)
@@ -275,6 +284,7 @@ enum class Extension(val identifier: String) {
 
         @ExperimentalUnsignedTypes
         val identifiersAsCbor = CborArray(identifiers.map { CborTextString(it) }.toTypedArray())
+
         @ExperimentalUnsignedTypes
         val noDisplayIdentifiersAsCbor =
             CborArray(noDisplayIdentifiers.map { CborTextString(it) }.toTypedArray())

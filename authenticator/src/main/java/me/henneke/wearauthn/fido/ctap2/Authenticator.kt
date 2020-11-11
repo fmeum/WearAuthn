@@ -111,7 +111,7 @@ object Authenticator : Logging {
         // credential without user interaction.
         // https://cs.chromium.org/chromium/src/device/fido/make_credential_task.cc?l=66&rcl=eb40dba9a062951578292de39424d7479f723463
         if ((rpId == ".dummy" && userName == "dummy") /* Chrome */ ||
-                (rpId == "SelectDevice" && userName == "SelectDevice") /* Windows Hello */) {
+            (rpId == "SelectDevice" && userName == "SelectDevice") /* Windows Hello */) {
             i { "GetTouch request received" }
             val requestInfo = context.makeCtap2RequestInfo(PLATFORM_GET_TOUCH, rpId)
             val followUpInClient = context.confirmRequestWithUser(requestInfo) == true
@@ -121,7 +121,45 @@ object Authenticator : Logging {
                 CTAP_ERR(OperationDenied)
         }
 
-        // Step 1
+        // Step 2 (unclear in the spec)
+        // We do not support any PIN protocols
+        if (params.getOptional(MAKE_CREDENTIAL_PIN_AUTH) != null)
+            CTAP_ERR(PinAuthInvalid, "pinAuth sent with MakeCredential")
+
+        // Step 3
+        var foundCompatibleAlgorithm = false
+        for (pubKeyCredParam in pubKeyCredParams) {
+            if (pubKeyCredParam.getRequired("type").unbox<String>() == "public-key" &&
+                pubKeyCredParam.getRequired("alg").unbox<Long>() == COSE_ID_ES256
+            )
+                foundCompatibleAlgorithm = true
+        }
+        if (!foundCompatibleAlgorithm)
+            CTAP_ERR(UnsupportedAlgorithm)
+
+        // Step 4
+        var requireResidentKey = false
+        var requireUserVerification = false
+        if (options != null) {
+            if (options.getOptional("rk")?.unbox<Boolean>() == true)
+                requireResidentKey = true
+            if (options.getOptional("up") != null)
+                CTAP_ERR(InvalidOption, "Option 'up' specified for MakeCredential")
+            if (options.getOptional("uv")?.unbox<Boolean>() == true)
+                requireUserVerification = true
+        }
+
+        // Step 5
+        // We only validate the extension inputs here, the actual processing is done later.
+        val activeExtensions = parseExtensionInputs(
+            extensions = extensions,
+            action = REGISTER,
+            canUseDisplay = context.isHidTransport,
+            requireUserPresence = true
+        )
+
+        // Step 6 (has to come after Step 9 once credProtect has been implemented, but the spec is
+        // unclear on this)
         if (excludeList != null) {
             i { "Exclude list present" }
             for (cborCredential in excludeList) {
@@ -141,46 +179,22 @@ object Authenticator : Logging {
             }
         }
 
-        // Step 2
-        var foundCompatibleAlgorithm = false
-        for (pubKeyCredParam in pubKeyCredParams) {
-            if (pubKeyCredParam.getRequired("type").unbox<String>() == "public-key" &&
-                pubKeyCredParam.getRequired("alg").unbox<Long>() == COSE_ID_ES256
-            )
-                foundCompatibleAlgorithm = true
-        }
-        if (!foundCompatibleAlgorithm)
-            CTAP_ERR(UnsupportedAlgorithm)
-
-        // Step 3
-        var requireResidentKey = false
-        var requireUserVerification = false
-        if (options != null) {
-            if (options.getOptional("rk")?.unbox<Boolean>() == true)
-                requireResidentKey = true
-            if (options.getOptional("up") != null)
-                CTAP_ERR(InvalidOption, "Option 'up' specified for MakeCredential")
-            if (options.getOptional("uv")?.unbox<Boolean>() == true) {
-                if (context.getUserVerificationState() != true)
-                    CTAP_ERR(UnsupportedOption)
-                requireUserVerification = true
-            }
-        }
-
-        // Step 4
-        // We only validate the extension inputs here, the actual processing is done later.
-        val activeExtensions = parseExtensionInputs(
-            extensions = extensions,
-            action = REGISTER,
-            canUseDisplay = context.isHidTransport
-        )
-
         // Step 7
-        // We do not support any PIN protocols
-        if (params.getOptional(MAKE_CREDENTIAL_PIN_AUTH) != null)
-            CTAP_ERR(PinAuthInvalid, "pinAuth sent with MakeCredential")
+        if (requireUserVerification && context.getUserVerificationState() != true)
+            CTAP_ERR(InvalidOption)
 
-        // Step 8
+        // Step 8 & 9
+        if (requireUserVerification && !context.verifyUser())
+            CTAP_ERR(OperationDenied)
+
+        // At this point, user verification has been performed if requested.
+        val userVerified = requireUserVerification
+
+        // If UV is available, require it when a resident key is requested.
+        if (requireResidentKey && context.getUserVerificationState() == true && !userVerified)
+            CTAP_ERR(PinRequired)
+
+        // Step 11
         val requestInfo = context.makeCtap2RequestInfo(
             action = REGISTER,
             rpId = rpId,
@@ -188,18 +202,15 @@ object Authenticator : Logging {
             userName = userName,
             userDisplayName = userDisplayName,
             addResidentKeyHint = requireResidentKey,
-            requiresUserVerification = requireUserVerification
         )
 
         if (context.confirmRequestWithUser(requestInfo) != true)
             CTAP_ERR(OperationDenied)
 
-        if (requireUserVerification && !context.verifyUser())
-            CTAP_ERR(OperationDenied)
+        // At this point, user verification and presence check have been performed if requested.
+        val userPresent = true
 
-        // At this point, user verification has been performed if requested.
-
-        // Step 9
+        // Step 12
         val (keyAlias, attestationType) =
             context.getOrCreateFreshWebAuthnCredential(
                 createResidentKey = requireResidentKey,
@@ -217,25 +228,24 @@ object Authenticator : Logging {
             userIcon = userIcon
         )
 
-        // Step 10
+        // Step 13
         if (requireResidentKey)
             context.setResidentCredential(
                 rpId = rpId,
                 userId = userId,
                 credential = credential,
-                userVerified = requireUserVerification
+                userVerified = userVerified
             )
 
-        // Step 4
+        // Step 14
         val extensionOutputs = processExtensions(
             extensions = activeExtensions,
             credential = credential,
-            requireUserPresence = true,
-            requireUserVerification = requireUserVerification,
+            userPresent = userPresent,
+            userVerified = userVerified,
             action = REGISTER
         )
 
-        // Step 11
         val credentialPublicKey = credential.ctap2PublicKeyRepresentation
         if (credentialPublicKey == null) {
             credential.delete(context)
@@ -251,14 +261,14 @@ object Authenticator : Logging {
             AttestationType.ANDROID_KEYSTORE -> ANDROID_KEYSTORE_ATTESTATION_AAGUID
         }
         val attestedCredentialData =
-            aaguid + credential.keyHandle.size.toUShort().bytes() + credential.keyHandle + credentialPublicKey.toCbor()
+            aaguid + credential.keyHandle.size.toUShort()
+                .bytes() + credential.keyHandle + credentialPublicKey.toCbor()
 
-        // At this point, if we have not returned CtapError.OperationDenied, the user has been
-        // verified successfully if UV had been requested.
         val flags = FLAGS_AT_INCLUDED or
                 (if (extensionOutputs != null) FLAGS_ED_INCLUDED else 0) or
-                FLAGS_USER_PRESENT or
-                (if (requireUserVerification) FLAGS_USER_VERIFIED else 0)
+                // userPresent is always true in authenticatorMakeCredential
+                (if (userPresent) FLAGS_USER_PRESENT else 0) or
+                (if (userVerified) FLAGS_USER_VERIFIED else 0)
 
         val authenticatorData =
             rpIdHash + flags.bytes() + 0.toUInt().bytes() + attestedCredentialData +
@@ -274,7 +284,12 @@ object Authenticator : Logging {
                 )
                 AttestationType.BASIC -> mapOf(
                     "alg" to CborLong(COSE_ID_ES256),
-                    "sig" to CborByteString(signWithWebAuthnBatchAttestationKey(authenticatorData, clientDataHash)),
+                    "sig" to CborByteString(
+                        signWithWebAuthnBatchAttestationKey(
+                            authenticatorData,
+                            clientDataHash
+                        )
+                    ),
                     "x5c" to CborArray(arrayOf(CborByteString(WEB_AUTHN_RAW_BASIC_ATTESTATION_CERT)))
                 )
                 AttestationType.ANDROID_KEYSTORE -> mapOf(
@@ -310,14 +325,7 @@ object Authenticator : Logging {
             params.getOptional(GET_ASSERTION_EXTENSIONS)?.unbox<Map<String, CborValue>>()
         val options = params.getOptional(GET_ASSERTION_OPTIONS)
 
-        // Step 1 is handled further down since it requires input from earlier steps
-
         // Step 3
-        // We do not support any PIN protocols
-        if (params.getOptional(GET_ASSERTION_PIN_AUTH) != null)
-            CTAP_ERR(PinAuthInvalid, "pinAuth sent with GetAssertion")
-
-        // Step 5
         var requireUserPresence = true
         var requireUserVerification = false
         if (options != null) {
@@ -325,19 +333,22 @@ object Authenticator : Logging {
                 CTAP_ERR(InvalidOption, "Option 'rk' specified for GetAssertion")
             if (options.getOptional("up")?.unbox<Boolean>() == false)
                 requireUserPresence = false
-            if (options.getOptional("uv")?.unbox<Boolean>() == true) {
-                if (context.getUserVerificationState() != true)
-                    CTAP_ERR(UnsupportedOption)
+            if (options.getOptional("uv")?.unbox<Boolean>() == true)
                 requireUserVerification = true
-            }
         }
 
-        // Step 6
+        // Step 2, 5 or 6 (CTAP 2.1 is unclear about the case of an internal UV-only authenticator).
+        // We do not support any PIN protocols
+        if (params.getOptional(GET_ASSERTION_PIN_AUTH) != null)
+            CTAP_ERR(PinAuthInvalid, "pinAuth sent with GetAssertion")
+
+        // Step 4
         // We only validate the extension inputs here, the actual processing is done later.
         val activeExtensions = parseExtensionInputs(
             extensions = extensions,
             action = AUTHENTICATE,
-            canUseDisplay = context.isHidTransport
+            canUseDisplay = context.isHidTransport,
+            requireUserPresence = requireUserPresence
         ).toMutableMap()
 
         // hmac-secret requires user presence, but the spec is not clear on whether this has to be
@@ -349,7 +360,18 @@ object Authenticator : Logging {
                 requireUserPresence = true
         }
 
-        // Step 1
+        // Step 5
+        if (requireUserVerification && context.getUserVerificationState() != true)
+            CTAP_ERR(UnsupportedOption)
+
+        // Step 6
+        if (requireUserVerification && !context.verifyUser())
+            CTAP_ERR(OperationDenied)
+
+        // At this point, user verification has been performed if requested.
+        val userVerified = requireUserVerification
+
+        // Step 7 (part 1)
         val useResidentKey = allowList == null
         val applicableCredentials = if (!useResidentKey) {
             check(allowList != null)
@@ -378,7 +400,6 @@ object Authenticator : Logging {
                 true
         }.toList()
 
-        // Step 9
         val credentialsToUse = if (useResidentKey) {
             applicableCredentials.toList()
         } else {
@@ -387,7 +408,7 @@ object Authenticator : Logging {
         val numberOfCredentials = credentialsToUse.size
         i { "Continuing with $numberOfCredentials credentials" }
 
-        // Step 7
+        // Step 8
 
         // txAuthSimple leads to a prompt that the user has to confirm. This prompt has to be shown
         // before the usual user presence check as per spec, but we omit it if there are no
@@ -407,10 +428,18 @@ object Authenticator : Logging {
             delay(500)
         }
 
-        // Since requests requiring user verification may ask the user to confirm their device
-        // credentials, we upgrade them to also require user presence.
-        if (requireUserVerification)
+        // Since requests requiring user verification may have asked the user to confirm their
+        // device credentials, we upgrade them to also require user presence. Also unlock user data.
+        if (userVerified) {
             requireUserPresence = true
+            for (credential in credentialsToUse) {
+                if (credential is WebAuthnCredential) {
+                    context.authenticateUserFor {
+                        credential.unlockUserInfoIfNecessary()
+                    }
+                }
+            }
+        }
 
         val requestInfo = if (numberOfCredentials > 0) {
             val firstCredential = credentialsToUse.first() as? WebAuthnCredential
@@ -422,7 +451,6 @@ object Authenticator : Logging {
                 rpName = firstCredential?.rpName,
                 userName = if (singleCredential) firstCredential?.userName else null,
                 userDisplayName = if (singleCredential) firstCredential?.userDisplayName else null,
-                requiresUserVerification = requireUserVerification,
                 addResidentKeyHint = !singleCredential
             )
         } else {
@@ -434,28 +462,17 @@ object Authenticator : Logging {
         if (!requireUserPresence)
             i { "Processing silent GetAssertion request" }
 
-        // Step 8
-        // It is very important that this step happens after the user presence check of step 7.
+        // Step 7, case of no credentials: Has to be performed *after* a presence check to remain
+        // compatible with CTAP 2 and Chromium.
+        // https://source.chromium.org/chromium/chromium/src/+/master:device/fido/get_assertion_request_handler.cc;l=69;drc=c4d7a7f9940c98c7c00442b883dc6b442875ee1e
         if (numberOfCredentials == 0) {
             context.notifyUser(requestInfo)
             CTAP_ERR(NoCredentials)
         }
 
-        // Step 7 (user verification)
-        if (requireUserVerification && !context.verifyUser())
-            CTAP_ERR(OperationDenied)
-
+        // Step 9
         // At this point, user presence and verification have been performed if requested.
-
-        if (requireUserVerification) {
-            for (credential in credentialsToUse) {
-                if (credential is WebAuthnCredential) {
-                    context.authenticateUserFor {
-                        credential.unlockUserInfoIfNecessary()
-                    }
-                }
-            }
-        }
+        val userPresent = requireUserPresence
 
         // If the transport does not allow for interactive credential selection or if silent
         // authentication is requested, return a list of assertions for all applicable credentials.
@@ -464,26 +481,26 @@ object Authenticator : Logging {
             // Step 10
             val assertionOperationsIterator = credentialsToUse
                 .mapIndexed { credentialCounter, nextCredential ->
-                    // Step 6
-                    // Process extensions.
                     val extensionOutputs = processExtensions(
                         extensions = activeExtensions,
                         credential = nextCredential,
-                        requireUserPresence = requireUserPresence,
-                        requireUserVerification = requireUserVerification,
+                        userPresent = userPresent,
+                        userVerified = userVerified,
                         action = AUTHENTICATE
                     )
                     nextCredential.assertWebAuthn(
                         clientDataHash = clientDataHash,
                         extensionOutputs = extensionOutputs,
-                        userPresent = requireUserPresence,
-                        userVerified = requireUserVerification,
+                        userPresent = userPresent,
+                        userVerified = userVerified,
                         numberOfCredentials = if (credentialCounter == 0) numberOfCredentials else null,
                         userSelected = false,
+                        // The credential ID must be returned unless the allow list contains exactly
+                        // one credential.
+                        returnCredential = allowList?.size != 1,
                         context = context
                     )
                 }.iterator()
-            // Step 12
             assertionOperationsIterator.next().also {
                 if (numberOfCredentials > 1) {
                     // Cache remaining assertions for subsequent GetNextAssertion requests
@@ -495,26 +512,27 @@ object Authenticator : Logging {
                 }
             }
         } else {
-            // Step 11
             val credential = context.chooseCredential(credentialsToUse)
                 ?: CTAP_ERR(OperationDenied)
-            // Step 6
-            // Process extensions.
             val extensionOutputs = processExtensions(
                 extensions = activeExtensions,
                 credential = credential,
-                requireUserPresence = requireUserPresence,
-                requireUserVerification = requireUserVerification,
+                userPresent = userPresent,
+                userVerified = userVerified,
                 action = AUTHENTICATE
             )
-            // Step 12
             credential.assertWebAuthn(
                 clientDataHash = clientDataHash,
                 extensionOutputs = extensionOutputs,
-                userPresent = requireUserPresence,
-                userVerified = requireUserVerification,
+                userPresent = userPresent,
+                userVerified = userVerified,
                 numberOfCredentials = 1,
+                // Let the platform skip the confirmation step if the user explicitly selected a
+                // credential.
                 userSelected = credentialsToUse.size > 1,
+                // The credential ID must be returned unless the allow list contains exactly one
+                // credential.
+                returnCredential = allowList?.size != 1,
                 context = context
             )
         }
@@ -581,7 +599,7 @@ object Authenticator : Logging {
                             )
                         )
                     )
-                )
+                ),
             )
         )
     }
@@ -635,7 +653,8 @@ object Authenticator : Logging {
     private fun parseExtensionInputs(
         extensions: Map<String, CborValue>?,
         action: AuthenticatorAction,
-        canUseDisplay: Boolean
+        canUseDisplay: Boolean,
+        requireUserPresence: Boolean
     ): Map<Extension, ExtensionInput> {
         if (extensions == null)
             return mapOf()
@@ -644,15 +663,23 @@ object Authenticator : Logging {
         }.map {
             val extension = Extension.fromIdentifier(it.key)
             // parseInput throws an appropriate exception if the input is not of the correct form.
-            Pair(extension, extension.parseInput(it.value, action, canUseDisplay))
+            Pair(
+                extension,
+                extension.parseInput(
+                    it.value,
+                    action,
+                    canUseDisplay = canUseDisplay,
+                    requireUserPresence = requireUserPresence
+                )
+            )
         }.toMap()
     }
 
     private fun processExtensions(
         extensions: Map<Extension, ExtensionInput>,
         credential: Credential,
-        requireUserPresence: Boolean,
-        requireUserVerification: Boolean,
+        userPresent: Boolean,
+        userVerified: Boolean,
         action: AuthenticatorAction
     ): CborValue? {
         val extensionOutputs = extensions.mapValues {
@@ -661,8 +688,8 @@ object Authenticator : Logging {
                 extension,
                 it.value,
                 credential,
-                requireUserPresence,
-                requireUserVerification,
+                userPresent,
+                userVerified,
                 action
             )
         }
@@ -695,17 +722,17 @@ object Authenticator : Logging {
                         ?: CTAP_ERR(InvalidParameter, "Invalid saltAuth")
                     require(salt.size == 32 || salt.size == 64)
                     val output = if (salt.size == 32) {
-                        val hmacOutput = credential.signWithHmacSecret(salt)
+                        val hmacOutput = credential.signWithHmacSecret(userVerified, salt)
                             ?: CTAP_ERR(NoCredentials, "HMAC secret is missing")
                         encryptHmacOutput(sharedSecret, hmacOutput).also {
                             check(it.size == 32)
                         }
                     } else {
                         val salt1 = salt.sliceArray(0 until 32)
-                        val hmacOutput1 = credential.signWithHmacSecret(salt1)
+                        val hmacOutput1 = credential.signWithHmacSecret(userVerified, salt1)
                             ?: CTAP_ERR(NoCredentials, "HMAC secret is missing")
                         val salt2 = salt.sliceArray(32 until 64)
-                        val hmacOutput2 = credential.signWithHmacSecret(salt2)
+                        val hmacOutput2 = credential.signWithHmacSecret(userVerified, salt2)
                             ?: CTAP_ERR(NoCredentials, "HMAC secret is missing")
                         encryptHmacOutput(sharedSecret, hmacOutput1 + hmacOutput2).also {
                             check(it.size == 64)

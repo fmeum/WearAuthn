@@ -37,6 +37,8 @@ private const val USER_INFO_ENCRYPTION_KEY_ALIAS = "%USER_INFO_ENCRYPTION_KEY%"
 private const val USER_VERIFICATION_FUSE_KEY_ALIAS = "%USER_VERIFICATION_FUSE_KEY%"
 private const val HMAC_SECRET_KEY_ALIAS_PREFIX = "%HMAC_SECRET%"
 
+private const val HMAC_CONTEXT_HMAC_SECRET_USER_NOT_VERIFIED = "user_not_verified"
+
 private const val AES_GCM_NO_PADDING = "AES/GCM/NoPadding"
 private const val AES_CBC_NO_PADDING = "AES/CBC/NoPadding"
 
@@ -535,14 +537,16 @@ abstract class Credential {
         userVerified: Boolean,
         numberOfCredentials: Int?,
         userSelected: Boolean,
+        returnCredential: Boolean,
         context: AuthenticatorContext
     ): CborLongMap {
         val assertion = assert(clientDataHash, extensionOutputs, userPresent, userVerified, context)
-        val resultMap = mutableMapOf(
-            GET_ASSERTION_RESPONSE_CREDENTIAL to toCborCredential(),
+        val resultMap = mutableMapOf<Long, CborValue>(
             GET_ASSERTION_RESPONSE_AUTH_DATA to CborByteString(assertion.authenticatorData),
             GET_ASSERTION_RESPONSE_SIGNATURE to CborByteString(assertion.signature)
         )
+        if (returnCredential)
+            resultMap[GET_ASSERTION_RESPONSE_CREDENTIAL] = toCborCredential()
         val usesMultipleResidentKeys = numberOfCredentials != 1
         check(usesMultipleResidentKeys implies isResident)
         if (isResident) {
@@ -800,11 +804,17 @@ class WebAuthnCredential(
     val hasHmacSecret: Boolean
         get() = androidKeystore.containsAlias(HMAC_SECRET_KEY_ALIAS_PREFIX + keyAlias)
 
-    fun signWithHmacSecret(vararg data: ByteArray): ByteArray? {
+    fun signWithHmacSecret(userVerified: Boolean, vararg data: ByteArray): ByteArray? {
         val secretKeyAlias = HMAC_SECRET_KEY_ALIAS_PREFIX + keyAlias
         val secretKey = androidKeystore.getSecretKey(secretKeyAlias) ?: return null
         return Mac.getInstance("HmacSHA256").run {
             init(secretKey)
+            // CTAP 2.1 requires two HMAC secrets: one if UV has been performed and one if it
+            // hasn't. We derive both secrets from the same HMAC credential by appending a fixed
+            // string if UV has not been performed. In this way, we preserve backward compatibility
+            // with the most (and only) common use case.
+            if (!userVerified)
+                update(HMAC_CONTEXT_HMAC_SECRET_USER_NOT_VERIFIED.toByteArray())
             for (datum in data) {
                 update(datum)
             }
