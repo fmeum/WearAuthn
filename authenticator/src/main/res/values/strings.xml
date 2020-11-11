@@ -55,7 +55,7 @@
     <string name="preference_discoverable_summary_on">Visible to other devices for 1 min</string>
     <string name="preference_discoverable_summary_off">Make visible to other devices</string>
     <string name="preference_discoverable_title">Discoverable</string>
-    <string name="preference_single_factor_mode_title">Passwordless mode</string>
+    <string name="preference_single_factor_mode_title">Go passwordless</string>
     <string name="preference_credential_management_title">Manage credentials for passwordless login</string>
     <string name="preference_about_title">About</string>
     <string name="preference_title">Use via Bluetooth with</string>
