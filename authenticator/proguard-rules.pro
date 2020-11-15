@@ -1,3 +1,4 @@
+-keep class android.support.wearable.preference.WearablePreferenceActivity
 -dontwarn android.bluetooth.BluetoothHidDeviceCallback
 
 # Ensure the custom, fast service loader implementation is removed.

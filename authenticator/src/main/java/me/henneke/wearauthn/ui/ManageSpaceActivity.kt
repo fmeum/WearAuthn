@@ -4,9 +4,9 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.os.ResultReceiver
-import android.support.wearable.activity.ConfirmationActivity
 import android.support.wearable.view.AcceptDenyDialog
 import androidx.fragment.app.FragmentActivity
+import androidx.wear.activity.ConfirmationActivity
 import kotlinx.coroutines.*
 import me.henneke.wearauthn.R
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
