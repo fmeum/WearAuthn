@@ -66,7 +66,7 @@ No setup required, but only supported by Chrome at the moment.
 
 ### Chrome OS (Bluetooth)
 
-Will not work with some devices, which is most likely because Chrome OS applies its own set of rules for low-level device access. This is currently being investigated in [crbug/1036698](https://bugs.chromium.org/p/chromium/issues/detail?id=1036698).
+Will not work with some devices, which is most likely because Chrome OS applies its own set of rules for low-level device access. Should work on Chrome OS 86 and later.
 
 ### Linux (Bluetooth)
 
