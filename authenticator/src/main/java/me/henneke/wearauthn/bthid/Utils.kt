@@ -27,7 +27,7 @@ val BluetoothDevice.canUseAuthenticator: Boolean
                 }
             }
         }
-        return bluetoothClass.majorDeviceClass in setOf(
+        return bluetoothClass?.majorDeviceClass in setOf(
             BluetoothClass.Device.Major.COMPUTER,
             BluetoothClass.Device.Major.MISC,
             BluetoothClass.Device.Major.PHONE,
@@ -37,7 +37,7 @@ val BluetoothDevice.canUseAuthenticator: Boolean
 
 val BluetoothDevice.canUseAuthenticatorViaBluetooth: Boolean
     get() {
-        return canUseAuthenticator && bluetoothClass.majorDeviceClass != BluetoothClass.Device.Major.PHONE
+        return canUseAuthenticator && bluetoothClass?.majorDeviceClass != BluetoothClass.Device.Major.PHONE
     }
 
 val defaultAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
