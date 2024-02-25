@@ -37,6 +37,9 @@ android {
         }
     }
     namespace 'me.henneke.wearauthn'
+    buildFeatures {
+        buildConfig true
+    }
     applicationVariants.all { variant ->
         variant.resValue "string", "application_id", variant.applicationId
     }

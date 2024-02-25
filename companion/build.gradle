@@ -39,6 +39,9 @@ android {
         jvmTarget = "1.8"
     }
     namespace 'me.henneke.wearauthn.companion'
+    buildFeatures {
+        buildConfig true
+    }
 }
 
 dependencies {
