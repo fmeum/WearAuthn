@@ -5,13 +5,13 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
+    compileSdk 29
 
 
     defaultConfig {
         applicationId "me.henneke.wearauthn.authenticator"
-        minSdkVersion 21
-        targetSdkVersion 29
+        minSdk 21
+        targetSdk 29
         versionCode makeVersionCode(minSdkVersion.apiLevel, false)
         versionName makeVersionName()
     }

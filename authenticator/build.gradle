@@ -17,11 +17,11 @@ android {
             keyPassword 'hunter2'
         }
     }
-    compileSdkVersion 29
+    compileSdk 29
     defaultConfig {
         applicationId "me.henneke.wearauthn.authenticator"
-        minSdkVersion 28
-        targetSdkVersion 29
+        minSdk 28
+        targetSdk 29
         versionCode makeVersionCode(minSdkVersion.apiLevel, true)
         versionName makeVersionName()
     }
@@ -40,7 +40,7 @@ android {
     buildFeatures {
         buildConfig true
     }
-    applicationVariants.all { variant ->
+    applicationVariants.configureEach { variant ->
         variant.resValue "string", "application_id", variant.applicationId
     }
 }

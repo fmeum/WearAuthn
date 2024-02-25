@@ -43,6 +43,6 @@ private String makeVersionName() {
     return "${ext.versionMajor}.${ext.versionMinor}.${ext.versionPatch}"
 }
 
-task clean(type: Delete) {
+tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }
