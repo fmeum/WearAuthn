@@ -6,13 +6,13 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.wearable.*
 import kotlinx.coroutines.cancel
 import me.henneke.wearauthn.companion.BillingManager
 import me.henneke.wearauthn.companion.BillingManager.WearAuthnInAppProduct
 import me.henneke.wearauthn.companion.combineLatestInitialized
-import me.henneke.wearauthn.companion.map
 
 class MainViewModel(application: Application) : AndroidViewModel(application),
     MessageClient.OnMessageReceivedListener, CapabilityClient.OnCapabilityChangedListener {
@@ -24,7 +24,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
     init {
         billingManager.connect()
-        capabilityClient.addListener(this, Uri.parse("wear://*/unlock-complication"), CapabilityClient.FILTER_LITERAL)
+        capabilityClient.addListener(
+            this,
+            Uri.parse("wear://*/unlock-complication"),
+            CapabilityClient.FILTER_LITERAL
+        )
         messageClient.addListener(this)
     }
 
@@ -35,7 +39,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         get() = billingManager.skusLiveData[WearAuthnInAppProduct.Complication]
             ?: error("Failed to get details for Complication product")
 
-    private val isWatchAppInstalled = MutableLiveData<Boolean>(false)
+    private val isWatchAppInstalled = MutableLiveData(false)
 
     val complicationUnlockStatus
         get() = billingManager.isComplicationUnlockedLiveData.combineLatestInitialized(
@@ -83,7 +87,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
         if (messageEvent.path == "/ack-unlock-complication") {
-            val model = String(messageEvent.data ?: return)
+            val model = String(messageEvent.data)
             _watchConfirmedUnlock.postValue(model)
         }
     }

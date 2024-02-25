@@ -73,7 +73,7 @@ class BillingManager private constructor(private val application: Application) :
             return
 
         val params = SkuDetailsParams.newBuilder().run {
-            setSkusList(WearAuthnInAppProduct.values().map { it.sku })
+            setSkusList(WearAuthnInAppProduct.entries.map { it.sku })
             setType(SkuType.INAPP)
             build()
         }
@@ -266,7 +266,7 @@ class BillingManager private constructor(private val application: Application) :
         Complication("complication");
 
         companion object {
-            private val map = values().associateBy(WearAuthnInAppProduct::sku)
+            private val map = entries.associateBy(WearAuthnInAppProduct::sku)
             fun fromString(string: String) = map[string]
         }
     }

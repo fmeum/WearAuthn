@@ -5,19 +5,22 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Wearable
-import kotlinx.android.synthetic.main.main_activity.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.asDeferred
+import me.henneke.wearauthn.companion.databinding.MainActivityBinding
 import me.henneke.wearauthn.companion.ui.main.MainFragment
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override val coroutineContext = Dispatchers.IO + SupervisorJob()
 
+    private lateinit var binding: MainActivityBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.main_activity)
-        floatingActionButton.setOnClickListener {
+        binding = MainActivityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.floatingActionButton.setOnClickListener {
             launch {
                 val nodeNames = try {
                     val capabilityClient = Wearable.getCapabilityClient(this@MainActivity)
@@ -32,7 +35,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     }
                 } catch (e: ApiException) {
                     null
-                } ?: emptyList<String>()
+                } ?: emptyList()
 
                 val intent = composeEmail(
                     to = getString(R.string.file_bug_email_address),

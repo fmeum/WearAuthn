@@ -4,7 +4,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.Transformations
 
 fun <S, T> LiveData<S>.combineLatestInitialized(that: LiveData<T>): LiveData<Pair<S, T>> {
     return MediatorLiveData<Pair<S, T>>().also {
@@ -32,8 +31,6 @@ fun <S, T> LiveData<S>.combineLatestInitialized(that: LiveData<T>): LiveData<Pai
         }
     }
 }
-
-fun <S, T> LiveData<S>.map(fn: (S) -> T): LiveData<T> = Transformations.map(this, fn)
 
 fun composeEmail(to: String, subject: String, body: String): Intent {
     return Intent(Intent.ACTION_SENDTO).apply {
