@@ -36,6 +36,7 @@ android {
             minifyEnabled false
         }
     }
+    namespace 'me.henneke.wearauthn'
     applicationVariants.all { variant ->
         variant.resValue "string", "application_id", variant.applicationId
     }
