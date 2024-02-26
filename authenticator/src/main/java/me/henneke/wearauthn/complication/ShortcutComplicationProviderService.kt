@@ -57,7 +57,7 @@ class ShortcutComplicationProviderService : ComplicationProviderService(), Loggi
             this,
             complicationId,
             launchIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val complicationData = when (dataType) {

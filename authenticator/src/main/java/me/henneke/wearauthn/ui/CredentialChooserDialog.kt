@@ -7,9 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
-import kotlinx.android.synthetic.main.credential_chooser_dialog.*
 import kotlinx.coroutines.*
 import me.henneke.wearauthn.R
+import me.henneke.wearauthn.databinding.CredentialChooserDialogBinding
 import me.henneke.wearauthn.fido.context.WebAuthnCredential
 
 private const val TAG = "CredentialChooserDialog"
@@ -25,12 +25,15 @@ class CredentialChooserDialog(
 
     override val coroutineContext = Dispatchers.Main + SupervisorJob()
 
+    private lateinit var binding: CredentialChooserDialogBinding
+
     private var chosenCredential: WebAuthnCredential? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.credential_chooser_dialog)
-        credentialList.apply {
+        binding = CredentialChooserDialogBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.credentialList.apply {
             val header = layoutInflater.inflate(R.layout.credential_list_header, this, false)
             addHeaderView(header)
             addFooterView(TextView(context).apply { height = header.height })

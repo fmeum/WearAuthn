@@ -14,17 +14,31 @@ import android.text.TextUtils
 import android.text.format.DateFormat
 import android.view.View
 import com.google.android.gms.common.util.Hex
-import kotlinx.android.synthetic.main.activity_authenticator_attached.*
-import me.henneke.wearauthn.*
-import me.henneke.wearauthn.bthid.*
+import me.henneke.wearauthn.Logging
+import me.henneke.wearauthn.R
+import me.henneke.wearauthn.bthid.HidDataSender
+import me.henneke.wearauthn.bthid.HidDeviceProfile
+import me.henneke.wearauthn.bthid.HidIntrDataListener
+import me.henneke.wearauthn.bthid.InputHostWrapper
+import me.henneke.wearauthn.bthid.defaultAdapter
+import me.henneke.wearauthn.bthid.identifier
+import me.henneke.wearauthn.bthid.isBluetoothEnabled
 import me.henneke.wearauthn.complication.ShortcutComplicationProviderService
+import me.henneke.wearauthn.d
+import me.henneke.wearauthn.databinding.ActivityAuthenticatorAttachedBinding
+import me.henneke.wearauthn.e
 import me.henneke.wearauthn.fido.context.AuthenticatorStatus
 import me.henneke.wearauthn.fido.hid.TransactionManager
+import me.henneke.wearauthn.i
 import me.henneke.wearauthn.ui.openUrlOnPhone
-import java.util.*
+import me.henneke.wearauthn.v
+import me.henneke.wearauthn.w
+import java.util.Date
 
 @ExperimentalUnsignedTypes
 class AuthenticatorAttachedActivity : WearableActivity() {
+
+    private lateinit var binding: ActivityAuthenticatorAttachedBinding
 
     private var transactionManager: TransactionManager? = null
     private var hidDeviceProfile: HidDeviceProfile? = null
@@ -65,7 +79,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
                             R.string.connecting_to_device_message,
                             TextUtils.htmlEncode(device.identifier)
                         )
-                    connectedToDeviceView.text =
+                    binding.connectedToDeviceView.text =
                         Html.fromHtml(connectingToDeviceMessage, Html.FROM_HTML_MODE_LEGACY)
                 }
                 BluetoothProfile.STATE_CONNECTED -> {
@@ -75,7 +89,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
                             R.string.connected_to_device_message,
                             TextUtils.htmlEncode(device.identifier)
                         )
-                    connectedToDeviceView.text =
+                    binding.connectedToDeviceView.text =
                         Html.fromHtml(connectedToDeviceMessage, Html.FROM_HTML_MODE_LEGACY)
                 }
             }
@@ -93,13 +107,14 @@ class AuthenticatorAttachedActivity : WearableActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_authenticator_attached)
+        binding = ActivityAuthenticatorAttachedBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         setAmbientEnabled()
-        viewsToHideOnAmbient = listOf(explanationView, setupOpenOnPhoneButton)
-        textClock.paint.isAntiAlias = false
+        viewsToHideOnAmbient = listOf(binding.explanationView, binding.setupOpenOnPhoneButton)
+        binding.textClock.paint.isAntiAlias = false
 
-        setupOpenOnPhoneButton.setOnClickListener {
+        binding.setupOpenOnPhoneButton.setOnClickListener {
             openUrlOnPhone(this, getString(R.string.url_setup))
         }
 
@@ -168,16 +183,16 @@ class AuthenticatorAttachedActivity : WearableActivity() {
 
     override fun onEnterAmbient(ambientDetails: Bundle?) {
         super.onEnterAmbient(ambientDetails)
-        connectedToDeviceView.paint.isAntiAlias = false
+        binding.connectedToDeviceView.paint.isAntiAlias = false
         for (view in viewsToHideOnAmbient) {
             view.visibility = View.INVISIBLE
         }
-        textClock.visibility = View.VISIBLE
+        binding.textClock.visibility = View.VISIBLE
         updateTime()
     }
 
     private fun updateTime() {
-        textClock.text = DateFormat.getTimeFormat(this).format(Date())
+        binding.textClock.text = DateFormat.getTimeFormat(this).format(Date())
     }
 
     override fun onUpdateAmbient() {
@@ -187,11 +202,11 @@ class AuthenticatorAttachedActivity : WearableActivity() {
 
     override fun onExitAmbient() {
         super.onExitAmbient()
-        connectedToDeviceView.paint.isAntiAlias = true
+        binding.connectedToDeviceView.paint.isAntiAlias = true
         for (view in viewsToHideOnAmbient) {
             view.visibility = View.VISIBLE
         }
-        textClock.visibility = View.INVISIBLE
+        binding.textClock.visibility = View.INVISIBLE
     }
 
     override fun onDestroy() {

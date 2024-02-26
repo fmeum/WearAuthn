@@ -5,13 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import me.henneke.wearauthn.R
+import me.henneke.wearauthn.databinding.FragmentProgressSpinnerBinding
 
 class ProgressSpinner : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_progress_spinner, container, false)
+    ): View {
+        return FragmentProgressSpinnerBinding.inflate(inflater, container, false).root
     }
 }

@@ -21,17 +21,19 @@ package me.henneke.wearauthn.ui
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
+import android.os.Bundle
 import android.os.PowerManager
 import android.os.PowerManager.ACQUIRE_CAUSES_WAKEUP
 import android.os.PowerManager.FULL_WAKE_LOCK
 import android.view.View
 import android.view.ViewTreeObserver
-import kotlinx.android.synthetic.main.timed_accept_deny_dialog.*
-import me.henneke.wearauthn.R
+import me.henneke.wearauthn.databinding.TimedAcceptDenyDialogBinding
 
 private const val DEFAULT_TIMEOUT = 5_000L
 
 class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
+
+    private lateinit var binding: TimedAcceptDenyDialogBinding
 
     var messageLineBreaks: List<Int>? = null
         private set
@@ -46,19 +48,21 @@ class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
 
     private val actionHandler: (View) -> Unit = { v: View ->
         when {
-            v == positiveButton -> {
+            v == binding.positiveButton -> {
                 positiveButtonListener?.let {
                     it.onClick(this, DialogInterface.BUTTON_POSITIVE)
                     dismiss()
                 }
             }
-            v == negativeButton || (v == negativeTimeout && timeoutListener == null) -> {
+
+            v == binding.negativeButton || (v == binding.negativeTimeout && timeoutListener == null) -> {
                 negativeButtonListener?.let {
                     it.onClick(this, DialogInterface.BUTTON_NEGATIVE)
                     dismiss()
                 }
             }
-            v == negativeTimeout -> {
+
+            v == binding.negativeTimeout -> {
                 timeoutListener?.let {
                     it.onCancel(this)
                     dismiss()
@@ -67,32 +71,37 @@ class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
         }
     }
 
-    init {
-        setContentView(R.layout.timed_accept_deny_dialog)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = TimedAcceptDenyDialogBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         setCancelable(false)
         setTimeout(DEFAULT_TIMEOUT)
-        negativeButton.setOnClickListener(actionHandler)
-        negativeTimeout.setOnTimerFinishedListener(actionHandler)
-        positiveButton.setOnClickListener(actionHandler)
-        // The txAuthSimple extension requires us to record the line breaks inserted into the
-        // message by the text rendering engine. This information can only be extracted reliably
-        // right before a draw. Since we do not expect the message to change after the dialog is
-        // shown, we remove the listener after the text layout has been obtained once.
-        messageView.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
-            override fun onPreDraw(): Boolean {
-                if (messageView.layout != null) {
-                    computeMessageLineBreaks()
-                    messageView.viewTreeObserver.removeOnPreDrawListener(this)
+        with(binding) {
+            negativeButton.setOnClickListener(actionHandler)
+            negativeTimeout.setOnTimerFinishedListener(actionHandler)
+            positiveButton.setOnClickListener(actionHandler)
+            // The txAuthSimple extension requires us to record the line breaks inserted into the
+            // message by the text rendering engine. This information can only be extracted reliably
+            // right before a draw. Since we do not expect the message to change after the dialog is
+            // shown, we remove the listener after the text layout has been obtained once.
+            messageView.viewTreeObserver.addOnPreDrawListener(object :
+                ViewTreeObserver.OnPreDrawListener {
+                override fun onPreDraw(): Boolean {
+                    if (messageView.layout != null) {
+                        computeMessageLineBreaks()
+                        messageView.viewTreeObserver.removeOnPreDrawListener(this)
+                    }
+                    return true
                 }
-                return true
-            }
-        })
+            })
+        }
     }
 
     override fun onStart() {
         super.onStart()
         if (negativeButtonListener != null) {
-            negativeTimeout.startTimer()
+            binding.negativeTimeout.startTimer()
         }
         if (vibrateOnShow) {
             wink(context)
@@ -100,14 +109,14 @@ class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
         if (wakeOnShow) {
             wakeLock = context.powerManager?.newWakeLock(
                 FULL_WAKE_LOCK or ACQUIRE_CAUSES_WAKEUP, "WearAuthn:WakeForDialog"
-            )?.apply { acquire(negativeTimeout.totalTime) }
+            )?.apply { acquire(binding.negativeTimeout.totalTime) }
         }
     }
 
     override fun onStop() {
         super.onStop()
-        if (negativeTimeout.isTimerRunning) {
-            negativeTimeout.stopTimer()
+        if (binding.negativeTimeout.isTimerRunning) {
+            binding.negativeTimeout.stopTimer()
         }
         wakeLock?.release()
     }
@@ -119,28 +128,33 @@ class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
             else -> return
         }
 
-        spacer.visibility = if (positiveButtonListener == null || negativeButtonListener == null)
-            View.GONE
-        else
-            View.INVISIBLE
-        positiveButton.visibility = if (positiveButtonListener == null) View.GONE else View.VISIBLE
-        negativeTimeout.visibility = if (negativeButtonListener == null) View.GONE else View.VISIBLE
-        buttonPanel.visibility =
-            if (positiveButtonListener == null && negativeButtonListener == null)
-                View.GONE
-            else
-                View.VISIBLE
+        with(binding) {
+            spacer.visibility =
+                if (positiveButtonListener == null || negativeButtonListener == null)
+                    View.GONE
+                else
+                    View.INVISIBLE
+            positiveButton.visibility =
+                if (positiveButtonListener == null) View.GONE else View.VISIBLE
+            negativeTimeout.visibility =
+                if (negativeButtonListener == null) View.GONE else View.VISIBLE
+            buttonPanel.visibility =
+                if (positiveButtonListener == null && negativeButtonListener == null)
+                    View.GONE
+                else
+                    View.VISIBLE
+        }
     }
 
     fun setIcon(resId: Int) {
-        iconView.run {
+        binding.iconView.run {
             visibility = if (resId == 0) View.GONE else View.VISIBLE
             setImageResource(resId)
         }
     }
 
     fun setMessage(message: CharSequence?) {
-        messageView.run {
+        binding.messageView.run {
             text = message
             visibility = if (message == null) View.GONE else View.VISIBLE
         }
@@ -159,18 +173,18 @@ class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
     }
 
     fun setTimeout(timeout: Long) {
-        negativeTimeout.totalTime = timeout
+        binding.negativeTimeout.totalTime = timeout
     }
 
     override fun setTitle(title: CharSequence?) {
-        titleView.run {
+        binding.titleView.run {
             text = title
             visibility = if (title == null) View.GONE else View.VISIBLE
         }
     }
 
     override fun setTitle(resId: Int) {
-        titleView.run {
+        binding.titleView.run {
             visibility = if (resId == 0) View.GONE else View.VISIBLE
             setText(resId)
         }
@@ -185,7 +199,7 @@ class TimedAcceptDenyDialog(context: Context) : Dialog(context) {
     }
 
     private fun computeMessageLineBreaks() {
-        val layout = messageView.layout
+        val layout = binding.messageView.layout
         if (layout != null)
             messageLineBreaks = (0 until layout.lineCount - 1).map { layout.getLineEnd(it) }
     }
