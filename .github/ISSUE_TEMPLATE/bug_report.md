@@ -3,7 +3,7 @@ name: Bug report
 about: Report a bug in WearAuthn
 title: ''
 labels: ''
-assignees: FabianHenneke
+assignees: fmeum
 
 ---
 

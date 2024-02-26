@@ -30,8 +30,8 @@
     <string name="preference_nfc_title">Phone via NFC</string>
     <string name="about_how_to_use"><b>Use via Bluetooth</b>\nPair a Bluetooth&#8203;-&#8203;enabled device running Windows 10 (Chrome, Firefox or Edge), macOS (Chrome) or Linux (Chrome) with your watch and connect to it from the WearAuthn main menu. Afterwards, you can use your watch like a plugged-in USB security key.\n\n<b>Use via NFC</b>\nHold your NFC&#8203;-&#8203;enabled Android phone or iPhone (iOS 13.3+) to your watch when you are asked to &#8220;Use your Security Key&#8221;. This works even from your watch face while it is not in &#8220;always-on&#8221; mode.</string>
     <string name="label_licenses">Licenses</string>
-    <string name="url_usage" translatable="false">https://github.com/FabianHenneke/WearAuthn/blob/master/README.md#usage</string>
-    <string name="url_setup" translatable="false" tools:ignore="TypographyDashes">https://github.com/FabianHenneke/WearAuthn/blob/master/README.md#compatibility--setup</string>
+    <string name="url_usage" translatable="false">https://github.com/fmeum/WearAuthn/blob/master/README.md#usage</string>
+    <string name="url_setup" translatable="false" tools:ignore="TypographyDashes">https://github.com/fmeum/WearAuthn/blob/master/README.md#compatibility--setup</string>
     <string name="label_support">Support WearAuthn</string>
     <string name="label_privacy">Privacy policy</string>
     <string name="app_family_name" translatable="false">WearAuthn</string>
