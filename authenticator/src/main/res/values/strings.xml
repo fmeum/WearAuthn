@@ -46,8 +46,6 @@
     <string name="message_continue_on_phone">Continue on your phone</string>
     <string name="name_unlocked_channel">Unlocked functionality</string>
     <string name="description_unlocked_channel">Informs you about functionality unlocked on your watch by in-app purchases made on your phone.</string>
-    <string name="notification_complication_unlocked_title">Watch face shortcut unlocked</string>
-    <string name="notification_complication_unlocked_message">Add a device shortcut complication from your watch face\'s settings.</string>
     <string name="preference_credential_management_key" translatable="false">preference_credential_management</string>
     <string name="button_delete">Delete</string>
     <string name="preference_manage_credentials_summary_disabled">Enable single-factor mode first</string>
