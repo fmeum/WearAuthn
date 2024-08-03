@@ -35,6 +35,12 @@ class ShortcutPicker : PreferenceFragment() {
         preferenceScreen.setTitle(R.string.preference_screen_title_shortcut_picker)
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        // Enable rotary wheel scrolling.
+        view?.requestFocus()
+    }
+
     override fun onPreferenceTreeClick(
         preferenceScreen: PreferenceScreen?,
         preference: Preference?

@@ -90,6 +90,12 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
         addPreferencesFromResource(R.xml.preferences_authenticator)
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        // Enable rotary wheel scrolling.
+        view?.requestFocus()
+    }
+
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         bluetoothSettingsPreference =

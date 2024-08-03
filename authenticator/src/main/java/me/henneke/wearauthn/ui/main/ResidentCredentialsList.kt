@@ -27,6 +27,12 @@ class ResidentCredentialsPreferenceFragment : PreferenceFragment() {
         createCredentialList()
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        // Enable rotary wheel scrolling.
+        view?.requestFocus()
+    }
+
     private fun createCredentialList() {
         preferenceScreen = preferenceManager.createPreferenceScreen(context)
         val credentialsPerRp = AuthenticatorContext.getAllResidentCredentials(context)

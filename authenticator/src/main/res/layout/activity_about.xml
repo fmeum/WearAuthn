@@ -6,6 +6,8 @@
     android:fillViewport="true"
     tools:context="me.henneke.wearauthn.ui.main.AboutActivity">
 
+    <requestFocus />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
