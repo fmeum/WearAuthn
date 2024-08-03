@@ -3,6 +3,7 @@
     <integer name="button_icon_viewport_size">24</integer>
     <integer name="order_device_list_compatible_device">100</integer>
     <integer name="order_device_list_incompatible_device">200</integer>
+    <integer name="order_device_list_bluetooth_permissions">299</integer>
     <integer name="order_device_list_nfc_settings">300</integer>
     <integer name="order_device_list_bluetooth_category">310</integer>
     <integer name="order_device_list_bluetooth_settings">312</integer>

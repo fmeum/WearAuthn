@@ -1,5 +1,6 @@
 package me.henneke.wearauthn.ui
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
 import android.content.Context
@@ -8,7 +9,8 @@ import me.henneke.wearauthn.R
 import me.henneke.wearauthn.bthid.canUseAuthenticatorViaBluetooth
 import me.henneke.wearauthn.bthid.identifier
 
-open class BluetoothDevicePreference(context: Context, protected val device: BluetoothDevice) : Preference(context) {
+open class BluetoothDevicePreference(context: Context, protected val device: BluetoothDevice) :
+    Preference(context) {
 
     init {
         key = device.address
@@ -23,16 +25,21 @@ open class BluetoothDevicePreference(context: Context, protected val device: Blu
         notifyChanged()
     }
 
+    @SuppressLint("MissingPermission")
     fun updateClass() {
-        setIcon(
-            when (device.bluetoothClass?.majorDeviceClass) {
-                BluetoothClass.Device.Major.AUDIO_VIDEO -> R.drawable.ic_btn_headset
-                BluetoothClass.Device.Major.COMPUTER -> R.drawable.ic_btn_computer
-                BluetoothClass.Device.Major.PHONE -> R.drawable.ic_btn_phone
-                BluetoothClass.Device.Major.WEARABLE -> R.drawable.ic_btn_watch
-                else -> R.drawable.ic_btn_bluetooth
-            }
-        )
+        if (context.hasBluetoothPermissions) {
+            setIcon(
+                when (device.bluetoothClass?.majorDeviceClass) {
+                    BluetoothClass.Device.Major.AUDIO_VIDEO -> R.drawable.ic_btn_headset
+                    BluetoothClass.Device.Major.COMPUTER -> R.drawable.ic_btn_computer
+                    BluetoothClass.Device.Major.PHONE -> R.drawable.ic_btn_phone
+                    BluetoothClass.Device.Major.WEARABLE -> R.drawable.ic_btn_watch
+                    else -> R.drawable.ic_btn_bluetooth
+                }
+            )
+        } else {
+            setIcon(R.drawable.ic_btn_bluetooth)
+        }
         updateCompatibility()
         notifyChanged()
     }

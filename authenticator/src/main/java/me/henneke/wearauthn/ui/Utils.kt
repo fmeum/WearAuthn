@@ -1,14 +1,20 @@
 package me.henneke.wearauthn.ui
 
+import android.Manifest
 import android.app.Activity
 import android.app.KeyguardManager
 import android.app.NotificationManager
 import android.app.admin.DevicePolicyManager
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.*
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import android.preference.PreferenceManager
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -34,12 +40,28 @@ val Context.powerManager
     get() = ContextCompat.getSystemService(this, PowerManager::class.java)
 val Context.vibrator
     get() = ContextCompat.getSystemService(this, Vibrator::class.java)
+// Only null in an emulator.
+val Context.bluetoothAdapter: BluetoothAdapter?
+    get() = ContextCompat.getSystemService(this, BluetoothManager::class.java)!!.adapter
 
 val Context.defaultSharedPreferences: SharedPreferences
     get() = PreferenceManager.getDefaultSharedPreferences(this)
 
 fun Context.sharedPreferences(name: String): SharedPreferences =
     getSharedPreferences(name, Context.MODE_PRIVATE)
+
+val Context.hasBluetoothPermissions: Boolean
+    get() =
+        if (VERSION.SDK_INT < VERSION_CODES.S) {
+            true
+        } else {
+            listOf(
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN
+            ).map { ContextCompat.checkSelfPermission(this, it) }
+                .all { it == PackageManager.PERMISSION_GRANTED }
+        }
 
 fun openUrlOnPhone(activity: Activity, url: String) {
     RemoteIntent.startRemoteActivity(

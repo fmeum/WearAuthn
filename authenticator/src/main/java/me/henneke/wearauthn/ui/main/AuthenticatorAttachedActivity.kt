@@ -1,5 +1,6 @@
 package me.henneke.wearauthn.ui.main
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothProfile
@@ -122,6 +123,7 @@ class AuthenticatorAttachedActivity : WearableActivity() {
         hidDeviceProfile = HidDataSender.register(this, hidProfileListener, hidIntrDataListener)
     }
 
+    @SuppressLint("MissingPermission")
     override fun onStart() {
         super.onStart()
 

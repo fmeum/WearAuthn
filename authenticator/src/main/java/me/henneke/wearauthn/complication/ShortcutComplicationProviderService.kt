@@ -1,5 +1,6 @@
 package me.henneke.wearauthn.complication
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
@@ -17,6 +18,7 @@ import androidx.core.content.edit
 import me.henneke.wearauthn.*
 import me.henneke.wearauthn.bthid.identifier
 import me.henneke.wearauthn.ui.defaultSharedPreferences
+import me.henneke.wearauthn.ui.hasBluetoothPermissions
 import me.henneke.wearauthn.ui.main.AuthenticatorAttachedActivity
 
 private fun abbreviate(name: String): String {
@@ -30,6 +32,7 @@ class ShortcutComplicationProviderService : ComplicationProviderService(), Loggi
 
     override val TAG = "ShortcutComplicationProviderService"
 
+    @SuppressLint("MissingPermission")
     @ExperimentalUnsignedTypes
     override fun onComplicationUpdate(
         complicationId: Int, dataType: Int, complicationManager: ComplicationManager
@@ -42,7 +45,8 @@ class ShortcutComplicationProviderService : ComplicationProviderService(), Loggi
             if (BluetoothAdapter.checkBluetoothAddress(deviceShortcut))
                 defaultAdapter.getRemoteDevice(deviceShortcut)
             else null
-        val invalidDevice = device == null || device !in defaultAdapter.bondedDevices
+        val invalidDevice =
+            device == null || device !in (if (applicationContext.hasBluetoothPermissions) defaultAdapter.bondedDevices else emptySet())
 
         val launchIntent = if (invalidDevice) {
             w { "Invalid device" }
@@ -70,6 +74,7 @@ class ShortcutComplicationProviderService : ComplicationProviderService(), Loggi
                     .setTapAction(complicationPendingIntent)
                     .build()
             }
+
             ComplicationData.TYPE_LONG_TEXT -> {
                 val label = if (invalidDevice) "Invalid device" else device!!.identifier
                 ComplicationData.Builder(ComplicationData.TYPE_LONG_TEXT)
@@ -78,12 +83,14 @@ class ShortcutComplicationProviderService : ComplicationProviderService(), Loggi
                     .setTapAction(complicationPendingIntent)
                     .build()
             }
+
             ComplicationData.TYPE_ICON -> {
                 ComplicationData.Builder(ComplicationData.TYPE_ICON)
                     .setIcon(Icon.createWithResource(this, R.drawable.ic_launcher_outline))
                     .setTapAction(complicationPendingIntent)
                     .build()
             }
+
             else -> null
         }
 

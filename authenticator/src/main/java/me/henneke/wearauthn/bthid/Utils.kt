@@ -4,6 +4,7 @@
 
 package me.henneke.wearauthn.bthid
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
@@ -14,9 +15,11 @@ private val HOGP_UUID = ParcelUuid.fromString("00001812-0000-1000-8000-00805f9b3
 private val HID_UUID = ParcelUuid.fromString("00001124-0000-1000-8000-00805f9b34fb")
 
 val BluetoothDevice.identifier: String
+    @SuppressLint("MissingPermission")
     get() = if (TextUtils.isEmpty(name)) address else name
 
 val BluetoothDevice.canUseAuthenticator: Boolean
+    @SuppressLint("MissingPermission")
     get() {
         // If a device reports itself as a HID Device, then it isn't a HID Host.
         val uuidArray = uuids
@@ -36,6 +39,7 @@ val BluetoothDevice.canUseAuthenticator: Boolean
     }
 
 val BluetoothDevice.canUseAuthenticatorViaBluetooth: Boolean
+    @SuppressLint("MissingPermission")
     get() {
         return canUseAuthenticator && bluetoothClass?.majorDeviceClass != BluetoothClass.Device.Major.PHONE
     }
@@ -45,5 +49,7 @@ val defaultAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 val isBluetoothEnabled
     get() = defaultAdapter.isEnabled
 
+// Caller must check permissions.
 val hasCompatibleBondedDevice
+    @SuppressLint("MissingPermission")
     get() = defaultAdapter.bondedDevices.any { device -> device.canUseAuthenticatorViaBluetooth }

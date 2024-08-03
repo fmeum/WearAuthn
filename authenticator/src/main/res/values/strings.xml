@@ -15,7 +15,9 @@
     <string name="status_bluetooth_connected">Attached</string>
     <string name="status_bluetooth_tap_and_pair">Tap and pair device</string>
     <string name="status_bluetooth_tap_to_enable">Tap to enable</string>
+    <string name="preference_bluetooth_permissions_key" translatable="false">preference_bluetooth_permissions</string>
     <string name="preference_nfc_settings_key" translatable="false">preference_nfc_settings</string>
+    <string name="bluetooth_permissions_explanation">Grant Bluetooth permission</string>
     <string name="status_nfc_explanation">Or hold to NFC-capable phone (even while on watch face).</string>
     <string name="status_nfc_not_available">NFC is not available on your watch</string>
     <string name="status_nfc_tap_and_enable">Tap and enable</string>
@@ -92,4 +94,5 @@
     <string name="preference_log_level_title">Log level</string>
     <string name="preference_log_level_dialog_title">Choose a log level</string>
     <string name="preference_log_level_dialog_message">Logs may contain personal information on \"Debug\" or \"Verbose\".</string>
+    <string name="status_bluetooth_permissions_required">Bluetooth permission not granted</string>
 </resources>

@@ -10,7 +10,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -18,8 +17,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.nfc.NfcManager
-import android.os.Build.VERSION
-import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.os.Handler
 import android.os.ResultReceiver
@@ -30,12 +27,13 @@ import android.preference.SwitchPreference
 import android.support.wearable.view.AcceptDenyDialog
 import android.text.Html
 import android.view.View
-import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import me.henneke.wearauthn.*
+import me.henneke.wearauthn.LogLevel
+import me.henneke.wearauthn.Logging
+import me.henneke.wearauthn.R
 import me.henneke.wearauthn.bthid.HidDataSender
 import me.henneke.wearauthn.bthid.HidDeviceProfile
 import me.henneke.wearauthn.bthid.canUseAuthenticator
@@ -43,11 +41,17 @@ import me.henneke.wearauthn.bthid.hasCompatibleBondedDevice
 import me.henneke.wearauthn.fido.context.AuthenticatorContext
 import me.henneke.wearauthn.fido.context.armUserVerificationFuse
 import me.henneke.wearauthn.fido.context.getUserVerificationState
+import me.henneke.wearauthn.i
+import me.henneke.wearauthn.isDeveloperModeEnabled
 import me.henneke.wearauthn.sync.UnlockComplicationListenerService
 import me.henneke.wearauthn.ui.ConfirmDeviceCredentialActivity
 import me.henneke.wearauthn.ui.EXTRA_CONFIRM_DEVICE_CREDENTIAL_RECEIVER
+import me.henneke.wearauthn.ui.bluetoothAdapter
 import me.henneke.wearauthn.ui.defaultSharedPreferences
+import me.henneke.wearauthn.ui.hasBluetoothPermissions
 import me.henneke.wearauthn.ui.openPhoneAppOrListing
+import me.henneke.wearauthn.ui.showToast
+import me.henneke.wearauthn.w
 import kotlin.coroutines.CoroutineContext
 
 @ExperimentalUnsignedTypes
@@ -58,15 +62,13 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
 
-    private val bluetoothAdapter: BluetoothAdapter
-        get() = context.getSystemService(BluetoothManager::class.java).adapter
-
-    private lateinit var hidDeviceProfile: HidDeviceProfile
+    private var hidDeviceProfile: HidDeviceProfile? = null
 
     private val bondedDeviceEntries = mutableSetOf<AuthenticatorHostDeviceEntry>()
 
     private lateinit var bluetoothSettingsPreference: Preference
     private lateinit var discoverableSwitchPreference: SwitchPreference
+    private lateinit var bluetoothPermissionsPreference: Preference
     private lateinit var nfcSettingsPreference: Preference
     private lateinit var singleFactorModeSwitchPreference: SwitchPreference
     private lateinit var manageCredentialsPreference: Preference
@@ -74,8 +76,13 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Crashes if there is no Bluetooth adapter (i.e. in emulator).
-        hidDeviceProfile = HidDataSender.register(context, hidProfileListener, null)
+        registerHidDeviceProfile()
+    }
+
+    private fun registerHidDeviceProfile() {
+        if (context.hasBluetoothPermissions && context.bluetoothAdapter != null && hidDeviceProfile == null) {
+            hidDeviceProfile = HidDataSender.register(context, hidProfileListener, null)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,6 +96,21 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
             findPreference(getString(R.string.preference_bluetooth_settings_key))
         discoverableSwitchPreference =
             findPreference(getString(R.string.preference_discoverable_key)) as SwitchPreference
+        bluetoothPermissionsPreference =
+            findPreference(getString(R.string.preference_bluetooth_permissions_key))
+        bluetoothPermissionsPreference.setOnPreferenceClickListener {
+            if (!context.hasBluetoothPermissions) {
+                requestPermissions(
+                    arrayOf(
+                        Manifest.permission.BLUETOOTH_CONNECT,
+                        Manifest.permission.BLUETOOTH_SCAN,
+                        Manifest.permission.BLUETOOTH_ADVERTISE,
+                    ),
+                    REQUEST_CODE_REQUEST_BLUETOOTH_PERMISSIONS
+                )
+            }
+            true
+        }
         nfcSettingsPreference = findPreference(getString(R.string.preference_nfc_settings_key))
         singleFactorModeSwitchPreference =
             findPreference(getString(R.string.preference_single_factor_mode_key)) as SwitchPreference
@@ -133,7 +155,10 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
 
     override fun onDetach() {
         super.onDetach()
-        HidDataSender.unregister(hidProfileListener, null)
+        if (hidDeviceProfile != null) {
+            HidDataSender.unregister(hidProfileListener, null)
+            hidDeviceProfile = null
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -156,23 +181,26 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        when(requestCode) {
+        when (requestCode) {
             REQUEST_CODE_REQUEST_BLUETOOTH_PERMISSIONS -> {
                 if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                     updateBluetoothStateAndDeviceEntries()
                     updateDiscoverableState()
+                    registerHidDeviceProfile()
+                } else {
+                    activity.showToast(context.getString(R.string.status_bluetooth_permissions_required))
                 }
             }
         }
     }
 
     private fun addEntryForDevice(device: BluetoothDevice) {
-        if (!device.canUseAuthenticator)
+        if (!device.canUseAuthenticator || hidDeviceProfile == null)
             return
         AuthenticatorHostDeviceEntry(
             activity!!,
             device,
-            hidDeviceProfile
+            hidDeviceProfile!!
         ).let { entry ->
             bondedDeviceEntries.add(entry)
             preferenceScreen.addPreference(entry)
@@ -193,16 +221,18 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
     }
 
     @SuppressLint("MissingPermission")
-    private fun createBondedDeviceEntries() {
-        if (!checkAndRequestBluetoothPermissions()) {
-            return
-        }
-        for (device in bluetoothAdapter.bondedDevices) {
-            addEntryForDevice(device)
+    private fun createBluetoothDeviceEntries() {
+        if (context.hasBluetoothPermissions) {
+            for (device in context.bluetoothAdapter?.bondedDevices ?: emptySet()) {
+                addEntryForDevice(device)
+            }
+        } else {
+            preferenceScreen.addPreference(bluetoothPermissionsPreference)
         }
     }
 
-    private fun clearBondedDeviceEntries() {
+    private fun clearBluetoothDeviceEntries() {
+        preferenceScreen.removePreference(bluetoothPermissionsPreference)
         for (entry in bondedDeviceEntries) {
             preferenceScreen.removePreference(entry)
         }
@@ -241,17 +271,17 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
     }
 
     private fun updateBluetoothStateAndDeviceEntries() {
-        clearBondedDeviceEntries()
+        clearBluetoothDeviceEntries()
         bluetoothSettingsPreference.apply {
-            when (bluetoothAdapter.state) {
+            when (context.bluetoothAdapter?.state ?: BluetoothAdapter.STATE_OFF) {
                 BluetoothAdapter.STATE_ON -> {
-                    if (hasCompatibleBondedDevice) {
+                    if (context.hasBluetoothPermissions && hasCompatibleBondedDevice) {
                         summary = null
                     } else {
                         setSummary(R.string.status_bluetooth_tap_and_pair)
                     }
                     onPreferenceClickListener = null
-                    createBondedDeviceEntries()
+                    createBluetoothDeviceEntries()
                     discoverableSwitchPreference.isEnabled = true
                 }
 
@@ -275,7 +305,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
             }
         }
         discoverableSwitchPreference.apply {
-            when (bluetoothAdapter.state) {
+            when (context.bluetoothAdapter?.state ?: BluetoothAdapter.STATE_OFF) {
                 BluetoothAdapter.STATE_ON -> {
                     updateDiscoverableState()
                     setOnPreferenceClickListener {
@@ -301,13 +331,12 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
 
     @SuppressLint("MissingPermission")
     private fun updateDiscoverableState() {
-        if (!checkAndRequestBluetoothPermissions()) {
+        if (!context.hasBluetoothPermissions) {
             discoverableSwitchPreference.isEnabled = false
             discoverableSwitchPreference.isChecked = false
             return
         }
-        val scanMode =
-            context.getSystemService(BluetoothManager::class.java).adapter.scanMode
+        val scanMode = context.bluetoothAdapter?.scanMode ?: BluetoothAdapter.SCAN_MODE_NONE
         if (scanMode == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
             discoverableSwitchPreference.isEnabled = false
             discoverableSwitchPreference.isChecked = true
@@ -448,36 +477,6 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
         })
     }
 
-    private fun checkAndRequestBluetoothPermissions(): Boolean {
-        if (VERSION.SDK_INT < VERSION_CODES.S) {
-            return true
-        }
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_ADVERTISE
-            ) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            return true
-        }
-        requestPermissions(
-            arrayOf(
-                Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.BLUETOOTH_ADVERTISE
-            ),
-            REQUEST_CODE_REQUEST_BLUETOOTH_PERMISSIONS
-        )
-        return false
-    }
-
     private val hidProfileListener = object : HidDataSender.ProfileListener {
         override fun onAppStatusChanged(registered: Boolean) {
             i { "onAppStatusChanged($registered)" }
@@ -534,7 +533,7 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
                 }
 
                 BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
-                    if (checkAndRequestBluetoothPermissions()) {
+                    if (context.hasBluetoothPermissions) {
                         removeEntryForDevice(device)
                         if (device.bondState == BluetoothDevice.BOND_BONDED) {
                             addEntryForDevice(device)

@@ -1,5 +1,6 @@
 package me.henneke.wearauthn.complication
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
 import android.preference.Preference
@@ -11,6 +12,7 @@ import me.henneke.wearauthn.R
 import me.henneke.wearauthn.bthid.canUseAuthenticator
 import me.henneke.wearauthn.bthid.defaultAdapter
 import me.henneke.wearauthn.ui.BluetoothDevicePreference
+import me.henneke.wearauthn.ui.hasBluetoothPermissions
 
 
 class ComplicationConfigActivity : WearablePreferenceActivity() {
@@ -63,8 +65,9 @@ class ShortcutPicker : PreferenceFragment() {
         clearPreferences()
     }
 
+    @SuppressLint("MissingPermission")
     private fun createPreferences() {
-        for (device in defaultAdapter.bondedDevices) {
+        for (device in if (context.hasBluetoothPermissions) defaultAdapter.bondedDevices else emptySet()) {
             if (!device.canUseAuthenticator)
                 continue
             preferenceScreen.addPreference(BluetoothDevicePreference(context, device))

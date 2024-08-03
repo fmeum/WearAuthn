@@ -4,6 +4,13 @@
     android:title="@string/preference_title">
 
     <Preference
+        android:icon="@drawable/ic_btn_bluetooth"
+        android:key="@string/preference_bluetooth_permissions_key"
+        android:order="@integer/order_device_list_bluetooth_permissions"
+        android:persistent="false"
+        android:title="@string/bluetooth_permissions_explanation" />
+
+    <Preference
         android:key="@string/preference_nfc_settings_key"
         android:order="@integer/order_device_list_nfc_settings"
         android:persistent="false"
@@ -29,8 +36,8 @@
             android:key="@string/preference_discoverable_key"
             android:order="@integer/order_device_list_discoverable"
             android:persistent="false"
-            android:summaryOn="@string/preference_discoverable_summary_on"
             android:summaryOff="@string/preference_discoverable_summary_off"
+            android:summaryOn="@string/preference_discoverable_summary_on"
             android:title="@string/preference_discoverable_title" />
     </PreferenceCategory>
 
@@ -39,19 +46,19 @@
         android:title="@string/preference_category_advanced_title">
 
         <SwitchPreference
+            android:enabled="false"
             android:key="@string/preference_single_factor_mode_key"
             android:order="@integer/order_device_list_single_factor_mode"
-            android:title="@string/preference_single_factor_mode_title"
-            android:enabled="false"
-            android:persistent="false" />
+            android:persistent="false"
+            android:title="@string/preference_single_factor_mode_title" />
 
         <Preference
+            android:enabled="false"
             android:icon="@drawable/ic_btn_key"
             android:key="@string/preference_credential_management_key"
             android:order="@integer/order_device_list_credential_management"
-            android:title="@string/preference_credential_management_title"
-            android:enabled="false"
-            android:persistent="false" />
+            android:persistent="false"
+            android:title="@string/preference_credential_management_title" />
 
         <Preference
             android:icon="@drawable/ic_btn_info"
@@ -61,7 +68,7 @@
             android:title="@string/preference_about_title">
             <intent
                 android:targetClass="me.henneke.wearauthn.ui.main.AboutActivity"
-                android:targetPackage="@string/application_id" />
+                android:targetPackage="me.henneke.wearauthn.authenticator" />
         </Preference>
 
         <Preference
