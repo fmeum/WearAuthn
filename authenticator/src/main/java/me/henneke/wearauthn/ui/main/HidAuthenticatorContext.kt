@@ -38,23 +38,18 @@ class HidAuthenticatorContext(private val activity: Activity) :
             withContext(Dispatchers.Main) {
                 val dialog =
                     TimedAcceptDenyDialog(activity).apply {
+                        create()
                         setIcon(R.drawable.ic_launcher_outline)
                         setMessage(info.confirmationPrompt)
                         setTimeout(HID_USER_PRESENCE_TIMEOUT_MS)
                         setVibrateOnShow(true)
                         setWakeOnShow(true)
                     }
-                suspendCancellableCoroutine<Boolean?> { continuation ->
+                suspendCancellableCoroutine { continuation ->
                     dialog.apply {
-                        setPositiveButton(DialogInterface.OnClickListener { _, _ ->
-                            continuation.resume(true)
-                        })
-                        setNegativeButton(DialogInterface.OnClickListener { _, _ ->
-                            continuation.resume(false)
-                        })
-                        setTimeoutListener(DialogInterface.OnCancelListener {
-                            continuation.resume(null)
-                        })
+                        setPositiveButton { _, _ -> continuation.resume(true) }
+                        setNegativeButton { _, _ -> continuation.resume(false) }
+                        setTimeoutListener { continuation.resume(null) }
                     }.show()
                     continuation.invokeOnCancellation {
                         dialog.dismiss()
@@ -72,6 +67,7 @@ class HidAuthenticatorContext(private val activity: Activity) :
             withContext(Dispatchers.Main) {
                 val dialog =
                     TimedAcceptDenyDialog(activity).apply {
+                        create()
                         setIcon(R.drawable.ic_launcher_outline)
                         setTitle(rpId)
                         setMessage(prompt)
@@ -79,18 +75,18 @@ class HidAuthenticatorContext(private val activity: Activity) :
                         setVibrateOnShow(true)
                         setWakeOnShow(true)
                     }
-                suspendCancellableCoroutine<String?> { continuation ->
+                suspendCancellableCoroutine { continuation ->
                     dialog.apply {
-                        setPositiveButton(DialogInterface.OnClickListener { _, _ ->
+                        setPositiveButton { _, _ ->
                             val lineBreaks = messageLineBreaks
                             if (lineBreaks == null)
                                 continuation.resume(null)
                             else
                                 continuation.resume(prompt.breakAt(lineBreaks))
-                        })
-                        setNegativeButton(DialogInterface.OnClickListener { _, _ ->
+                        }
+                        setNegativeButton { _, _ ->
                             continuation.resume(null)
-                        })
+                        }
                     }.show()
                     continuation.invokeOnCancellation {
                         dialog.dismiss()
