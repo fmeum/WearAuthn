@@ -2,6 +2,7 @@ package me.henneke.wearauthn.complication
 
 import android.app.PendingIntent
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -36,7 +37,7 @@ class ShortcutComplicationProviderService : ComplicationProviderService(), Loggi
         d { "Updating complication $complicationId of type $dataType" }
 
         val deviceShortcut = getDeviceShortcut(this, complicationId)
-        val defaultAdapter = BluetoothAdapter.getDefaultAdapter()
+        val defaultAdapter = getSystemService(BluetoothManager::class.java).adapter
         val device =
             if (BluetoothAdapter.checkBluetoothAddress(deviceShortcut))
                 defaultAdapter.getRemoteDevice(deviceShortcut)
