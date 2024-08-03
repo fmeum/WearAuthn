@@ -57,23 +57,25 @@ interface Logging {
                 LogLevel.Disabled
         }
 
-        inline fun v(tag: String, tr: Throwable? = null, crossinline message: () -> String) {
+        // Functions below should be inline, but that results in the following failure at runtime:
+        // java.lang.IllegalAccessError: Field 'me.henneke.wearauthn.Logging$Companion.$$INSTANCE' is inaccessible to class 'me.henneke.wearauthn.ui.main.AuthenticatorMainMenu$hidProfileListener$1$onServiceStateChanged$$inlined$i$default$1' (declaration of 'me.henneke.wearauthn.ui.main.AuthenticatorMainMenu$hidProfileListener$1$onServiceStateChanged$$inlined$i$default$1' appears in /data/data/me.henneke.wearauthn.authenticator/code_cache/.overlay/base.apk/classes5.dex)
+        fun v(tag: String, tr: Throwable? = null, message: () -> String) {
             runIfLoggedLevel(LogLevel.Verbose) { log(LogLevel.Verbose, tag, tr, message()) }
         }
 
-        inline fun d(tag: String, tr: Throwable? = null, crossinline message: () -> String) {
+        fun d(tag: String, tr: Throwable? = null, message: () -> String) {
             runIfLoggedLevel(LogLevel.Debug) { log(LogLevel.Debug, tag, tr, message()) }
         }
 
-        inline fun i(tag: String, tr: Throwable? = null, crossinline message: () -> String) {
+        fun i(tag: String, tr: Throwable? = null, message: () -> String) {
             runIfLoggedLevel(LogLevel.Info) { log(LogLevel.Info, tag, tr, message()) }
         }
 
-        inline fun w(tag: String, tr: Throwable? = null, crossinline message: () -> String) {
+        fun w(tag: String, tr: Throwable? = null, message: () -> String) {
             runIfLoggedLevel(LogLevel.Warn) { log(LogLevel.Warn, tag, tr, message()) }
         }
 
-        inline fun e(tag: String, tr: Throwable? = null, crossinline message: () -> String) {
+        fun e(tag: String, tr: Throwable? = null, message: () -> String) {
             runIfLoggedLevel(LogLevel.Error) { log(LogLevel.Error, tag, tr, message()) }
         }
 
@@ -105,17 +107,19 @@ interface Logging {
     }
 }
 
-inline fun <T : Logging> T.v(tr: Throwable? = null, crossinline message: () -> String) =
+// Functions below should be inline, but that results in the following failure at runtime:
+// java.lang.IllegalAccessError: Field 'me.henneke.wearauthn.Logging$Companion.$$INSTANCE' is inaccessible to class 'me.henneke.wearauthn.ui.main.AuthenticatorMainMenu$hidProfileListener$1$onServiceStateChanged$$inlined$i$default$1' (declaration of 'me.henneke.wearauthn.ui.main.AuthenticatorMainMenu$hidProfileListener$1$onServiceStateChanged$$inlined$i$default$1' appears in /data/data/me.henneke.wearauthn.authenticator/code_cache/.overlay/base.apk/classes5.dex)
+fun <T : Logging> T.v(tr: Throwable? = null, message: () -> String) =
     Logging.v(TAG, tr, message)
 
-inline fun <T : Logging> T.d(tr: Throwable? = null, crossinline message: () -> String) =
+fun <T : Logging> T.d(tr: Throwable? = null, message: () -> String) =
     Logging.d(TAG, tr, message)
 
-inline fun <T : Logging> T.i(tr: Throwable? = null, crossinline message: () -> String) =
+fun <T : Logging> T.i(tr: Throwable? = null, message: () -> String) =
     Logging.i(TAG, tr, message)
 
-inline fun <T : Logging> T.w(tr: Throwable? = null, crossinline message: () -> String) =
+fun <T : Logging> T.w(tr: Throwable? = null, message: () -> String) =
     Logging.w(TAG, tr, message)
 
-inline fun <T : Logging> T.e(tr: Throwable? = null, crossinline message: () -> String) =
+fun <T : Logging> T.e(tr: Throwable? = null, message: () -> String) =
     Logging.e(TAG, tr, message)
