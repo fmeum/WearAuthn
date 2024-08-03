@@ -68,7 +68,7 @@
             android:title="@string/preference_about_title">
             <intent
                 android:targetClass="me.henneke.wearauthn.ui.main.AboutActivity"
-                android:targetPackage="me.henneke.wearauthn.authenticator" />
+                android:targetPackage="me.henneke.wearauthn.ui.main" />
         </Preference>
 
         <Preference

@@ -1,5 +1,6 @@
 package me.henneke.wearauthn.bthid.api28
 
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.bluetooth.*
 import android.os.Build
@@ -9,6 +10,7 @@ import me.henneke.wearauthn.fido.hid.HID_REPORT_DESC
 
 /** Wrapper around the final BluetoothHidDevice class to make it mockable.  */
 @TargetApi(Build.VERSION_CODES.P)
+@SuppressLint("MissingPermission")
 class InputHostWrapper28(inputHost: BluetoothProfile) : InputHostWrapper {
     private val sdp = BluetoothHidDeviceAppSdpSettings(
         Constants.SDP_NAME,

@@ -1,5 +1,6 @@
 package me.henneke.wearauthn.bthid.api28
 
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -12,6 +13,7 @@ import me.henneke.wearauthn.bthid.canUseAuthenticatorViaBluetooth
 
 /** Wrapper for BluetoothHidDevice profile that manages paired HID Host devices.  */
 @TargetApi(Build.VERSION_CODES.P)
+@SuppressLint("MissingPermission")
 class HidDeviceProfile28(bluetoothAdapter: BluetoothAdapter) : HidDeviceProfile(bluetoothAdapter) {
 
     private var service: BluetoothHidDevice? = null
