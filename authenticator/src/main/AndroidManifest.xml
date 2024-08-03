@@ -3,13 +3,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:targetSandboxVersion="2">
 
-    <uses-permission
-        android:name="android.permission.BLUETOOTH"
-        android:maxSdkVersion="30" />
+    <!--
+    This intentionally doesn't have tools:targetApi="s" set even though the docs say it should.
+    Not declaring this permission results in the following failure in the emulator and on a
+    real watch:
+    java.lang.SecurityException: Permission Denial: starting Intent { act=android.bluetooth.adapter.action.REQUEST_DISCOVERABLE cmp=com.google.android.apps.wearable.settings/com.google.android.clockwork.settings.connectivity.bluetooth.BluetoothRequestDiscoverableActivity (has extras) } from ProcessRecord{d09dbe5 21801:me.henneke.wearauthn.authenticator/u0a8} (pid=21801, uid=10008) requires android.permission.BLUETOOTH
+    -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE"
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADVERTISE"
         tools:targetApi="s" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_CONNECT"
         tools:targetApi="s" />
     <uses-permission
         android:name="android.permission.BLUETOOTH_SCAN"
