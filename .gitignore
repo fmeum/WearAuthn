@@ -3,11 +3,16 @@
 /local.properties
 /.idea/caches
 /.idea/libraries
+/.idea/misc.xml
 /.idea/modules.xml
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 /.idea/dictionaries
+/.idea/**/deploymentTargetSelector.xml
+/.idea/**/deploymentTargetDropDown.xml
+/.idea/studiobot.xml
+/.idea/other.xml
 .DS_Store
 /build
 /captures
