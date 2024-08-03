@@ -8,7 +8,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.*
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingFlowParams.ProductDetailsParams
 import com.android.billingclient.api.Purchase.*
+import com.android.billingclient.api.QueryProductDetailsParams.Product
 import java.security.KeyFactory
 import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
@@ -22,11 +25,11 @@ class BillingManager private constructor(private val application: Application) :
     val isComplicationUnlockedLiveData: LiveData<Boolean?>
         get() = _isComplicationUnlockedLiveData
 
-    private val _skusLiveData = mapOf(
-        WearAuthnInAppProduct.Complication to MutableLiveData<SkuDetails>()
+    private val _productDetailsLiveData = mapOf(
+        WearAuthnInAppProduct.Complication to MutableLiveData<ProductDetails>()
     )
-    val skusLiveData: Map<WearAuthnInAppProduct, LiveData<SkuDetails>>
-        get() = _skusLiveData
+    val productDetailsLiveData: Map<WearAuthnInAppProduct, LiveData<ProductDetails>>
+        get() = _productDetailsLiveData
 
     private val _isBillingReady = MutableLiveData(false)
     val isBillingReady: LiveData<Boolean>
@@ -34,7 +37,10 @@ class BillingManager private constructor(private val application: Application) :
 
     fun connect() {
         billingClient = newBuilder(application.applicationContext).run {
-            enablePendingPurchases()
+            enablePendingPurchases(PendingPurchasesParams.newBuilder().run {
+                enableOneTimeProducts()
+                build()
+            })
             setListener(this@BillingManager).build()
         }
         if (!billingClient.isReady)
@@ -46,43 +52,55 @@ class BillingManager private constructor(private val application: Application) :
     }
 
     fun updatePurchases() {
-        billingClient.queryPurchases(SkuType.INAPP).purchasesList?.forEach {
-            process(it)
-        }
+        billingClient.queryPurchasesAsync(
+            QueryPurchasesParams.newBuilder().setProductType(ProductType.INAPP).build()
+        ) { _, purchases -> purchases.forEach { process(it) } }
     }
 
     fun launchBillingFlow(activity: Activity, product: WearAuthnInAppProduct) {
         if (!billingClient.isReady)
             return
 
-        val skuDetails = skusLiveData[product]?.value
+        val skuDetails = productDetailsLiveData[product]?.value
         if (skuDetails == null) {
             Log.e(TAG, "Failed to get SkuDetails for $product")
             return
         }
 
         val params = BillingFlowParams.newBuilder().run {
-            setSkuDetails(skuDetails)
+            setProductDetailsParamsList(
+                listOf(
+                    ProductDetailsParams.newBuilder().run {
+                        setProductDetails(skuDetails)
+                        build()
+                    }
+                )
+            )
             build()
         }
         billingClient.launchBillingFlow(activity, params)
     }
 
-    private fun updateSkus() {
+    private fun updateProductDetails() {
         if (!billingClient.isReady)
             return
 
-        val params = SkuDetailsParams.newBuilder().run {
-            setSkusList(WearAuthnInAppProduct.entries.map { it.sku })
-            setType(SkuType.INAPP)
+        val params = QueryProductDetailsParams.newBuilder().run {
+            setProductList(WearAuthnInAppProduct.entries.map {
+                Product.newBuilder().run {
+                    setProductId(it.sku)
+                    setProductType(ProductType.INAPP)
+                    build()
+                }
+            })
             build()
         }
-        billingClient.querySkuDetailsAsync(params) { result, skuDetails ->
+        billingClient.queryProductDetailsAsync(params) { result, productDetails ->
             when (result.responseCode) {
                 BillingResponseCode.OK -> {
-                    skuDetails?.forEach { details ->
-                        WearAuthnInAppProduct.fromString(details.sku)?.let { product ->
-                            _skusLiveData[product]?.value = details
+                    productDetails.forEach { details ->
+                        WearAuthnInAppProduct.fromString(details.productId)?.let { product ->
+                            _productDetailsLiveData[product]?.value = details
                         }
                     }
                 }
@@ -98,15 +116,17 @@ class BillingManager private constructor(private val application: Application) :
                     acknowledgePurchase(purchase)
                 }
             }
+
             PurchaseState.PENDING -> {
-                when (WearAuthnInAppProduct.fromString(purchase.sku)) {
+                when (WearAuthnInAppProduct.fromString(purchase.products.first())) {
                     WearAuthnInAppProduct.Complication -> {
                         _isComplicationUnlockedLiveData.postValue(null)
                     }
+
                     null -> {
                         Log.e(
                             TAG,
-                            "Purchase pending for ${purchase.sku} which does not match any known SKU"
+                            "Purchase pending for ${purchase.products.first()} which does not match any known SKU"
                         )
                     }
                 }
@@ -130,13 +150,12 @@ class BillingManager private constructor(private val application: Application) :
     }
 
     private fun realizePurchase(purchase: Purchase) {
-        when (WearAuthnInAppProduct.fromString(purchase.sku)) {
-            WearAuthnInAppProduct.Complication -> {
-                _isComplicationUnlockedLiveData.postValue(true)
-            }
-            null -> {
-                Log.e(TAG, "Purchased ${purchase.sku} which does not match any known SKU")
-            }
+        when (WearAuthnInAppProduct.fromString(purchase.products.first())) {
+            WearAuthnInAppProduct.Complication -> _isComplicationUnlockedLiveData.postValue(true)
+            null -> Log.e(
+                TAG,
+                "Purchased ${purchase.products.first()} which does not match any known SKU"
+            )
         }
     }
 
@@ -163,7 +182,7 @@ class BillingManager private constructor(private val application: Application) :
     override fun onBillingSetupFinished(billingResult: BillingResult) {
         if (billingResult.responseCode == BillingResponseCode.OK) {
             _isBillingReady.postValue(true)
-            updateSkus()
+            updateProductDetails()
             updatePurchases()
         } else {
             Log.w(TAG, "Setting up billing failed: ${billingResult.debugMessage}")

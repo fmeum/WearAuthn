@@ -93,7 +93,10 @@ class MainFragment : Fragment() {
             }
             complicationUnlockDetails.observe(viewLifecycleOwner) { details ->
                 binding.complicationUnlockPrice.text =
-                    getString(R.string.label_price_without_tax, details.price)
+                    getString(
+                        R.string.label_price_without_tax,
+                        details.oneTimePurchaseOfferDetails!!.formattedPrice
+                    )
             }
             watchConfirmedUnlock.observe(viewLifecycleOwner) { model ->
                 Snackbar.make(

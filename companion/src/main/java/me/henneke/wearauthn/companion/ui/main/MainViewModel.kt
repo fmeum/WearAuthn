@@ -36,7 +36,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application),
         get() = billingManager.isBillingReady
 
     val complicationUnlockDetails
-        get() = billingManager.skusLiveData[WearAuthnInAppProduct.Complication]
+        get() = billingManager.productDetailsLiveData[WearAuthnInAppProduct.Complication]
             ?: error("Failed to get details for Complication product")
 
     private val isWatchAppInstalled = MutableLiveData(false)
