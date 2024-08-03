@@ -47,7 +47,7 @@
             android:name="me.henneke.wearauthn.ui.main.AuthenticatorActivity"
             android:clearTaskOnLaunch="true"
             android:exported="true"
-            android:taskAffinity="Main">
+            android:taskAffinity=".ui.main.AuthenticatorActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -56,22 +56,22 @@
         </activity>
         <activity
             android:name="me.henneke.wearauthn.ui.main.AuthenticatorAttachedActivity"
-            android:taskAffinity="Main" />
+            android:taskAffinity=".ui.main.AuthenticatorActivity" />
         <activity
             android:name="me.henneke.wearauthn.ui.main.AboutActivity"
-            android:taskAffinity="Main" />
+            android:taskAffinity=".ui.main.AuthenticatorActivity" />
         <activity
             android:name="me.henneke.wearauthn.ui.ConfirmDeviceCredentialActivity"
-            android:taskAffinity="Main" />
+            android:taskAffinity=".ui.main.AuthenticatorActivity" />
         <activity
             android:name="me.henneke.wearauthn.ui.ManageSpaceActivity"
             android:taskAffinity=".ui.ManageSpaceActivity" />
         <activity
             android:name="android.support.wearable.preference.WearablePreferenceActivity"
-            android:taskAffinity="Main" />
+            android:taskAffinity=".ui.main.AuthenticatorActivity" />
         <activity
             android:name="androidx.wear.activity.ConfirmationActivity"
-            android:taskAffinity="Main" />
+            android:taskAffinity=".ui.main.AuthenticatorActivity" />
 
         <service
             android:name="me.henneke.wearauthn.fido.nfc.NfcAuthenticatorService"
@@ -122,7 +122,7 @@
         </activity>
         <activity
             android:name=".ui.main.ResidentCredentialsList"
-            android:taskAffinity="Main" />
+            android:taskAffinity=".ui.main.AuthenticatorActivity" />
 
         <service
             android:name="me.henneke.wearauthn.sync.UnlockComplicationListenerService"
