@@ -2,7 +2,7 @@
 
 ext.versionMajor = 0
 ext.versionMinor = 9
-ext.versionPatch = 17
+ext.versionPatch = 19
 
 buildscript {
     ext.kotlin_version = '1.9.22'
@@ -12,7 +12,7 @@ buildscript {
 
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.5.1'
+        classpath 'com.android.tools.build:gradle:8.5.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
