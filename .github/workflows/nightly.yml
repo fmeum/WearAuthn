@@ -19,11 +19,13 @@ jobs:
           java-version: 17
           distribution: 'zulu'
       - name: Assemble with Gradle
-        run: ./gradlew assembleNightlySigned \
-          -PcommitCount=$(git rev-list --count HEAD) \
-          -PcommitHash=$(git rev-parse --short HEAD) \
-          -PstorePassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}"
-          -PkeyPassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}"
+        run: ./gradlew \
+          -PcommitCount=$(git rev-list --count master) \
+          -PcommitHash=$(git rev-parse --short master) \
+          -PstorePassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" \
+          -PkeyPassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" \
+          assembleNightlySigned
+
       - name: Upload authenticator APK
         uses: actions/upload-artifact@v4
         with:
