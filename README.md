@@ -30,6 +30,10 @@ Many websites allow you to additionally protect your accounts via certain types 
 
 Traditionally, security keys take the form of USB sticks, but there are also models that can be used via NFC, Bluetooth or Lightning. But many computers and phones even come with security key functionality built-in: Windows Hello, macOS Touch ID (with Chrome) or your Android 7+ phone can all be used with sites asking for a security key. Unfortunately, Wear OS watches could so far not be used as security keys, even though many of them are equipped with hardware facilities for cryptographic keys used for Google Pay. This is where WearAuthn comes in.
 
+## Installation
+
+In addition to the Google Play Store, you can also download the latest [nightly build](https://github.com/fmeum/WearAuthn/releases/tag/nightly).
+
 ## Usage
 
 Watch a demo:
