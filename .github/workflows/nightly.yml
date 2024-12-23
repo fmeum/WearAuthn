@@ -1,0 +1,52 @@
+name: Nightly
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'zulu'
+      - name: Assemble with Gradle
+        run: ./gradlew assembleNightlySigned \
+          -PcommitCount=$(git rev-list --count HEAD) \
+          -PcommitHash=$(git rev-parse --short HEAD) \
+          -PstorePassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}"
+          -PkeyPassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}"
+      - name: Upload authenticator APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: authenticator.apk
+          path: authenticator/build/outputs/apk/nightly/signed/authenticator-nightly-signed.apk
+          if-no-files-found: error
+      - name: Upload companion APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: companion.apk
+          path: companion/build/outputs/apk/nightly/signed/companion-nightly-signed.apk
+          if-no-files-found: error
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            authenticator/build/outputs/apk/nightly/signed/authenticator-nightly-signed.apk
+            companion/build/outputs/apk/nightly/signed/companion-nightly-signed.apk
+          tag_name: nightly
+          release_name: Nightly Release
+          body: |
+            Nightly build for commit ${{ github.sha }}.
+          draft: false
+          prerelease: true
+
+

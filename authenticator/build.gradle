@@ -11,8 +11,14 @@ android {
         testSign {
             storeFile file('../ci_keystore.jks')
             storePassword 'hunter2'
-            keyAlias = 'key0'
+            keyAlias 'key0'
             keyPassword 'hunter2'
+        }
+        nightlySign {
+            storeFile file('../nightly_keystore.jks')
+            storePassword project.hasProperty("storePassword") ? project.storePassword : ""
+            keyAlias 'key0'
+            keyPassword project.hasProperty("keyPassword") ? project.keyPassword : ""
         }
     }
     compileSdk 34
@@ -32,6 +38,23 @@ android {
         }
         debug {
             minifyEnabled false
+        }
+        signed {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.nightlySign
+        }
+    }
+    flavorDimensions += "distribution"
+    productFlavors {
+        playStore {
+            dimension "distribution"
+        }
+        nightly {
+            dimension "distribution"
+            applicationIdSuffix ".nightly"
+            versionCode getNightlyVersionCode()
+            versionName getNightlyVersionName()
         }
     }
     namespace 'me.henneke.wearauthn'
