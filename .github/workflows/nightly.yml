@@ -13,18 +13,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
       - name: set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: 'zulu'
       - name: Assemble with Gradle
-        run: ./gradlew \
-          -PcommitCount=$(git rev-list --count master) \
-          -PcommitHash=$(git rev-parse --short master) \
-          -PstorePassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" \
-          -PkeyPassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" \
-          assembleNightlySigned
+        run: ./gradlew -PcommitCount=$(git rev-list --count master) -PcommitHash=$(git rev-parse --short master) -PstorePassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" -PkeyPassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" assembleNightlySigned
 
       - name: Upload authenticator APK
         uses: actions/upload-artifact@v4
