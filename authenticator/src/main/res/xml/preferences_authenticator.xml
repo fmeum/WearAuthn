@@ -65,13 +65,7 @@
             android:key="@string/preference_about_key"
             android:order="@integer/order_device_list_about"
             android:persistent="false"
-            android:title="@string/preference_about_title">
-            <!-- Inspection is unhappy about the package, but it's required for the intent to work -->
-            <!--suppress AndroidDomInspection -->
-            <intent
-                android:targetClass="me.henneke.wearauthn.ui.main.AboutActivity"
-                android:targetPackage="me.henneke.wearauthn.authenticator" />
-        </Preference>
+            android:title="@string/preference_about_title" />
 
         <Preference
             android:icon="@drawable/ic_launcher_outline"

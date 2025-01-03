@@ -31,6 +31,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import me.henneke.wearauthn.BuildConfig
 import me.henneke.wearauthn.LogLevel
 import me.henneke.wearauthn.Logging
 import me.henneke.wearauthn.R
@@ -123,6 +124,10 @@ class AuthenticatorMainMenu : PreferenceFragment(), CoroutineScope, Logging {
             findPreference(getString(R.string.preference_single_factor_mode_key)) as SwitchPreference
         manageCredentialsPreference =
             findPreference(getString(R.string.preference_credential_management_key))
+        with(findPreference(getString(R.string.preference_about_key))) {
+            intent = Intent(context, AboutActivity::class.java)
+            intent.`package` = BuildConfig.APPLICATION_ID
+        }
         supportPreference = findPreference(getString(R.string.preference_support_key))
     }
 
