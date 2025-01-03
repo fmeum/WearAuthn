@@ -23,11 +23,11 @@ jobs:
           distribution: 'zulu'
       - name: Assemble with Gradle
         run: ./gradlew -PcommitCount=$(git rev-list --count master) -PcommitHash=$(git rev-parse --short master) -PstorePassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" -PkeyPassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" assembleNightlySigned
-      - name: Delete existing nightly tag
-        run: git push origin --delete nightly || true
       - name: Delete existing nightly release
         run: |
           curl -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/releases/tags/nightly
+      - name: Delete existing nightly tag
+        run: git push origin --delete nightly || true
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
