@@ -95,5 +95,4 @@
     <string name="preference_log_level_dialog_title">Choose a log level</string>
     <string name="preference_log_level_dialog_message">Logs may contain personal information on \"Debug\" or \"Verbose\".</string>
     <string name="status_bluetooth_permissions_required">Bluetooth permission not granted</string>
-    <string name="unlock_to_use_nfc">Unlock to use WearAuthn</string>
 </resources>

@@ -21,7 +21,6 @@ import me.henneke.wearauthn.fido.context.AuthenticatorSpecialStatus.USER_NOT_AUT
 import me.henneke.wearauthn.fido.context.RequestInfo
 import me.henneke.wearauthn.fido.ctap2.Authenticator
 import me.henneke.wearauthn.ui.isDoNotDisturbEnabled
-import me.henneke.wearauthn.ui.keyguardManager
 import me.henneke.wearauthn.ui.showToast
 import me.henneke.wearauthn.ui.vibrator
 import me.henneke.wearauthn.v
@@ -76,12 +75,6 @@ class NfcAuthenticatorService : HostApduService(), CoroutineScope {
     }
 
     override fun processCommandApdu(commandApdu: ByteArray, extras: Bundle?): ByteArray? {
-        // Always allow usage on devices without a secure screen lock.
-        if (keyguardManager?.isDeviceLocked == true) {
-            notifyUnhandled()
-            showToast(getString(R.string.unlock_to_use_nfc))
-            return null
-        }
         v { "<- ${Hex.bytesToStringUppercase(commandApdu)}" }
         val rawCommandApdu = commandApdu.asUByteArray()
         if (SELECT_FIDO_APDUS.any { rawCommandApdu.contentEquals(it) }) {
