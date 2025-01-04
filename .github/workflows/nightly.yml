@@ -21,22 +21,29 @@ jobs:
         with:
           java-version: 17
           distribution: 'zulu'
+      - name: Set sha_short
+        id: vars
+        run: |
+          echo "commit_count=$(git rev-list --count master)" >> $GITHUB_OUTPUT
+          echo "sha_short=$(git rev-parse --short master)" >> $GITHUB_OUTPUT
       - name: Assemble with Gradle
         run: |
-          ./gradlew -PcommitCount=$(git rev-list --count master) -PcommitHash=$(git rev-parse --short master) -PstorePassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" -PkeyPassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" assembleNightlySigned
-          mv authenticator/build/outputs/apk/nightly/signed/authenticator-nightly-signed.apk authenticator-${{ github.sha }}.apk
-          mv companion/build/outputs/apk/nightly/signed/companion-nightly-signed.apk companion-${{ github.sha }}.apk
+          ./gradlew -PcommitCount=${{ steps.vars.outputs.commit_count }} -PcommitHash=${{ steps.vars.outputs.sha_short }} -PstorePassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" -PkeyPassword="${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" assembleNightlySigned
+          mv authenticator/build/outputs/apk/nightly/signed/authenticator-nightly-signed.apk authenticator-${{ steps.vars.outputs.sha_short }}.apk
+          mv companion/build/outputs/apk/nightly/signed/companion-nightly-signed.apk companion-${{ steps.vars.outputs.sha_short }}.apk
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            authenticator${{ github.sha }}.apk
-            companion-${{ github.sha }}.apk
-          name: Nightly Release (${{ github.sha }})
-          tag_name: nightly-${{ github.sha }}
+            authenticator-${{ steps.vars.outputs.sha_short }}.apk
+            companion-${{ steps.vars.outputs.sha_short }}.apk
+          name: Nightly Release (${{ steps.vars.outputs.sha_short }})
+          tag_name: nightly-${{ steps.vars.outputs.sha_short }}
           body: |
-            Nightly build for commit ${{ github.sha }}.
+            Nightly build for commit ${{ steps.vars.outputs.sha_short }}.
           draft: false
           prerelease: true
+          fail_on_unmatched_files: true
+          preserve_order: true
 
 
