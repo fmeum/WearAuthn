@@ -148,6 +148,25 @@ object HidDataSender {
     }
 
     /**
+     * Hand HID interrupt data to the given listener, replacing any previous one.
+     *
+     * Only one listener is active at a time: whichever screen currently owns the session. Passing
+     * `null` stops delivery without tearing the Bluetooth link down, which is what lets the main
+     * screen keep an attached host alive after the user navigates back.
+     */
+    fun setIoListener(listener: HidIntrDataListener?) {
+        synchronized(lock) {
+            if (ioListener == listener) return
+            ioListener = listener
+            if (listener != null) {
+                hidDeviceApp.registerIoListener(listener)
+            } else {
+                hidDeviceApp.unregisterIoListener()
+            }
+        }
+    }
+
+    /**
      * Stop listening for the profile events. When the last profileListener is unregistered, the SD record
      * for HID Device will also be unregistered.
      *

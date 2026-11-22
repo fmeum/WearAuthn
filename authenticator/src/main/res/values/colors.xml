@@ -1,4 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="blue">#0000FF</color>
+
+    <!-- legacy neutral tokens (still referenced by a few leftover resources) -->
+    <color name="main_background">#FF000000</color>
+    <color name="main_surface">#1AFFFFFF</color>
+    <color name="main_border">#26FFFFFF</color>
+    <color name="main_text_primary">#FFFFFFFF</color>
+    <color name="main_text_secondary">#99FFFFFF</color>
+    <color name="main_text_tertiary">#66FFFFFF</color>
+    <color name="main_icon">#6BFFFFFF</color>
+    <color name="main_accent">#FF4C8DFF</color>
+    <color name="main_accent_wash">#1F4C8DFF</color>
+    <color name="main_connected">#FF3DDC84</color>
+
+    <!--
+      Wear Material 3 Expressive, dark scheme.
+      Blue is the product signature (One UI 8 system blue). Green is reserved for
+      one meaning only: an authenticated host. Tertiary stays a cool blue-teal.
+    -->
+    <color name="m3_background">#FF000000</color>
+    <color name="m3_surface_container_low">#FF151619</color>
+    <color name="m3_surface_container">#FF1B1C21</color>
+    <color name="m3_surface_container_high">#FF25262C</color>
+    <color name="m3_on_surface">#FFEDEDF0</color>
+    <color name="m3_on_surface_variant">#FFB9BBC4</color>
+    <color name="m3_outline">#FF3A3B42</color>
+
+    <!-- One UI 8 system blue: the accent every chip and every action uses -->
+    <color name="m3_primary">#FF2962FF</color>
+    <color name="m3_on_primary">#FFFFFFFF</color>
+    <color name="m3_primary_container">#FF2962FF</color>
+    <color name="m3_on_primary_container">#FFFFFFFF</color>
+
+    <!-- lighter blue, for surfaces that need to sit behind the accent -->
+    <color name="m3_secondary">#FFA9C7FF</color>
+    <color name="m3_on_secondary">#FF072B52</color>
+    <color name="m3_secondary_container">#FF24476F</color>
+    <color name="m3_on_secondary_container">#FFD8E6FF</color>
+
+    <!-- teal, same family -->
+    <color name="m3_tertiary">#FF96D9E0</color>
+    <color name="m3_on_tertiary">#FF00363B</color>
+    <color name="m3_tertiary_container">#FF1B3F45</color>
+    <color name="m3_on_tertiary_container">#FFB8EAF0</color>
+
+    <!-- semantic: an attached host. This is the original #3DDC84 dot green from r10,
+         kept on purpose: bright, saturated, unmistakably "live". -->
+    <color name="m3_connected">#FF3DDC84</color>
+    <color name="m3_connected_container">#FF0E2A1B</color>
 </resources>

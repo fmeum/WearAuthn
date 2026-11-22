@@ -5,7 +5,7 @@
     <string name="aiddescription">FIDO2/U2F Security Key</string>
     <string name="connected_to_device_message"><![CDATA[Attached to<br><b>%1$s</b>]]></string>
     <string name="connecting_to_device_message"><![CDATA[Attaching to<br><b>%1$s</b>…]]></string>
-    <string name="connected_to_device_explanation">Use as if a USB security key were attached to that device.\nHelp with common issues is available on your phone.</string>
+    <string name="connected_to_device_explanation">Works as a USB security key</string>
     <string name="preference_about_key" translatable="false">preference_about</string>
     <string name="preference_bluetooth_settings_key" translatable="false">preference_bluetooth_settings</string>
     <string name="message_key_storage_type_unknown">Credential storage: Scanning…</string>
@@ -13,6 +13,7 @@
     <string name="message_key_storage_type_hardware">Credential storage: Hardware</string>
     <string name="status_bluetooth_connecting">Attaching…</string>
     <string name="status_bluetooth_connected">Attached</string>
+    <string name="status_bluetooth_connected_dot">● Attached</string>
     <string name="status_bluetooth_tap_and_pair">Tap and pair device</string>
     <string name="status_bluetooth_tap_to_enable">Tap to enable</string>
     <string name="preference_bluetooth_permissions_key" translatable="false">preference_bluetooth_permissions</string>
@@ -95,4 +96,38 @@
     <string name="preference_log_level_dialog_title">Choose a log level</string>
     <string name="preference_log_level_dialog_message">Logs may contain personal information on \"Debug\" or \"Verbose\".</string>
     <string name="status_bluetooth_permissions_required">Bluetooth permission not granted</string>
+    <string name="label_complication_config">Config</string>
+    <string name="label_log_in_as">Log in as</string>
+    <string name="label_complication_invalid">Not set</string>
+    <string name="label_tile_shortcut">Quick attach</string>
+    <string name="tile_title">WearAuthn</string>
+    <string name="tile_subtitle_device">Tap to attach to %1$s</string>
+    <string name="shortcut_no_device">No paired computer found, pick one from the list</string>
+    <string name="shortcut_connect_failed">Could not connect to %1$s</string>
+    <string name="tile_main_choose">Choose a device</string>
+    <string name="tile_hint_attach">Tap to attach</string>
+    <string name="tile_subtitle_choose_device">Tap to choose a device</string>
+    <string name="label_complication_invalid_long">No device selected — tap to choose</string>
+    <string name="main_subtitle">FIDO2 security key · Bluetooth HID</string>
+    <string name="main_section_devices">Computers</string>
+    <string name="main_section_more">More</string>
+    <string name="main_empty_devices">No paired computer yet</string>
+    <string name="main_discoverable_on_short">Visible for the next 60 seconds</string>
+
+    <string name="tile_action_connect">Connect</string>
+    <string name="tile_action_choose">Choose computer</string>
+    <string name="label_setup_on_phone">Set up on phone</string>
+    <string name="label_view_on_phone">View on phone</string>
+
+    <string name="passwordless_screen_title">Passwordless login</string>
+    <string name="passwordless_screen_description">When it is on the watch signs in by itself; when it is off you confirm every login here.</string>
+    <string name="passwordless_state_on">On</string>
+    <string name="passwordless_state_off">Off</string>
+    <string name="passwordless_warning_on">Turning it off keeps your registrations; you can turn it back on any time.</string>
+    <string name="passwordless_warning_off">Supported sites will sign in without asking you to confirm here.</string>
+    <string name="passwordless_description_on">Supported sites sign in without a prompt on the watch.</string>
+    <string name="passwordless_description_off">Turn it on and supported sites sign in without a prompt.</string>
+    <string name="passwordless_label_unavailable">Unavailable</string>
+    <string name="prompt_passwordless_disable_title">Turn off passwordless mode?</string>
+    <string name="prompt_passwordless_disable_message"><![CDATA[Credentials registered in passwordless mode stay on the watch, but sites that require user verification will reject them until you register again.<br/><br/>You can turn the mode back on at any time; a full reset is only needed if the screen lock itself is removed.<br/><br/>Turn it off?]]></string>
 </resources>

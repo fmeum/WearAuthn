@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- About: header block, one primary action pill, then two neutral pills. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/m3_background"
     android:fillViewport="true"
+    android:fadingEdge="vertical"
+    android:fadingEdgeLength="24dp"
+    android:requiresFadingEdge="vertical"
+    android:scrollbars="none"
     tools:context="me.henneke.wearauthn.ui.main.AboutActivity">
 
     <requestFocus />
@@ -11,65 +17,108 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingTop="38dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="24dp">
 
         <TextView
             android:id="@+id/titleView"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:paddingTop="@dimen/text_vertical_padding"
-            android:textAppearance="@android:style/TextAppearance.Material.Title"
+            android:gravity="center_horizontal"
+            android:textColor="@color/m3_on_surface"
+            android:textSize="18sp"
             tools:text="WearAuthn" />
 
         <TextView
             android:id="@+id/versionView"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:layout_marginTop="2dp"
+            android:gravity="center_horizontal"
+            android:textColor="@color/m3_on_surface_variant"
+            android:textSize="12sp"
             tools:text="1.0.0" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="@dimen/text_horizontal_padding"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
             android:text="@string/about_how_to_use"
-            android:textAppearance="@android:style/TextAppearance.Material.Body1" />
+            android:textAlignment="center"
+            android:textColor="@color/m3_on_surface"
+            android:textSize="14sp" />
 
-        <ImageButton
+        <LinearLayout
             android:id="@+id/howToUseOpenOnPhoneButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginVertical="@dimen/diag_button_bottom_padding"
-            android:background="?android:selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_btn_open_on_phone" />
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_pill_action_primary"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_open_on_phone"
+                android:tint="@color/m3_on_primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/label_view_on_phone"
+                android:textColor="@color/m3_on_primary"
+                android:textSize="15sp" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/keyStorageView"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_marginVertical="@dimen/diag_button_bottom_padding"
-            android:layout_weight="1"
-            android:paddingHorizontal="@dimen/text_horizontal_padding"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_pill_item"
+            android:gravity="center"
+            android:minHeight="44dp"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
             android:text="@string/message_key_storage_type_unknown"
-            android:textAppearance="@android:style/TextAppearance.Material.Body2" />
+            android:textColor="@color/m3_on_surface_variant"
+            android:textSize="12sp" />
 
-        <Button
+        <TextView
             android:id="@+id/privacyButtton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginVertical="@dimen/diag_button_bottom_padding"
-            android:text="@string/label_privacy" />
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_pill_item_pressed"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/label_privacy"
+            android:textColor="@color/m3_on_surface"
+            android:textSize="15sp" />
 
-        <Button
+        <TextView
             android:id="@+id/licensesButtton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginVertical="@dimen/diag_button_bottom_padding"
-            android:text="@string/label_licenses" />
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_pill_item_pressed"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/label_licenses"
+            android:textColor="@color/m3_on_surface"
+            android:textSize="15sp" />
+
     </LinearLayout>
 </ScrollView>

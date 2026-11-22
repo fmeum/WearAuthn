@@ -46,9 +46,19 @@ class UnlockComplicationListenerService : WearableListenerService() {
     companion object {
 
         fun isComplicationEnabled(context: Context): Boolean {
+            // Unlocked build: the watch face shortcut complication is always available,
+            // independent of any in-app purchase made on the companion phone app.
             val component =
                 ComponentName(context, ShortcutComplicationProviderService::class.java)
-            return context.packageManager.getComponentEnabledSetting(component) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            val state = context.packageManager.getComponentEnabledSetting(component)
+            if (state != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+                context.packageManager.setComponentEnabledSetting(
+                    component,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP
+                )
+            }
+            return true
         }
     }
 }

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="servicedesc">FIDO2/U2F 安全密钥</string>
+    <string name="aiddescription">FIDO2/U2F 安全密钥</string>
+
+    <!-- Bluetooth connection status -->
+    <string name="connected_to_device_message"><![CDATA[已连接<br><b>%1$s</b>]]></string>
+    <string name="connecting_to_device_message"><![CDATA[正在连接<br><b>%1$s</b>…]]></string>
+    <string name="connected_to_device_explanation">可当 USB 安全密钥使用</string>
+    <string name="status_bluetooth_connecting">正在连接…</string>
+    <string name="status_bluetooth_connected">已连接</string>
+    <string name="status_bluetooth_connected_dot">● 已连接</string>
+    <string name="status_bluetooth_tap_and_pair">点按以配对设备</string>
+    <string name="status_bluetooth_tap_to_enable">点按以启用</string>
+    <string name="status_bluetooth_use_via_nfc_instead">改用 NFC 方式</string>
+    <string name="status_bluetooth_permissions_required">未授予蓝牙权限</string>
+    <string name="bluetooth_permissions_explanation">授予蓝牙权限</string>
+    <string name="preference_bluetooth_settings_title">设置</string>
+    <string name="preference_title">通过蓝牙连接设备</string>
+    <string name="preference_discoverable_title">可被发现</string>
+    <string name="preference_discoverable_summary_on">其他设备可在 1 分钟内发现本机</string>
+    <string name="preference_discoverable_summary_off">允许其他设备发现本机</string>
+
+    <!-- NFC -->
+    <string name="preference_nfc_title">通过 NFC 连接手机</string>
+    <string name="status_nfc_explanation">或贴近支持 NFC 的手机（停留在表盘时也可用）。</string>
+    <string name="status_nfc_not_available">此手表不支持 NFC</string>
+    <string name="status_nfc_tap_and_enable">点按以启用</string>
+
+    <!-- Credential storage -->
+    <string name="message_key_storage_type_unknown">凭据存储：检测中…</string>
+    <string name="message_key_storage_type_software">凭据存储：软件</string>
+    <string name="message_key_storage_type_hardware">凭据存储：硬件</string>
+
+    <!-- Passwordless / single-factor mode -->
+    <string name="preference_single_factor_mode_title">启用免密登录</string>
+    <string name="preference_single_factor_mode_summary_available">在部分网站免密码登录</string>
+    <string name="preference_single_factor_mode_summary_active">已启用</string>
+    <string name="preference_single_factor_mode_summary_enable_lock">请先设置屏幕锁定</string>
+    <string name="preference_single_factor_mode_summary_disabled">屏幕锁定曾被关闭，需完全重置后才能启用</string>
+    <string name="prompt_single_factor_mode_title">启用免密模式？</string>
+    <string name="prompt_single_factor_mode_message"><![CDATA[在免密模式下注册的凭据，可让您在部分网站免用户名、免密码直接登录。<br/><br/>一旦关闭屏幕锁定，免密登录将失效，且必须完全重置 WearAuthn 才能重新启用。<br/><br/>是否继续？]]></string>
+    <string name="preference_category_advanced_title">高级</string>
+
+    <!-- Credential management -->
+    <string name="preference_credential_management_title">管理凭据</string>
+    <string name="preference_manage_credentials_summary_disabled">请先启用免密模式</string>
+    <string name="credential_management_title">免密登录凭据</string>
+    <string name="credential_management_title_no_credentials">暂无免密登录凭据</string>
+    <string name="label_log_in_as">登录身份</string>
+    <string name="prompt_delete_resident_credential_message">确认删除以下站点的凭据？\n%1$s\n</string>
+    <string name="button_delete">删除</string>
+
+    <!-- Reset -->
+    <string name="prompt_delete_all_data_first_step_message">删除全部凭据？\n如果没有备用的第二重验证方式，您<b>将无法再登录这些账户</b>。</string>
+    <string name="prompt_delete_all_data_second_step_message">向下滚动可看到确认按钮。\n\n\n\n\n\n\n\n\n\n\n<b>确认删除全部凭据？</b></string>
+    <string name="message_deleted_all_data">WearAuthn 已重置</string>
+    <string name="reset_via_bluetooth_only">仅可通过蓝牙执行重置</string>
+
+    <!-- Authenticator prompts -->
+    <string name="generic_accept">同意</string>
+    <string name="generic_deny">拒绝</string>
+    <string name="generic_icon">图标</string>
+    <string name="generic_part_to">"（%1$s）"</string>
+    <string name="generic_part_as">"，身份 %1$s"</string>
+    <string name="prompt_register">注册%1$s%2$s？%3$s</string>
+    <string name="message_register">已注册%1$s%2$s</string>
+    <string name="prompt_authenticate">登录%1$s%2$s？%3$s</string>
+    <string name="message_authenticate">已验证%1$s%2$s</string>
+    <string name="prompt_register_credential_excluded">是否揭示此前的注册状态或错误%1$s？</string>
+    <string name="message_register_credential_excluded">已揭示此前的注册状态或错误%1$s</string>
+    <string name="prompt_authenticate_no_credentials">是否向对方表明尚未注册？</string>
+    <string name="message_authenticate_no_credentials">已表明尚未注册</string>
+    <string name="prompt_platform_get_touch">使用此安全密钥继续？</string>
+    <string name="message_platform_get_touch">尚未注册或发生错误</string>
+    <string name="prompt_authenticate_user_verification"><![CDATA[<br/>可能需要输入屏幕锁定密码。]]></string>
+    <string name="prompt_register_user_verification"><![CDATA[<br/>通过手表登录可能需要屏幕锁定密码，<b>关闭屏幕锁定后将无法再登录</b>。]]></string>
+    <string name="message_register_user_verification">。请勿关闭屏幕锁定。</string>
+    <string name="prompt_authenticate_resident_key"><![CDATA[<br/>随后需要选择账户。]]></string>
+    <string name="prompt_register_resident_key"><![CDATA[<br/>网站地址和用户名将保存在手表上。]]></string>
+    <string name="verify_screen_lock_and_retry">请验证屏幕锁定后重试</string>
+    <string name="title_prefix_unknown_site_with_number">未知站点 #%1$d</string>
+
+    <!-- Complication / shortcut -->
+    <string name="label_complication_device_shortcut">设备快捷方式</string>
+    <string name="label_complication_config">配置</string>
+    <string name="label_complication_invalid">未设置</string>
+    <string name="label_tile_shortcut">一键连接</string>
+    <string name="tile_title">WearAuthn</string>
+    <string name="tile_subtitle_device">点按连接到 %1$s</string>
+    <string name="shortcut_no_device">未找到可连接的电脑，请在列表中选择</string>
+    <string name="shortcut_connect_failed">连接 %1$s 未成功</string>
+    <string name="tile_main_choose">选择设备</string>
+    <string name="tile_hint_attach">点按连接</string>
+    <string name="tile_subtitle_choose_device">点按选择设备</string>
+    <string name="label_complication_invalid_long">未选择设备，点按选择</string>
+    <string name="preference_screen_title_shortcut_picker">在表盘添加设备快捷方式</string>
+
+    <!-- Unlock channel -->
+    <string name="name_unlocked_channel">已解锁的功能</string>
+    <string name="description_unlocked_channel">用于告知您通过手机应用内购买在手表上解锁的功能。</string>
+    <string name="message_continue_on_phone">请在手机上继续操作</string>
+
+    <!-- About / support -->
+    <string name="preference_about_title">关于</string>
+    <string name="label_licenses">开源许可</string>
+    <string name="label_privacy">隐私政策</string>
+    <string name="label_support">支持 WearAuthn</string>
+    <string name="preference_support_not_purchased_title">支持 WearAuthn</string>
+    <string name="preference_support_not_purchased_summary">并解锁表盘快捷方式</string>
+    <string name="preference_support_purchased_title">感谢你的支持！</string>
+    <string name="preference_support_purchased_summary">查看更新日志</string>
+    <string name="about_how_to_use"><b>通过蓝牙使用</b>\n将运行 Windows 10（Chrome、Firefox 或 Edge）、macOS（Chrome）或 Linux（Chrome）的蓝牙设备与手表配对，再在 WearAuthn 主菜单中连接该设备。此后即可把这块手表当作已插入的 USB 安全密钥使用。\n\n<b>通过 NFC 使用</b>\n当系统提示“使用安全密钥”时，将手表贴近支持 NFC 的 Android 手机或 iPhone（iOS 13.3 及以上）。即使停留在表盘、未处于常亮模式，此方式同样可用。</string>
+
+    <!-- Logging -->
+    <string name="preference_log_level_title">日志级别</string>
+    <string name="preference_log_level_dialog_title">选择日志级别</string>
+    <string name="preference_log_level_dialog_message">选择“调试”或“详细”级别时，日志中可能包含个人信息。</string>
+    <string name="main_subtitle">FIDO2 安全密钥 · 蓝牙免驱</string>
+    <string name="main_section_devices">电脑</string>
+    <string name="main_section_more">更多</string>
+    <string name="main_empty_devices">尚未配对电脑</string>
+    <string name="main_discoverable_on_short">60 秒内可被发现</string>
+
+    <string name="tile_action_connect">连接</string>
+    <string name="tile_action_choose">选择电脑</string>
+    <string name="label_setup_on_phone">在手机上设置</string>
+    <string name="label_view_on_phone">在手机上查看</string>
+
+    <string name="passwordless_screen_title">免密登录</string>
+    <string name="passwordless_screen_description">开启后手表会自己完成登录；关闭后每次都要在手表上确认。</string>
+    <string name="passwordless_state_on">已开启</string>
+    <string name="passwordless_state_off">已关闭</string>
+    <string name="passwordless_warning_on">关闭不会删除已登记的凭据，随时可以再打开。</string>
+    <string name="passwordless_warning_off">支持的网站可直接登录，手表不再弹确认框。</string>
+    <string name="passwordless_description_on">支持的网站会直接登录，不用在手表上点确认。</string>
+    <string name="passwordless_description_off">打开后，支持的网站会直接登录，不用再点确认。</string>
+    <string name="passwordless_label_unavailable">不可用</string>
+    <string name="prompt_passwordless_disable_title">关闭免密登录？</string>
+    <string name="prompt_passwordless_disable_message"><![CDATA[关闭后，用免密模式登记的凭据仍留在手表上，但要求验证的网站会拒绝它们，需要重新登记才能登录。<br/><br/>随时可以再打开；只有屏幕锁定被关闭时才需要完全重置。<br/><br/>是否关闭？]]></string>
+</resources>

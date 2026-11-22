@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Same padlock as ic_btn_lock, with the shackle lifted: the body and keyhole keep the
+  closed icon's exact geometry, only the shackle is rotated off the body so the two states
+  read as one family at 18dp.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <group
+        android:pivotX="12"
+        android:pivotY="9"
+        android:rotation="-24"
+        android:translateY="-0.6">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M7,8V6A5,5 0 0 1 17,6V8H15.2V6A3.2,3.2 0 0 0 8.8,6V8Z" />
+    </group>
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M18,8H6c-1.1,0 -2,0.9 -2,2v10c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V10c0,-1.1 -0.9,-2 -2,-2zM12,17c-1.1,0 -2,-0.9 -2,-2s0.9,-2 2,-2 2,0.9 2,2 -0.9,2 -2,2z" />
+</vector>

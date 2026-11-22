@@ -330,6 +330,28 @@ fun armUserVerificationFuse(context: Context) {
         e(TAG) { "Failed to arm user verification fuse" }
 }
 
+/**
+ * Turns passwordless mode back off by dropping the fuse key and clearing the marker.
+ * The key only ever answers "is user verification armed?", so nothing else depends on it;
+ * turning the mode back on simply arms a fresh fuse.
+ */
+fun disarmUserVerificationFuse(context: Context) {
+    if (getUserVerificationState(context) != true)
+        return
+
+    // Drop the key first: if that fails the marker must stay `true`, otherwise the state would
+    // read back as "needs a reset" while the mode is still armed.
+    try {
+        deleteKey(USER_VERIFICATION_FUSE_KEY_ALIAS)
+        context.defaultSharedPreferences.edit {
+            putBoolean(FUSE_CREATED_PREFERENCE_KEY, false)
+        }
+        i(TAG) { "Disarmed user verification fuse" }
+    } catch (error: Exception) {
+        e(TAG, error) { "Failed to disarm user verification fuse" }
+    }
+}
+
 fun getUserVerificationState(context: Context, obeyTimeout: Boolean = false): Boolean? {
     val fuseCreated = context.defaultSharedPreferences.getBoolean(
         FUSE_CREATED_PREFERENCE_KEY, true

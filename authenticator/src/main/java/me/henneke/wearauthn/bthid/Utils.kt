@@ -8,8 +8,11 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
+import android.content.Context
 import android.os.ParcelUuid
 import android.text.TextUtils
+import androidx.core.content.edit
+import me.henneke.wearauthn.ui.defaultSharedPreferences
 
 private val HOGP_UUID = ParcelUuid.fromString("00001812-0000-1000-8000-00805f9b34fb")
 private val HID_UUID = ParcelUuid.fromString("00001124-0000-1000-8000-00805f9b34fb")
@@ -53,3 +56,13 @@ val isBluetoothEnabled
 val hasCompatibleBondedDevice
     @SuppressLint("MissingPermission")
     get() = defaultAdapter.bondedDevices.any { device -> device.canUseAuthenticatorViaBluetooth }
+
+private const val PREF_LAST_ATTACHED_DEVICE = "setting_last_attached_device"
+
+/** Address of the host the user attached to last, so shortcuts can skip the picker. */
+val Context.lastAttachedDeviceAddress: String?
+    get() = defaultSharedPreferences.getString(PREF_LAST_ATTACHED_DEVICE, null)
+
+fun Context.rememberAttachedDevice(device: BluetoothDevice) {
+    defaultSharedPreferences.edit { putString(PREF_LAST_ATTACHED_DEVICE, device.address) }
+}

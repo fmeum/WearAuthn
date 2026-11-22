@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      One theme for the whole app: black canvas, blue accent, green secondary.
+      The dialog variant gives AlertDialog / AcceptDenyDialog a rounded tonal surface
+      instead of the platform dark box, so every modal matches the list pills.
+    -->
+    <style name="Theme.WearAuthn" parent="@android:style/Theme.DeviceDefault">
+        <item name="android:windowBackground">@color/m3_background</item>
+        <item name="android:colorBackground">@color/m3_background</item>
+        <item name="android:colorAccent">@color/m3_primary</item>
+        <item name="android:colorPrimary">@color/m3_primary</item>
+        <item name="android:colorPrimaryDark">@color/m3_background</item>
+        <item name="android:textColorPrimary">@color/m3_on_surface</item>
+        <item name="android:textColorSecondary">@color/m3_on_surface_variant</item>
+        <item name="android:dialogTheme">@style/Theme.WearAuthn.Dialog</item>
+        <item name="android:alertDialogTheme">@style/Theme.WearAuthn.Dialog</item>
+    </style>
+
+    <style name="Theme.WearAuthn.Dialog" parent="@android:style/Theme.DeviceDefault.Dialog">
+        <item name="android:windowBackground">@drawable/bg_dialog</item>
+        <item name="android:colorAccent">@color/m3_primary</item>
+        <item name="android:textColorPrimary">@color/m3_on_surface</item>
+        <item name="android:windowTitleStyle">@style/Theme.WearAuthn.Dialog.Title</item>
+    </style>
+
+    <style name="Theme.WearAuthn.Dialog.Title" parent="@android:style/TextAppearance.Material.DialogWindowTitle">
+        <item name="android:textColor">@color/m3_on_surface</item>
+    </style>
+</resources>

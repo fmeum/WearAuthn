@@ -1,46 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Attached screen. Everything is sized to survive a 225dp round display:
+  20dp top, 52dp status mark, two lines of host name, two lines of help, 44dp action.
+  A ScrollView is the safety net for long translations instead of letting the circle cut text.
+-->
 <androidx.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:background="@color/m3_background"
     tools:context=".ui.main.AuthenticatorAttachedActivity">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
+        android:fillViewport="true"
+        android:scrollbars="none"
         app:boxedEdges="top">
 
-        <TextView
-            android:id="@+id/connectedToDeviceView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:textAlignment="center"
-            android:textAppearance="@android:style/TextAppearance.Material.Title"
-            tools:text="Connected to\nJoe's laptop" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingTop="18dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="12dp">
 
-        <TextView
-            android:id="@+id/explanationView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:padding="8dp"
-            android:text="@string/connected_to_device_explanation"
-            android:textAlignment="center"
-            android:textAppearance="@android:style/TextAppearance.Material.Body1" />
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/bg_chip_status">
 
-        <ImageButton
-            android:id="@+id/setupOpenOnPhoneButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:background="?android:selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_btn_open_on_phone" />
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_computer"
+                    android:tint="@color/m3_connected_container" />
+            </FrameLayout>
 
-    </LinearLayout>
+            <View
+                android:id="@+id/statusDot"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_status_dot"
+                android:importantForAccessibility="no"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/connectedToDeviceView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:lineSpacingExtra="2dp"
+                android:maxLines="2"
+                android:textAlignment="center"
+                android:textColor="@color/m3_on_surface"
+                android:textSize="15sp"
+                tools:text="已连接\n我的电脑" />
+
+            <TextView
+                android:id="@+id/explanationView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/connected_to_device_explanation"
+                android:textAlignment="center"
+                android:textColor="@color/m3_on_surface_variant"
+                android:textSize="11sp" />
+
+
+        </LinearLayout>
+    </ScrollView>
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -51,7 +96,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:textSize="24sp"
+            android:textColor="@color/m3_on_surface"
+            android:textSize="36sp"
             android:visibility="invisible" />
     </FrameLayout>
 </androidx.wear.widget.BoxInsetLayout>

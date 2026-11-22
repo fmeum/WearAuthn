@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.graphics.drawable.Icon
 import android.support.wearable.complications.ComplicationData
@@ -19,7 +18,7 @@ import me.henneke.wearauthn.*
 import me.henneke.wearauthn.bthid.identifier
 import me.henneke.wearauthn.ui.defaultSharedPreferences
 import me.henneke.wearauthn.ui.hasBluetoothPermissions
-import me.henneke.wearauthn.ui.main.AuthenticatorAttachedActivity
+import me.henneke.wearauthn.tile.ShortcutLaunchActivity
 
 private fun abbreviate(name: String): String {
     if (name.length <= 7) {
@@ -37,7 +36,7 @@ class ShortcutComplicationProviderService : ComplicationProviderService(), Loggi
     override fun onComplicationUpdate(
         complicationId: Int, dataType: Int, complicationManager: ComplicationManager
     ) {
-        d { "Updating complication $complicationId of type $dataType" }
+        i { "Updating complication $complicationId of type $dataType" }
 
         val deviceShortcut = getDeviceShortcut(this, complicationId)
         val defaultAdapter = getSystemService(BluetoothManager::class.java).adapter
@@ -48,15 +47,16 @@ class ShortcutComplicationProviderService : ComplicationProviderService(), Loggi
         val invalidDevice =
             device == null || device !in (if (applicationContext.hasBluetoothPermissions) defaultAdapter.bondedDevices else emptySet())
 
-        val launchIntent = if (invalidDevice) {
-            w { "Invalid device" }
-            packageManager.getLaunchIntentForPackage(BuildConfig.APPLICATION_ID)
-        } else {
-            Intent(this, AuthenticatorAttachedActivity::class.java)
-                .putExtra(AuthenticatorAttachedActivity.EXTRA_DEVICE, device)
-                .putExtra(EXTRA_COMPLICATION_ID, complicationId)
-                .setFlags(FLAG_ACTIVITY_CLEAR_TASK or FLAG_ACTIVITY_NEW_TASK)
+        if (invalidDevice) {
+            w { "No usable device stored; the tap will open the device picker" }
         }
+
+        // Both the old provider and the tile now share one proven launch path: the
+        // invisible ShortcutLaunchActivity resolves the target device and hands it to
+        // AuthenticatorAttachedActivity (or falls back to the device list).
+        val launchIntent = Intent(this, ShortcutLaunchActivity::class.java)
+            .putExtra(ShortcutLaunchActivity.EXTRA_DEVICE_ADDRESS, deviceShortcut)
+            .setFlags(FLAG_ACTIVITY_NEW_TASK)
 
         val complicationPendingIntent = PendingIntent.getActivity(
             this,
@@ -67,7 +67,7 @@ class ShortcutComplicationProviderService : ComplicationProviderService(), Loggi
 
         val complicationData = when (dataType) {
             ComplicationData.TYPE_SHORT_TEXT -> {
-                val label = if (invalidDevice) "INVALID" else abbreviate(device!!.identifier)
+                val label = if (invalidDevice) getString(R.string.label_complication_invalid) else abbreviate(device!!.identifier)
                 ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
                     .setIcon(Icon.createWithResource(this, R.drawable.ic_launcher_outline))
                     .setShortText(ComplicationText.plainText(label))
@@ -76,7 +76,7 @@ class ShortcutComplicationProviderService : ComplicationProviderService(), Loggi
             }
 
             ComplicationData.TYPE_LONG_TEXT -> {
-                val label = if (invalidDevice) "Invalid device" else device!!.identifier
+                val label = if (invalidDevice) getString(R.string.label_complication_invalid_long) else device!!.identifier
                 ComplicationData.Builder(ComplicationData.TYPE_LONG_TEXT)
                     .setIcon(Icon.createWithResource(this, R.drawable.ic_launcher_outline))
                     .setLongText(ComplicationText.plainText(label))
