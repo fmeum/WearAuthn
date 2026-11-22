@@ -1,10 +1,6 @@
 # WearAuthn (Beta)
 
-> **本仓库是中文非官方修改版 / Unofficial Chinese fork**
->
-> 从 [fmeum/WearAuthn](https://github.com/fmeum/WearAuthn)（MIT，© 2019 Fabian Henneke）fork 而来，改动集中在 `zh-cn/wear-m3e` 分支，`master` 与上游保持一致。
-> 主要改动：全量简体中文本地化、主界面按 Wear Material 3 Expressive 重构、磁贴与表盘入口点击落点修复、返回主界面后保持 HID 连接、免密登录改为可开可关的双向开关、应用图标重配色。
-> 完整改动清单与许可说明见 [MODIFICATIONS.md](MODIFICATIONS.md)。与上游作者及 Google Play 上的官方版本无隶属关系。
+> 本项目改自 [fmeum/WearAuthn](https://github.com/fmeum/WearAuthn)（MIT License，© 2019 Fabian Henneke），为面向中文用户的 Wear OS 修改版，非官方，与原作者及 Google Play 官方版本无隶属关系。
 
 [<img src="_assets/screen_1.png" alt="Get it on Google Play" width=300px />](https://play.google.com/store/apps/details?id=me.henneke.wearauthn.authenticator)
 [<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" width=400px />](https://play.google.com/store/apps/details?id=me.henneke.wearauthn.authenticator)
